@@ -552,7 +552,17 @@ async function callAI(system, userMsg, maxTokens=900) {
       messages: [{ role:'system', content:system }, { role:'user', content:userMsg }] };
   }
 
-  if (useProxy) body.target_url = targetUrl;
+  if (useProxy) {
+    // 通过代理时，把认证信息放进 body，代理负责转发给 AI 服务
+    body.target_url = targetUrl;
+    body.api_key    = cfg.key;
+    body.api_mode   = isAnthropic ? 'anthropic' : 'openai';
+    // 代理不需要在 header 里带认证
+    delete headers['Authorization'];
+    delete headers['x-api-key'];
+    delete headers['anthropic-version'];
+    delete headers['anthropic-dangerous-direct-browser-access'];
+  }
 
   const resp = await fetch(fetchUrl, { method:'POST', headers, body: JSON.stringify(body) });
 
