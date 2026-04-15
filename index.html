@@ -260,6 +260,10 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
         <label class="cfg-label">模型名称</label>
         <input class="cfg-input" id="cfg-model" type="text" placeholder="claude-sonnet-4-20250514" autocomplete="off">
       </div>
+      <div class="cfg-field full">
+        <label class="cfg-label">代理地址（填你的 Vercel 代理网址，解决跨域问题）</label>
+        <input class="cfg-input" id="cfg-proxy" type="text" placeholder="https://你的项目名.vercel.app" autocomplete="off">
+      </div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
       <button class="cfg-save" onclick="saveCfg()">保存配置</button>
@@ -460,6 +464,7 @@ function saveCfg() {
     url:   document.getElementById('cfg-url').value.trim().replace(/\/+$/,''),
     key:   document.getElementById('cfg-key').value.trim(),
     model: document.getElementById('cfg-model').value.trim(),
+    proxy: document.getElementById('cfg-proxy').value.trim().replace(/\/+$/,''),
     mode:  loadCfg().mode || 'openai'
   };
   if (!cfg.url || !cfg.key || !cfg.model) { toast('请填写完整配置'); return; }
@@ -487,6 +492,7 @@ function toggleCfg(force) {
     if (cfg.url)   document.getElementById('cfg-url').value   = cfg.url;
     if (cfg.key)   document.getElementById('cfg-key').value   = cfg.key;
     if (cfg.model) document.getElementById('cfg-model').value = cfg.model;
+    if (cfg.proxy) document.getElementById('cfg-proxy').value = cfg.proxy;
   }
 }
 function applyPreset(name) {
@@ -524,35 +530,36 @@ async function callAI(system, userMsg, maxTokens=900) {
   if (!cfg.url || !cfg.key || !cfg.model) throw new Error('请先配置 AI 接口');
 
   const isAnthropic = cfg.url.includes('anthropic.com');
-  const url  = cfg.url + (isAnthropic ? '/messages' : '/chat/completions');
+  const targetUrl   = cfg.url + (isAnthropic ? '/messages' : '/chat/completions');
+
+  // 通过代理转发，解决浏览器 CORS 限制
+  // 代理地址：优先用配置的代理，否则用相对路径（同域部署时可用）
+  const proxyBase = cfg.proxy || '';
+  const useProxy  = !!proxyBase;
+  const fetchUrl  = useProxy ? proxyBase + '/api/proxy' : targetUrl;
+
   const headers = { 'Content-Type': 'application/json' };
 
   let body;
   if (isAnthropic) {
-    // Anthropic 格式
-    headers['x-api-key'] = cfg.key;
+    headers['x-api-key']         = cfg.key;
     headers['anthropic-version'] = '2023-06-01';
-    headers['anthropic-dangerous-direct-browser-access'] = 'true';
+    if (!useProxy) headers['anthropic-dangerous-direct-browser-access'] = 'true';
     body = { model: cfg.model, max_tokens: maxTokens, system, messages: [{role:'user',content:userMsg}] };
   } else {
-    // OpenAI 兼容格式（DeepSeek、通义千问、Moonshot、OpenAI 等都支持）
     headers['Authorization'] = `Bearer ${cfg.key}`;
-    body = {
-      model: cfg.model,
-      max_tokens: maxTokens,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user',   content: userMsg }
-      ]
-    };
+    body = { model: cfg.model, max_tokens: maxTokens,
+      messages: [{ role:'system', content:system }, { role:'user', content:userMsg }] };
   }
 
-  const resp = await fetch(url, { method:'POST', headers, body: JSON.stringify(body) });
+  if (useProxy) body.target_url = targetUrl;
+
+  const resp = await fetch(fetchUrl, { method:'POST', headers, body: JSON.stringify(body) });
 
   if (!resp.ok) {
     const err = await resp.json().catch(()=>({}));
     const msg = err.error?.message || err.message || '';
-    const s = resp.status;
+    const s   = resp.status;
     if (s===401) throw new Error('API Key 无效，请检查是否填写正确');
     if (s===402) throw new Error('账号余额不足，请充值后重试');
     if (s===403) throw new Error('无访问权限：' + msg);
@@ -561,12 +568,9 @@ async function callAI(system, userMsg, maxTokens=900) {
   }
 
   const data = await resp.json();
-  // 兼容两种格式的响应
-  if (isAnthropic) {
-    return data.content?.map(i=>i.text||'').join('') || '';
-  } else {
-    return data.choices?.[0]?.message?.content || '';
-  }
+  return isAnthropic
+    ? (data.content?.map(i=>i.text||'').join('') || '')
+    : (data.choices?.[0]?.message?.content || '');
 }
 
 // ══════════════════════════════════════════
