@@ -291,6 +291,8 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
   </div>
   <div class="nav">
     <button class="nb on" id="nb-upload" onclick="goPage('upload')">上传数据</button>
+    <button class="nb" id="nb-planning" onclick="showPlanningMenu()">规划管理</button>
+    <button class="nb" id="nb-mapping" onclick="goPage('mapping')">关联管理</button>
     <button class="nb" id="nb-report" onclick="goPage('report')">分析报告</button>
     <button class="nb" id="nb-overview" onclick="goPage('overview')">老板总览</button>
     <button class="nb" id="nb-history" onclick="goPage('history')">历史对比</button>
@@ -447,6 +449,27 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 </div>
 
 </div>
+
+<!-- ═══ MAPPING PAGE ═══ -->
+<div id="pg-mapping" class="pg">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div style="font-size:15px;font-weight:700">部门关联管理</div>
+    <button class="btn bp" style="font-size:11px;padding:5px 11px" onclick="saveMapping()">保存关联</button>
+  </div>
+  
+  <div style="margin-bottom:20px;padding:12px;background:var(--s2);border-radius:8px;font-size:13px;line-height:1.5">
+    <div style="font-weight:600;margin-bottom:6px">💡 功能介绍</div>
+    <div>建立周度数据部门与年度规划部门的关联关系，实现智能匹配分析。</div>
+    <div style="font-size:12px;color:var(--ink3);margin-top:6px">
+      例如：周度数据中的"天猫平台"可以关联到"电商一部"、"电商二部"等多个规划部门
+    </div>
+  </div>
+  
+  <div id="mapping-container">
+    <!-- 关联管理界面将在这里动态生成 -->
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -460,13 +483,32 @@ const DEPT_MAP = [
   ['客服','cs'],['仓储','warehouse'],['供应链','warehouse'],
   ['大客户','key'],['跨境','cross'],['财务','finance'],
   ['人力','hr'],['HR','hr'],['IT','it'],['数据','it'],
+  // 新增部门映射（基于2026年各部门规划文件）
+  ['渔之源事','biz4'],['渔之源事业四部','biz4'],
+  ['彩麦','purchase'],['采购','purchase'],
+  ['视觉中心','visual'],['视觉','visual'],
+  ['PAA事业部','paa'],['PAA事','paa'],['PAA','paa'],['PAA事业','paa'],
+  ['电商一部','ec1'],['电商一','ec1'],['电商一部（钓竿）','ec1'],
+  ['电商二部','ec2'],['电商二','ec2'],['电商二部（钓椅&配件&鱼钩)','ec2'],
+  ['电商三部','ec3'],['电商三','ec3'],['电商三部（钓伞&线&台钓装备）','ec3'],
+  ['电商四部','ec4'],['电商四','ec4'],['电商四部（渔具包&盒类&漂）','ec4'],
+  ['电商五部','ec5'],['电商五','ec5'],['电商五部（鱼护&水桶&钓箱&服装防护）','ec5'],
+  ['电商六部','ec6'],['电商六','ec6'],['电商六部（支架及&路亚竿&路亚装备)','ec6'],
+  ['电商七部','ec7'],['电商七','ec7'],['电商七部（抄网&渔轮）','ec7'],
 ];
 const DEPT_NAMES = {
   tmall:'天猫平台',jd:'京东平台',pdd:'拼多多平台',
   douyin:'抖音平台',live:'直播部',kol:'达人/内容部',
   brand:'品牌/视频部',cs:'客服部',warehouse:'仓储/供应链',
   key:'大客户部',cross:'跨境部',finance:'财务部',
-  hr:'HR/行政',it:'IT/数据部',other:'其他部门'
+  hr:'HR/行政',it:'IT/数据部',other:'其他部门',
+  // 新增部门显示名称
+  biz4:'渔之源事业四部',purchase:'采购中心',
+  visual:'视觉中心',paa:'PAA事业部',
+  ec1:'电商一部（钓竿）',ec2:'电商二部（钓椅&配件&鱼钩)',
+  ec3:'电商三部（钓伞&线&台钓装备）',ec4:'电商四部（渔具包&盒类&漂）',
+  ec5:'电商五部（鱼护&水桶&钓箱&服装防护）',ec6:'电商六部（支架及&路亚竿&路亚装备)',
+  ec7:'电商七部（抄网&渔轮）'
 };
 const RAG = {
   r:{cls:'rp-r',label:'红灯 · 需决策',color:'var(--R)'},
@@ -694,13 +736,449 @@ async function callAI(system, userMsg, maxTokens=900) {
 // 页面导航
 // ══════════════════════════════════════════
 function goPage(p) {
-  ['upload','report','overview','history'].forEach(pg => {
+  ['upload','mapping','report','overview','history'].forEach(pg => {
     document.getElementById('pg-'+pg).classList.toggle('on', pg===p);
     document.getElementById('nb-'+pg).classList.toggle('on', pg===p);
   });
   if (p==='overview') buildOverview();
   if (p==='history')  renderHist();
+  if (p==='mapping')  renderMapping();
 }
+
+// ============================================================================
+// 年度规划管理器（最小可行性版本）
+// ============================================================================
+
+// 存储已加载的规划数据
+let PLANNING_DATA = {};
+
+// 智能摘要算法（简化版）
+function summarizePlanningText(text, maxChars = 800) {
+    if (!text || text.length <= maxChars) return text;
+    
+    // 查找关键部分
+    const sections = [];
+    
+    // 查找总体目的
+    const purposeMatch = text.match(/总体目的[：:]([^\n]{50,300})/);
+    if (purposeMatch) sections.push('总体目的：' + purposeMatch[1].trim());
+    
+    // 查找年度目标
+    const goalMatch = text.match(/年度目标[：:]([^\n]{50,300})/);
+    if (goalMatch) sections.push('年度目标：' + goalMatch[1].trim());
+    
+    // 查找Q2行动计划
+    const q2Match = text.match(/第二季度[^：:]*[：:]([^\n]{100,400})/);
+    if (q2Match) sections.push('Q2行动计划：' + q2Match[1].trim());
+    
+    // 如果找到关键部分，组合它们
+    if (sections.length > 0) {
+        let summary = sections.join('\n\n');
+        if (summary.length > maxChars) {
+            summary = summary.substring(0, maxChars);
+            // 在完整句子处截断
+            for (let i = maxChars - 1; i > maxChars - 100; i--) {
+                if ('。；，.;,\n'.includes(summary[i])) {
+                    summary = summary.substring(0, i + 1);
+                    break;
+                }
+            }
+        }
+        return summary;
+    }
+    
+    // 如果没有找到特定格式，取前800字符
+    return text.substring(0, maxChars);
+}
+
+// 加载规划文件（通过手动调用）
+function loadPlanningFile(file, callback) {
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const data = e.target.result;
+            const workbook = XLSX.read(data, { type: 'binary' });
+            
+            // 提取所有文本内容
+            let allText = '';
+            workbook.SheetNames.forEach(sheetName => {
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                jsonData.forEach(row => {
+                    row.forEach(cell => {
+                        if (cell !== null && cell !== undefined) {
+                            allText += String(cell).trim() + ' ';
+                        }
+                    });
+                    allText += '\n';
+                });
+            });
+            
+            // 生成智能摘要
+            const summary = summarizePlanningText(allText, 800);
+            
+            // 检测部门
+            let deptCode = 'other';
+            const fileName = file.name;
+            
+            for (const [keyword, code] of DEPT_MAP) {
+                if (fileName.includes(keyword)) {
+                    deptCode = code;
+                    break;
+                }
+            }
+            
+            const planningItem = {
+                id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                filename: file.name,
+                deptCode: deptCode,
+                deptName: DEPT_NAMES[deptCode] || fileName,
+                summary: summary,
+                timestamp: new Date().toLocaleString()
+            };
+            
+            // 存储规划数据
+            PLANNING_DATA[deptCode] = planningItem;
+            
+            // 显示成功消息
+            alert(`成功加载规划文件：${file.name}\n部门：${planningItem.deptName}\n摘要长度：${summary.length}字符`);
+            
+            if (callback) callback(planningItem);
+        } catch (error) {
+            alert('解析规划文件失败：' + error.message);
+            console.error('解析规划文件失败:', file.name, error);
+        }
+    };
+    
+    reader.onerror = function(e) {
+        alert('读取文件失败：' + e.target.error);
+    };
+    
+    reader.readAsBinaryString(file);
+}
+
+// 手动触发规划文件上传
+function triggerPlanningUpload() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.xls';
+    input.multiple = true;
+    
+    input.onchange = function(e) {
+        const files = e.target.files;
+        if (!files.length) return;
+        
+        for (let i = 0; i < files.length; i++) {
+            loadPlanningFile(files[i], function(item) {
+                console.log('规划文件已加载:', item);
+            });
+        }
+    };
+    
+    input.click();
+}
+
+// 查看已加载的规划
+function showLoadedPlanning() {
+    if (Object.keys(PLANNING_DATA).length === 0) {
+        alert('尚未加载任何规划文件');
+        return;
+    }
+    
+    let msg = '已加载的规划文件：\n\n';
+    Object.values(PLANNING_DATA).forEach(item => {
+        msg += `📋 ${item.deptName}\n`;
+        msg += `   文件：${item.filename}\n`;
+        msg += `   摘要：${item.summary.substring(0, 80)}...\n\n`;
+    });
+    
+    alert(msg);
+}
+
+// 清空规划数据
+function clearPlanningData() {
+    if (confirm('确认清空所有已加载的规划文件？')) {
+        PLANNING_DATA = {};
+        alert('已清空所有规划数据');
+    }
+}
+
+// 规划管理菜单
+function showPlanningMenu() {
+    // 移除已存在的菜单
+    const existing = document.getElementById('planning-menu');
+    if (existing) {
+        existing.remove();
+        return;
+    }
+    
+    // 创建菜单容器
+    const menu = document.createElement('div');
+    menu.id = 'planning-menu';
+    menu.style.cssText = `
+        position: absolute;
+        top: 50px;
+        right: 20px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 1000;
+        min-width: 180px;
+        overflow: hidden;
+    `;
+    
+    // 创建菜单项
+    const items = [
+        { label: '📂 加载年度规划文件', action: () => triggerPlanningUpload() },
+        { label: '👁️ 查看已加载规划', action: () => showLoadedPlanning() },
+        { label: '🗑️ 清空规划数据', action: () => clearPlanningData() },
+        { label: '❌ 关闭菜单', action: () => menu.remove() }
+    ];
+    
+    items.forEach(item => {
+        const button = document.createElement('button');
+        button.textContent = item.label;
+        button.style.cssText = `
+            display: block;
+            width: 100%;
+            padding: 10px 16px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            font-size: 13px;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+        `;
+        button.addEventListener('mouseenter', () => {
+            button.style.backgroundColor = '#f5f5f5';
+        });
+        button.addEventListener('mouseleave', () => {
+            button.style.backgroundColor = 'white';
+        });
+        button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            item.action();
+            menu.remove();
+        });
+        menu.appendChild(button);
+    });
+    
+    // 点击外部关闭菜单
+    const closeMenu = (e) => {
+        if (!menu.contains(e.target) && e.target.id !== 'nb-planning') {
+            menu.remove();
+            document.removeEventListener('click', closeMenu);
+        }
+    };
+    
+    document.body.appendChild(menu);
+    setTimeout(() => {
+        document.addEventListener('click', closeMenu);
+    }, 10);
+}
+
+
+// ============================================================================
+// 部门关联管理器（完整方案B）
+// ============================================================================
+
+// 存储部门关联关系
+let DEPT_MAPPING = {};
+
+// 预设的业务关联关系（初始建议）
+const BUSINESS_RELATIONS = {
+    'tmall': ['ec1', 'ec2', 'ec3', 'ec4', 'ec5', 'ec6', 'ec7'], // 天猫平台对应所有电商部门
+    'jd': ['ec1', 'ec2', 'ec3', 'ec4', 'ec5', 'ec6', 'ec7'], // 京东平台对应所有电商部门
+    'pdd': ['ec1', 'ec2', 'ec3', 'ec4', 'ec5', 'ec6', 'ec7'], // 拼多多平台对应所有电商部门
+    'douyin': ['ec1', 'ec2', 'ec3', 'ec4', 'ec5', 'ec6', 'ec7'], // 抖音平台对应所有电商部门
+    'brand': ['visual', 'video', 'kol'], // 品牌部关联视觉、视频、达人
+    'warehouse': ['purchase'], // 仓储关联采购
+    'finance': ['purchase'], // 财务关联采购
+    'hr': ['it', 'finance'], // 人力关联IT、财务
+};
+
+// 加载关联配置
+function loadMapping() {
+    try {
+        const saved = localStorage.getItem('yz_dept_mapping');
+        if (saved) {
+            DEPT_MAPPING = JSON.parse(saved);
+        } else {
+            // 如果没有保存的配置，使用预设建议
+            DEPT_MAPPING = {};
+        }
+    } catch (e) {
+        console.error('加载关联配置失败:', e);
+        DEPT_MAPPING = {};
+    }
+}
+
+// 保存关联配置
+function saveMapping() {
+    try {
+        // 从界面收集所有关联
+        const container = document.getElementById('mapping-container');
+        if (!container) return;
+        
+        const newMapping = {};
+        const weekDeptSections = container.querySelectorAll('.week-dept-section');
+        
+        weekDeptSections.forEach(section => {
+            const weekDept = section.getAttribute('data-week-dept');
+            const checkboxes = section.querySelectorAll('input[type="checkbox"]:checked');
+            const selectedPlans = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (selectedPlans.length > 0) {
+                newMapping[weekDept] = selectedPlans;
+            }
+        });
+        
+        DEPT_MAPPING = newMapping;
+        localStorage.setItem('yz_dept_mapping', JSON.stringify(DEPT_MAPPING));
+        toast('✅ 关联配置已保存');
+        
+        // 重新渲染界面以显示已保存状态
+        setTimeout(() => {
+            renderMapping();
+        }, 500);
+    } catch (e) {
+        console.error('保存关联配置失败:', e);
+        toast('❌ 保存失败：' + e.message);
+    }
+}
+
+// 渲染关联管理界面
+function renderMapping() {
+    const container = document.getElementById('mapping-container');
+    if (!container) return;
+    
+    // 确保已加载关联配置
+    if (Object.keys(DEPT_MAPPING).length === 0) {
+        loadMapping();
+    }
+    
+    // 获取所有可能的周数据部门
+    const weekDepts = Object.keys(DEPT_NAMES).filter(dept => 
+        !['other'].includes(dept) // 排除其他部门
+    );
+    
+    // 获取所有已加载的规划部门
+    const planningDepts = Object.values(PLANNING_DATA).map(item => item.deptCode);
+    const allPlanningDepts = [...new Set([...planningDepts, ...Object.keys(DEPT_NAMES)])];
+    
+    let html = '';
+    
+    // 周数据部门列表
+    weekDepts.forEach(weekDept => {
+        const weekDeptName = DEPT_NAMES[weekDept] || weekDept;
+        const currentMapping = DEPT_MAPPING[weekDept] || [];
+        
+        // 预设建议
+        const presetSuggestions = BUSINESS_RELATIONS[weekDept] || [];
+        
+        html += `
+        <div class="week-dept-section" data-week-dept="${weekDept}">
+            <div class="mapping-header">
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-weight:600;font-size:14px">${weekDeptName}</span>
+                    <span style="font-size:11px;color:var(--ink3);background:var(--s2);padding:2px 6px;border-radius:4px">${weekDept}</span>
+                </div>
+                <div style="font-size:12px;color:var(--ink3);margin-top:4px">
+                    请勾选相关的年度规划部门（可多选）
+                </div>
+            </div>
+            
+            <div class="planning-options" style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:8px">
+        `;
+        
+        // 显示所有可能的规划部门选项
+        allPlanningDepts.forEach(planDept => {
+            const planDeptName = DEPT_NAMES[planDept] || planDept;
+            const isChecked = currentMapping.includes(planDept);
+            const isPreset = presetSuggestions.includes(planDept);
+            const hasPlanning = planningDepts.includes(planDept);
+            
+            html += `
+                <label class="planning-option" style="display:flex;align-items:center;gap:6px;padding:8px;background:${isChecked ? 'var(--s3)' : 'var(--s1)'};border-radius:6px;cursor:pointer;border:1px solid ${isChecked ? 'var(--ink3)' : 'var(--bd2)'}">
+                    <input type="checkbox" value="${planDept}" ${isChecked ? 'checked' : ''} 
+                        onchange="updateMappingPreview()"
+                        style="margin:0">
+                    <span style="flex:1;font-size:13px">${planDeptName}</span>
+                    ${isPreset ? '<span style="font-size:10px;color:var(--A);background:var(--s2);padding:1px 4px;border-radius:3px">建议</span>' : ''}
+                    ${hasPlanning ? '<span style="font-size:10px;color:var(--G);background:var(--s2);padding:1px 4px;border-radius:3px">已加载</span>' : ''}
+                </label>
+            `;
+        });
+        
+        html += `
+            </div>
+            
+            <div class="mapping-preview" style="margin-top:12px;font-size:12px;color:var(--ink3);display:${currentMapping.length > 0 ? 'block' : 'none'};">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                    <span style="font-weight:500">当前关联：</span>
+                    ${currentMapping.map(p => `<span style="background:var(--s2);padding:2px 6px;border-radius:4px">${DEPT_NAMES[p] || p}</span>`).join('')}
+                </div>
+            </div>
+            
+            ${presetSuggestions.length > 0 ? `
+            <div class="preset-suggestions" style="margin-top:12px;font-size:11px;color:var(--ink3);background:var(--s2);padding:8px;border-radius:6px;">
+                <span style="display:block;margin-bottom:4px">💡 业务关联建议：</span>
+                ${presetSuggestions.map(p => `<span style="background:white;padding:1px 4px;border-radius:3px;margin-right:4px">${DEPT_NAMES[p] || p}</span>`).join('')}
+            </div>
+            ` : ''}
+            
+            <div style="height:1px;background:var(--bd2);margin:20px 0"></div>
+        </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    // 如果没有已加载的规划文件，显示提示
+    if (planningDepts.length === 0) {
+        const info = document.createElement('div');
+        info.innerHTML = `
+            <div style="text-align:center;padding:20px;color:var(--ink3);font-size:13px">
+                <div style="margin-bottom:8px">📝 尚未加载任何年度规划文件</div>
+                <div style="font-size:12px">请先点击导航栏的"规划管理" → "📂 加载年度规划文件"</div>
+            </div>
+        `;
+        container.insertBefore(info, container.firstChild);
+    }
+}
+
+// 更新映射预览
+function updateMappingPreview() {
+    // 这个函数会在复选框状态改变时被调用
+    // 这里可以添加实时预览更新的逻辑，但现在先留空
+}
+
+// 获取关联的规划数据
+function getMappedPlanningData(weekDept) {
+    const mapping = DEPT_MAPPING[weekDept];
+    if (!mapping || mapping.length === 0) {
+        return null; // 没有关联配置
+    }
+    
+    const relatedPlans = [];
+    mapping.forEach(planDept => {
+        if (PLANNING_DATA[planDept]) {
+            relatedPlans.push(PLANNING_DATA[planDept]);
+        }
+    });
+    
+    return relatedPlans.length > 0 ? relatedPlans : null;
+}
+
+// 在页面加载时初始化关联配置
+window.addEventListener('DOMContentLoaded', () => {
+    loadMapping();
+});
+
 
 // ══════════════════════════════════════════
 // 文件操作
@@ -929,6 +1407,35 @@ function buildSummary(d) {
   const bizDepts = ['tmall','jd','pdd','douyin','live'];
   const isBiz = bizDepts.includes(d.dept);
 
+  // 检查是否有年度规划数据可用（精确匹配）
+  const planning = PLANNING_DATA[d.dept];
+  const hasPlanning = !!planning;
+  const planningSummary = hasPlanning ? planning.summary : null;
+  
+  // 检查是否有通过关联管理的规划数据
+  const mappedPlanning = getMappedPlanningData(d.dept);
+  const hasMappedPlanning = !!mappedPlanning && mappedPlanning.length > 0;
+  
+  // 构建规划文本
+  let planningText = '';
+  if (hasPlanning) {
+    planningText = `
+📋 年度规划摘要（来自文件：${planning.filename}）：
+${planningSummary}
+
+基于上述年度规划，请参考以下内容进行对照分析：`;
+  } else if (hasMappedPlanning) {
+    // 显示关联的规划数据
+    planningText = `
+📋 关联年度规划摘要（基于部门关联配置）：
+
+`;
+    mappedPlanning.forEach((item, index) => {
+      planningText += `【${item.deptName}】\n${item.summary}\n\n`;
+    });
+    planningText += `基于上述关联部门的年度规划，请综合分析对${d.deptName}工作的指导意义：`;
+  }
+
   // 找出异常指标（环比变化超过±20%）
   const anomalies = d.metrics.filter(m => {
     if (!m.deltaRate) return false;
@@ -973,23 +1480,69 @@ function buildSummary(d) {
   // 判断是否有实际数据
   const hasData = d.metrics.length > 0 || d.subGroups.length > 0;
   const noDataNote = !hasData
-    ? '\n【本部门本周无数字指标数据】\n文件名：' + (d.filename || d.deptName) + '\n请从文件名判断部门性质，对照知识库中对应部门的Q2规划进行实质性分析。\n重点回答：①该部门Q2（4-6月）最关键的3项工作 ②本周是否应有推进或交付 ③给出具体可执行的下周工作建议'
+    ? '\n【本部门本周无数字指标数据】\n文件名：' + (d.filename || d.deptName) + '\n' + (hasPlanning || hasMappedPlanning
+      ? '已检测到该部门的相关年度规划文件，请基于实际规划内容进行分析。\n重点回答：①该部门Q2（4-6月）最关键的3项工作 ②本周是否应有推进或交付 ③给出具体可执行的下周工作建议'
+      : '请从文件名判断部门性质，对照知识库中对应部门的Q2规划进行实质性分析。\n重点回答：①该部门Q2（4-6月）最关键的3项工作 ②本周是否应有推进或交付 ③给出具体可执行的下周工作建议')
     : '';
 
-  return `【${deptType}】${d.deptName}（文件：${d.filename||''}），数据周期：${d.curWeek||'本周（2026年Q2）'}
+  // 构建最终提示词
+  let prompt = `【${deptType}】${d.deptName}（文件：${d.filename||''}），数据周期：${d.curWeek||'本周（2026年Q2）'}`;
+
+  // 如果有规划数据（精确或关联），添加规划摘要
+  if (hasPlanning || hasMappedPlanning) {
+    prompt += `
+    
+${planningText}`;
+  }
+
+  prompt += `
 
 核心指标：${m||'（无数字数据）'}
 ${sg ? '各账号/分组：' + sg : ''}
 ${rk ? '店铺排名：' + rk : ''}
 ${anomalyText}
-${noDataNote}
+${noDataNote}`;
 
-请按要求进行专业分析。${isBiz
-  ? '重点针对异常指标给出原因分析和可执行的排查优化方案。'
-  : hasData
-    ? '结合部门职能和年度规划知识库评估本周工作质量、进度和风险。'
-    : '重要：本部门无数字数据，请完全基于年度规划知识库，分析该部门在Q2应推进的重点工作，并给出具体可执行的工作建议。不要输出"数据缺失"相关内容，而是给出有价值的规划对照分析。'
-}`;
+  // 分析指导部分
+  let analysisGuidance = '';
+  if (isBiz) {
+    analysisGuidance = '重点针对异常指标给出原因分析和可执行的排查优化方案。';
+  } else if (hasData) {
+    analysisGuidance = '结合部门职能和年度规划知识库评估本周工作质量、进度和风险。';
+  } else {
+    analysisGuidance = '重要：本部门无数字数据，请完全基于年度规划知识库，分析该部门在Q2应推进的重点工作，并给出具体可执行的工作建议。不要输出"数据缺失"相关内容，而是给出有价值的规划对照分析。';
+  }
+
+  // 如果有规划数据（精确或关联），增强分析指导
+  if (hasPlanning || hasMappedPlanning) {
+    if (isBiz) {
+      analysisGuidance = '重点针对异常指标给出原因分析和可执行的排查优化方案，并结合年度规划评估业务方向一致性。';
+    } else if (hasData) {
+      analysisGuidance = '结合部门职能、实际数据和年度规划内容进行综合分析，评估本周工作对规划目标的贡献度和风险。';
+    } else {
+      analysisGuidance = '基于已加载的年度规划内容，分析该部门在Q2应推进的重点工作，并给出具体可执行的工作建议。参考规划摘要中的关键目标和工作计划。';
+    }
+  }
+
+  prompt += `
+
+请按要求进行专业分析。${analysisGuidance}`;
+
+  // 如果有规划数据且无数据，添加特殊指示
+  if ((hasPlanning || hasMappedPlanning) && !hasData) {
+    prompt += `
+
+特别提示：已提供该部门' + (hasPlanning ? '真实' : '关联') + '的年度规划摘要，请基于实际规划内容进行详细分析，不要提及"知识库"或"假设性规划"。`;
+  }
+
+  // 如果有映射规划数据，添加关联说明
+  if (hasMappedPlanning && !hasPlanning) {
+    prompt += `
+
+📌 关联说明：当前分析基于部门关联配置。${d.deptName}关联到${mappedPlanning.length}个规划部门，请综合参考这些部门的规划目标进行分析。`;
+  }
+
+  return prompt;
 }
 
 // ══════════════════════════════════════════
