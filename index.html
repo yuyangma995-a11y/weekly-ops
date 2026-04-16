@@ -1339,7 +1339,114 @@ async function parseExcel(file) {
   const wb   = XLSX.read(buf, {type:'array',cellFormula:false,cellDates:false});
   const ws   = wb.Sheets[wb.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(ws, {header:1,defval:null,raw:true});
+  // 识别任务清单格式（第1行包含"待办事件"/"任务名"/"事项"字样）
+  const header0 = rows[0] ? String(rows[0][0]||'') : '';
+  if (/待办|任务|事项|盯盘/.test(header0) || /待办|任务|盯盘/.test(file.name)) {
+    return buildTaskData(rows, file.name);
+  }
   return buildDeptData(rows, detectDept(file.name), file.name);
+}
+
+// ── 任务清单解析器（盯盘跟进表格式）──
+function buildTaskData(rows, filename) {
+  // 表头：待办事件(0) 登记日期(1) 盯盘类型(2) 负责人(3) 部门(4) 进度(5) 截止日期(6) 完成时间(7) 剩余时间(8) 说明(9)
+  const header = rows[0] || [];
+  const colIdx = {};
+  header.forEach((h, i) => {
+    if (!h) return;
+    const s = String(h).trim();
+    if (s.includes('待办') || s.includes('事件') || s.includes('任务')) colIdx.task = i;
+    else if (s.includes('部门')) colIdx.dept = i;
+    else if (s.includes('负责人') || s.includes('责任人')) colIdx.owner = i;
+    else if (s.includes('进度') || s.includes('状态')) colIdx.status = i;
+    else if (s.includes('截止')) colIdx.due = i;
+    else if (s.includes('完成时间')) colIdx.doneAt = i;
+    else if (s.includes('剩余') || s.includes('剩余时间')) colIdx.remain = i;
+    else if (s.includes('说明') || s.includes('完成情况')) colIdx.note = i;
+  });
+  // 默认列序
+  if (colIdx.task === undefined)   colIdx.task = 0;
+  if (colIdx.dept === undefined)   colIdx.dept = 4;
+  if (colIdx.owner === undefined)  colIdx.owner = 3;
+  if (colIdx.status === undefined) colIdx.status = 5;
+  if (colIdx.due === undefined)    colIdx.due = 6;
+  if (colIdx.doneAt === undefined) colIdx.doneAt = 7;
+  if (colIdx.remain === undefined) colIdx.remain = 8;
+  if (colIdx.note === undefined)   colIdx.note = 9;
+
+  const today = new Date('2026-04-16');
+  const weekStart = new Date('2026-04-10');
+
+  // 按部门聚合
+  const deptMap = {};
+  for (let ri = 1; ri < rows.length; ri++) {
+    const row = rows[ri];
+    if (!row || !row.length) continue;
+    const task   = row[colIdx.task]  ? String(row[colIdx.task]).trim()  : '';
+    const dept   = row[colIdx.dept]  ? String(row[colIdx.dept]).trim()  : '';
+    const owner  = row[colIdx.owner] ? String(row[colIdx.owner]).trim() : '';
+    const status = row[colIdx.status]? String(row[colIdx.status]).trim(): '';
+    const remain = row[colIdx.remain]? String(row[colIdx.remain]).trim(): '';
+    const note   = row[colIdx.note]  ? String(row[colIdx.note]).trim()  : '';
+    const doneAt = row[colIdx.doneAt];
+    if (!dept || !task) continue;
+
+    // 只取单一部门（跳过多部门联合行如"3 品牌部,6 抖音平台"）
+    if (dept.includes(',')) continue;
+
+    if (!deptMap[dept]) deptMap[dept] = { inprog:[], overdue:[], doneThisWeek:[], pending:[] };
+    const shortOwner = owner.split('-')[0].trim();
+
+    if (status.includes('已完成')) {
+      let doneDate = null;
+      if (doneAt) {
+        try { doneDate = doneAt instanceof Date ? doneAt : new Date(String(doneAt)); } catch(e){}
+      }
+      if (doneDate && doneDate >= weekStart) {
+        deptMap[dept].doneThisWeek.push(task.slice(0,25) + '（' + shortOwner + '）');
+      }
+    } else if (status.includes('进行中')) {
+      if (remain.includes('延期') || remain.includes('❗')) {
+        const days = remain.replace(/[^0-9]/g,'') || '?';
+        deptMap[dept].overdue.push(task.slice(0,30) + '（' + shortOwner + '，延期' + days + '天）');
+      } else {
+        deptMap[dept].inprog.push(task.slice(0,30) + '（' + shortOwner + '，' + remain + '）');
+      }
+    } else if (remain.includes('待排期')) {
+      deptMap[dept].pending.push(task.slice(0,25));
+    }
+  }
+
+  // 将部门数据聚合成一个结果，带 tasksByDept 字段供 buildSummary 使用
+  const deptNames = Object.keys(deptMap);
+  const result = {
+    dept: 'taskboard',
+    deptName: filename.replace(/\.xlsx?$|\.csv$/i,'').replace('_副本',''),
+    filename,
+    curWeek: '4.10-4.16',
+    prevWeek: null,
+    metrics: [],
+    subGroups: [],
+    rankData: [],
+    tasksByDept: deptMap,
+    isTaskBoard: true,
+    _taskSummary: buildTaskSummaryText(deptMap)
+  };
+  return result;
+}
+
+function buildTaskSummaryText(deptMap) {
+  const lines = [];
+  for (const [dept, d] of Object.entries(deptMap)) {
+    const total = d.inprog.length + d.overdue.length;
+    if (total === 0 && d.doneThisWeek.length === 0) continue;
+    let line = dept + '：';
+    if (d.overdue.length) line += '⚠延期' + d.overdue.length + '项（' + d.overdue.slice(0,2).join(' / ') + '）；';
+    if (d.inprog.length)  line += '进行中' + d.inprog.length + '项（' + d.inprog.slice(0,2).join(' / ') + '）；';
+    if (d.doneThisWeek.length) line += '本周完成（' + d.doneThisWeek.slice(0,2).join(' / ') + '）';
+    lines.push(line);
+  }
+  return lines.join('\n');
 }
 function buildDeptData(rows, dept, filename) {
   const r = { dept, deptName:DEPT_NAMES[dept]||filename, filename, curWeek:null, prevWeek:null, metrics:[], subGroups:[], rankData:[] };
@@ -1541,6 +1648,12 @@ metrics最多4条，findings最多5条，suggestions最多4条。严格要求：
 }
 
 function buildSummary(d) {
+  // 任务清单（盯盘跟进表）特殊处理
+  if (d.isTaskBoard && d._taskSummary) {
+    return '【公司盯盘跟进表】本周各部门任务进展（2026年第16周）：\n' + d._taskSummary + 
+      '\n\n请基于以上各部门任务进展，结合公司年度规划知识库，逐部门分析：①进行中任务是否符合Q2规划方向 ②延期任务的风险影响 ③下周各部门优先事项建议。输出整体盯盘报告。';
+  }
+
   const bizDepts = ['tmall','jd','pdd','douyin','live'];
   const isBiz = bizDepts.includes(d.dept);
 
@@ -1696,6 +1809,33 @@ function renderReport(ai,d) {
   var ragRaw = (ai.rag||'g').toLowerCase().trim();
   var rag = ['r','a','g'].includes(ragRaw) ? ragRaw : 'g';
   var h = '<div class="rcard">';
+  
+  // 任务清单额外渲染：在 AI 结论后插入各部门任务明细
+  var taskDetailHtml = '';
+  if (d.isTaskBoard && d.tasksByDept) {
+    var depts = Object.keys(d.tasksByDept);
+    taskDetailHtml = '<div class="sh">各部门本周任务明细</div>';
+    depts.forEach(function(dept) {
+      var dd = d.tasksByDept[dept];
+      if (!dd.inprog.length && !dd.overdue.length && !dd.doneThisWeek.length) return;
+      var ragColor = dd.overdue.length > 2 ? 'var(--R)' : dd.overdue.length > 0 ? 'var(--A)' : 'var(--G)';
+      taskDetailHtml += '<div style="margin-bottom:12px;padding:12px 14px;background:var(--s2);border-radius:8px;border-left:3px solid '+ragColor+'">';
+      taskDetailHtml += '<div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:8px">'+dept+'</div>';
+      if (dd.overdue.length) {
+        taskDetailHtml += '<div style="font-size:11px;color:var(--R);margin-bottom:4px">⚠ 延期（'+dd.overdue.length+'项）：';
+        taskDetailHtml += dd.overdue.slice(0,3).join(' · ') + '</div>';
+      }
+      if (dd.inprog.length) {
+        taskDetailHtml += '<div style="font-size:11px;color:var(--ink2);margin-bottom:4px">进行中（'+dd.inprog.length+'项）：';
+        taskDetailHtml += dd.inprog.slice(0,3).join(' · ') + '</div>';
+      }
+      if (dd.doneThisWeek.length) {
+        taskDetailHtml += '<div style="font-size:11px;color:var(--G)">✓ 本周完成：';
+        taskDetailHtml += dd.doneThisWeek.slice(0,3).join(' · ') + '</div>';
+      }
+      taskDetailHtml += '</div>';
+    });
+  }
   h += '<div class="rcard-head">';
   h += '<div><div class="rcard-title">'+d.deptName+'</div>';
   h += '<div class="rcard-wk">'+(d.curWeek||'')+'</div></div>';
@@ -1807,6 +1947,7 @@ function renderReport(ai,d) {
     h += '</div>';
   }
 
+  if (taskDetailHtml) h += taskDetailHtml;
   h += '</div>';
   return h;
 }
