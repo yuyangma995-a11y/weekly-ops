@@ -387,11 +387,7 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
   <div class="ask-wrap" id="ask-wrap">
     <div class="ask-context" id="ask-context">💡 正在基于本周报告数据回答你的问题</div>
     <div class="ask-tips" id="ask-tips">
-      <button class="ask-tip" onclick="sendTip(this)">帮我写一封给负责人的跟进邮件</button>
-      <button class="ask-tip" onclick="sendTip(this)">把本周红灯部门问题汇总发给老板</button>
-      <button class="ask-tip" onclick="sendTip(this)">当前选中部门下周应该优先做什么</button>
-      <button class="ask-tip" onclick="sendTip(this)">这个问题的根本原因是什么</button>
-      <button class="ask-tip" onclick="sendTip(this)">帮我生成一个简短的会议议题</button>
+      <!-- 快捷按钮由 showRpt() 动态生成 -->
     </div>
     <div class="ask-history" id="ask-history"></div>
     <div class="ask-input-row">
@@ -434,7 +430,7 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
       <textarea class="ask-input" id="ask-input-ov" placeholder="针对全公司经营情况追问..." rows="1"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAskOv()}"
         oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
-      <button class="ask-send" onclick="sendAskOv()">发送</button>
+      <button class="ask-send" id="ask-send-ov" onclick="sendAskOv()">发送</button>
     </div>
   </div>
 </div>
@@ -1991,15 +1987,15 @@ async function sendOvAsk() {
 }
 
 async function sendAsk() {
-  var input = document.getElementById('ask-input');
+  var input   = document.getElementById('ask-input');
+  var history = document.getElementById('ask-history');
+  var sendBtn = document.getElementById('ask-send');
+  if (!input || !history) return;   // 元素不存在时直接退出
   var q = input.value.trim();
   if (!q) return;
-  var sendBtn = document.getElementById('ask-btn');
-  sendBtn.disabled = true;
+  if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = '发送中...'; }
   input.value = '';
   input.style.height = 'auto';
-
-  var history = document.getElementById('ask-history');
   // 显示用户问题
   history.innerHTML += '<div class="ask-bubble"><div class="ask-q"><span class="ask-q-label">你</span><span class="ask-q-text">'+q+'</span></div><div class="ask-a"><span class="ask-a-label">AI</span><span class="ask-a-text ask-a-loading" id="ask-loading">思考中...</span></div></div>';
   history.scrollTop = history.scrollHeight;
@@ -2034,18 +2030,21 @@ async function sendAsk() {
     }
   }
   history.scrollTop = history.scrollHeight;
-  sendBtn.disabled = false;
-  input.focus();
+  if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = '发送'; }
+  if (input) input.focus();
 }
 
 async function sendAskOv() {
-  var input = document.getElementById('ask-input-ov');
+  var input   = document.getElementById('ask-input-ov');
+  var history = document.getElementById('ask-history-ov');
+  var sendBtnOv = document.getElementById('ask-send-ov');
+  if (!input || !history) return;   // 元素不存在时直接退出
   var q = input.value.trim();
   if (!q) return;
+  if (sendBtnOv) { sendBtnOv.disabled = true; sendBtnOv.textContent = '发送中...'; }
   input.value = '';
   input.style.height = 'auto';
 
-  var history = document.getElementById('ask-history-ov');
   history.innerHTML += '<div class="ask-bubble"><div class="ask-q"><span class="ask-q-label">你</span><span class="ask-q-text">'+q+'</span></div><div class="ask-a"><span class="ask-a-label">AI</span><span class="ask-a-text ask-a-loading" id="ask-loading-ov">思考中...</span></div></div>';
   history.scrollTop = history.scrollHeight;
 
@@ -2065,6 +2064,8 @@ async function sendAskOv() {
     if (el) { el.className = 'ask-a-text'; el.style.color='var(--R)'; el.textContent = '失败：'+e.message; }
   }
   history.scrollTop = history.scrollHeight;
+  if (sendBtnOv) { sendBtnOv.disabled = false; sendBtnOv.textContent = '发送'; }
+  if (input) input.focus();
 }
 
 // ══════════════════════════════════════════
