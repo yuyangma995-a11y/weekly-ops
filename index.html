@@ -602,6 +602,61 @@ function detectDept(fn) {
   return 'other';
 }
 
+// 判断是否为排名数据
+function isRankData(label) {
+  if (!label || typeof label !== 'string') return false;
+  
+  const lcLabel = label.toLowerCase();
+  
+  // 排除业务指标关键词 - 这些绝对不是排名数据
+  const businessKeywords = [
+    '销售', 'gmv', '金额', '收入', '成交', '访客', '流量', '转化',
+    'uv', 'pv', '客单价', '订单', '支付', '退款', '退货',
+    '成本', '利润', '毛利', '净利', '费用', '预算', '花费'
+  ];
+  
+  // 检查是否包含业务指标关键词（中英文）
+  for (const kw of businessKeywords) {
+    if (lcLabel.includes(kw.toLowerCase())) {
+      return false; // 包含业务关键词，不是排名数据
+    }
+  }
+  
+  // 检查英文业务关键词
+  const englishBusinessKeywords = [
+    'sale', 'revenue', 'income', 'gmv', 'transaction', 'visitor',
+    'traffic', 'conversion', 'order', 'payment', 'refund', 'return',
+    'cost', 'profit', 'margin', 'expense', 'budget', 'spend'
+  ];
+  
+  for (const kw of englishBusinessKeywords) {
+    if (lcLabel.includes(kw)) {
+      return false;
+    }
+  }
+  
+  // 排名数据的关键特征
+  const rankPatterns = [
+    /【.*】/,  // 包含【】符号
+    /排名/,     // 包含"排名"字样
+    /第[一二三四五六七八九十\d]+名/,  // "第X名"格式
+    /top\s*\d+/i,  // "TOP 10"格式
+    /位$/,      // 以"位"结尾
+    /名次/,     // 包含"名次"
+    /rank/i,    // 包含"rank"
+    /position/i // 包含"position"
+  ];
+  
+  // 检查是否匹配排名模式
+  for (const pattern of rankPatterns) {
+    if (pattern.test(label)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 // ══════════════════════════════════════════
 // AI 接口配置
 // ══════════════════════════════════════════
@@ -730,6 +785,155 @@ async function callAI(system, userMsg, maxTokens=900) {
   return isAnthropic
     ? (data.content?.map(i=>i.text||'').join('') || '')
     : (data.choices?.[0]?.message?.content || '');
+}
+
+// ══════════════════════════════════════════
+// JSON 修复工具
+// ══════════════════════════════════════════
+function repairJSON(jsonString) {
+  if (!jsonString || typeof jsonString !== 'string') return jsonString;
+  
+  let fixed = jsonString;
+  
+  // 1. 移除可能包裹的代码块标记
+  fixed = fixed.replace(/```json|```/g, '').trim();
+  
+  // 2. 处理中文引号
+  fixed = fixed.replace(/[“”]/g, '"');
+  fixed = fixed.replace(/[‘’]/g, "'");
+  
+  // 3. 先尝试直接解析，如果成功则直接返回
+  try {
+    JSON.parse(fixed);
+    return fixed;
+  } catch (e) {
+    console.log('JSON 需要修复，原始错误:', e.message);
+  }
+  
+  // 4. 逐步修复常见问题
+  
+  // 4.1 修复字符串内部的未转义双引号
+  // 使用状态机方法，更可靠
+  let result = '';
+  let inString = false;
+  let escapeNext = false;
+  let quoteChar = '';
+  
+  for (let i = 0; i < fixed.length; i++) {
+    const char = fixed[i];
+    
+    if (escapeNext) {
+      result += char;
+      escapeNext = false;
+      continue;
+    }
+    
+    if (char === '\\') {
+      escapeNext = true;
+      result += char;
+      continue;
+    }
+    
+    if (!inString && (char === '"' || char === "'")) {
+      inString = true;
+      quoteChar = char;
+      result += char;
+      continue;
+    }
+    
+    if (inString && char === quoteChar) {
+      inString = false;
+      quoteChar = '';
+      result += char;
+      continue;
+    }
+    
+    if (inString && char === '"' && quoteChar === '"') {
+      // 字符串内部未转义的双引号，需要转义
+      result += '\\"';
+    } else if (inString && char === "'" && quoteChar === "'") {
+      // 字符串内部未转义的单引号，需要转义
+      result += "\\'";
+    } else {
+      result += char;
+    }
+  }
+  
+  fixed = result;
+  
+  // 4.2 修复尾随逗号
+  fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
+  
+  // 4.3 修复缺少逗号的情况
+  fixed = fixed.replace(/}(\s*")/g, '},$1');
+  fixed = fixed.replace(/}(\s*{)/g, '},$1');
+  fixed = fixed.replace(/](\s*")/g, '],$1');
+  fixed = fixed.replace(/](\s*{)/g, '],$1');
+  
+  // 4.4 修复未闭合的括号
+  const openBraces = (fixed.match(/{/g) || []).length;
+  const closeBraces = (fixed.match(/}/g) || []).length;
+  if (openBraces > closeBraces) {
+    fixed = fixed + '}'.repeat(openBraces - closeBraces);
+  }
+  
+  const openBrackets = (fixed.match(/\[/g) || []).length;
+  const closeBrackets = (fixed.match(/\]/g) || []).length;
+  if (openBrackets > closeBrackets) {
+    fixed = fixed + ']'.repeat(openBrackets - closeBrackets);
+  }
+  
+  // 4.5 移除控制字符（不在字符串内的）
+  // 再次使用状态机保护字符串内容
+  result = '';
+  inString = false;
+  escapeNext = false;
+  
+  for (let i = 0; i < fixed.length; i++) {
+    const char = fixed[i];
+    const code = char.charCodeAt(0);
+    
+    if (escapeNext) {
+      result += char;
+      escapeNext = false;
+      continue;
+    }
+    
+    if (char === '\\') {
+      escapeNext = true;
+      result += char;
+      continue;
+    }
+    
+    if (char === '"') {
+      inString = !inString;
+      result += char;
+      continue;
+    }
+    
+    if (!inString && (code <= 0x1F || (code >= 0x7F && code <= 0x9F))) {
+      // 控制字符，不在字符串内，移除
+      continue;
+    }
+    
+    result += char;
+  }
+  
+  fixed = result;
+  
+  // 5. 最终尝试解析
+  try {
+    JSON.parse(fixed);
+    console.log('JSON 修复成功');
+    return fixed;
+  } catch (e) {
+    console.warn('JSON 修复失败:', e.message);
+    // 返回最基础的清理版本
+    return jsonString.replace(/```json|```/g, '').trim()
+      .replace(/[“”]/g, '"')
+      .replace(/[‘’]/g, "'")
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+  }
 }
 
 // ══════════════════════════════════════════
@@ -1297,7 +1501,7 @@ function buildDeptData(rows, dept, filename) {
       const drRaw=sp.dr!==undefined?cleanVal(row[sp.dr]):null;
       const comp=sp.comp!==undefined?cleanVal(row[sp.comp]):null;
       const tgt=sp.tgt!==undefined?cleanVal(row[sp.tgt]):null;
-      const isRank=(label.includes('【')&&label.includes('】'))||(label.includes('排名')&&!label.includes('类目')&&!label.includes('品牌'));
+      const isRank = isRankData(label);
       if (isRank) {
         r.rankData.push({label,curVal:cv!==null?String(cv):null,prevVal:pv!==null?String(pv):null,delta:sp.dv!==undefined?String(cleanVal(row[sp.dv])||''):null});
         continue;
@@ -1407,14 +1611,8 @@ metrics最多4条，findings最多5条，suggestions最多4条。`,
         1500
       );
       const cleaned = text.replace(/```json|```/g,'').trim();
-      // 尝试修复常见的JSON格式问题：中文引号、未转义的控制字符
-      let fixed = cleaned;
-      // 将中文引号替换为英文引号
-      fixed = fixed.replace(/[“”]/g, '"');
-      // 将中文单引号替换为英文单引号
-      fixed = fixed.replace(/[‘’]/g, "'");
-      // 移除JSON字符串外的控制字符
-      fixed = fixed.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+      // 使用增强的 JSON 修复函数
+      const fixed = repairJSON(cleaned);
       
       try {
         const json = JSON.parse(fixed);
