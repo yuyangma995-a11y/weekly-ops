@@ -201,6 +201,53 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 .sp-bar{width:100%;border-radius:3px 3px 0 0;background:var(--bd2);min-height:4px}
 .sp-bar.cur{background:var(--ink)}
 .sp-wk{font-size:10px;color:var(--ink3)}
+/* 追问框 */
+.ask-box{background:var(--sf);border:.5px solid var(--bd);border-radius:12px;padding:18px 20px;margin-top:14px}
+.ask-label{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ask-label-icon{width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--sf);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.ask-input-row{display:flex;gap:8px;align-items:flex-end}
+.ask-textarea{flex:1;font-size:13px;padding:9px 12px;border:.5px solid var(--bd2);border-radius:8px;background:var(--s2);color:var(--ink);font-family:inherit;resize:none;min-height:42px;max-height:120px;outline:none;line-height:1.5;transition:border-color .15s}
+.ask-textarea:focus{border-color:var(--ink);background:var(--sf)}
+.ask-send{font-size:12px;padding:9px 16px;border-radius:8px;border:none;background:var(--ink);color:var(--sf);cursor:pointer;font-family:inherit;font-weight:500;white-space:nowrap;transition:opacity .15s;flex-shrink:0}
+.ask-send:hover{opacity:.82}
+.ask-send:disabled{opacity:.4;cursor:not-allowed}
+.ask-presets{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.ask-preset{font-size:11px;padding:4px 10px;border-radius:20px;border:.5px solid var(--bd2);background:transparent;color:var(--ink3);cursor:pointer;font-family:inherit;transition:all .15s}
+.ask-preset:hover{background:var(--s2);color:var(--ink);border-color:var(--bd2)}
+.ask-history{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.ask-q{font-size:12.5px;color:var(--ink2);background:var(--s2);padding:8px 12px;border-radius:8px;line-height:1.6}
+.ask-q-label{font-size:11px;color:var(--ink3);margin-bottom:3px;font-weight:500}
+.ask-a{font-size:12.5px;color:var(--ink);line-height:1.7;white-space:pre-wrap;padding:10px 14px;border-left:3px solid var(--bd2);margin-top:2px}
+.ask-a-loading{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink3);padding:10px 0}
+.ask-a-dot{width:6px;height:6px;border-radius:50%;background:var(--ink3);animation:ask-pulse 1.2s ease-in-out infinite}
+.ask-a-dot:nth-child(2){animation-delay:.2s}
+.ask-a-dot:nth-child(3){animation-delay:.4s}
+@keyframes ask-pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+
+/* 追问框 */
+.ask-wrap{margin-top:20px;background:var(--sf);border:.5px solid var(--bd);border-radius:12px;overflow:hidden}
+.ask-history{max-height:320px;overflow-y:auto;padding:0}
+.ask-bubble{padding:12px 16px;border-bottom:.5px solid var(--bd)}
+.ask-bubble:last-child{border-bottom:none}
+.ask-q{display:flex;gap:8px;align-items:flex-start;margin-bottom:0}
+.ask-q-label{font-size:11px;font-weight:600;color:var(--B);white-space:nowrap;margin-top:2px}
+.ask-q-text{font-size:13px;color:var(--ink);line-height:1.6}
+.ask-a{margin-top:8px;display:flex;gap:8px;align-items:flex-start}
+.ask-a-label{font-size:11px;font-weight:600;color:var(--G);white-space:nowrap;margin-top:2px}
+.ask-a-text{font-size:13px;color:var(--ink2);line-height:1.7;white-space:pre-wrap;flex:1}
+.ask-a-loading{font-size:13px;color:var(--ink3);animation:blink 1s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.ask-input-row{display:flex;gap:8px;padding:12px 16px;border-top:.5px solid var(--bd);background:var(--s2)}
+.ask-input{flex:1;font-size:13px;padding:9px 12px;border:.5px solid var(--bd2);border-radius:8px;background:var(--sf);color:var(--ink);font-family:inherit;outline:none;resize:none;min-height:40px;max-height:120px;line-height:1.5}
+.ask-input:focus{border-color:var(--ink)}
+.ask-send{font-size:13px;padding:9px 18px;border-radius:8px;border:none;background:var(--ink);color:var(--sf);cursor:pointer;font-family:inherit;font-weight:500;white-space:nowrap;flex-shrink:0}
+.ask-send:hover{opacity:.82}
+.ask-send:disabled{opacity:.4;cursor:not-allowed}
+.ask-tips{display:flex;gap:6px;padding:10px 16px;flex-wrap:wrap;border-bottom:.5px solid var(--bd)}
+.ask-tip{font-size:11px;padding:4px 10px;border-radius:20px;border:.5px solid var(--bd2);color:var(--ink3);cursor:pointer;background:transparent;font-family:inherit;transition:all .15s}
+.ask-tip:hover{background:var(--s2);color:var(--ink);border-color:var(--ink3)}
+.ask-context{font-size:11px;color:var(--ink3);padding:8px 16px;border-bottom:.5px solid var(--bd)}
+
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--sf);font-size:13px;padding:10px 20px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.show{opacity:1}
 @media(max-width:640px){
@@ -209,6 +256,28 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
   .mg4,.mg3{grid-template-columns:repeat(2,minmax(0,1fr))}
   .cfg-fields{grid-template-columns:1fr}
 }
+
+/* ─ Chat 追问 ─ */
+.chat-box{margin-top:14px;background:var(--sf);border:.5px solid var(--bd);border-radius:12px;overflow:hidden}
+.chat-header{padding:11px 16px;border-bottom:.5px solid var(--bd);font-size:12px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.chat-header-dot{width:7px;height:7px;border-radius:50%;background:var(--G)}
+.chat-messages{padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-height:0;max-height:420px;overflow-y:auto}
+.chat-messages:empty{display:none}
+.chat-msg{display:flex;gap:8px;align-items:flex-start}
+.chat-msg.user{flex-direction:row-reverse}
+.chat-bubble{font-size:13px;line-height:1.65;padding:9px 13px;border-radius:10px;max-width:85%}
+.chat-msg.user .chat-bubble{background:var(--ink);color:var(--sf);border-radius:10px 10px 2px 10px}
+.chat-msg.ai .chat-bubble{background:var(--s2);color:var(--ink);border-radius:10px 10px 10px 2px;white-space:pre-wrap}
+.chat-msg.ai .chat-bubble.loading{color:var(--ink3);font-style:italic}
+.chat-input-row{display:flex;gap:8px;padding:10px 14px;border-top:.5px solid var(--bd);background:var(--s2)}
+.chat-input{flex:1;font-size:13px;padding:8px 12px;border:.5px solid var(--bd2);border-radius:8px;background:var(--sf);color:var(--ink);font-family:inherit;outline:none;resize:none;min-height:38px;max-height:100px;line-height:1.5}
+.chat-input:focus{border-color:var(--ink)}
+.chat-send{font-size:13px;padding:8px 16px;border-radius:8px;border:none;background:var(--ink);color:var(--sf);cursor:pointer;font-family:inherit;font-weight:500;white-space:nowrap;align-self:flex-end}
+.chat-send:hover{opacity:.82}
+.chat-send:disabled{opacity:.35;cursor:not-allowed}
+.chat-suggestions{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px 0}
+.chat-sug{font-size:11px;padding:4px 10px;border-radius:20px;border:.5px solid var(--bd2);background:transparent;color:var(--ink2);cursor:pointer;font-family:inherit;transition:all .15s}
+.chat-sug:hover{background:var(--s2);color:var(--ink);border-color:var(--ink3)}
 </style>
 </head>
 <body>
@@ -311,6 +380,25 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
   </div>
   <div class="rtabs" id="rtabs"></div>
   <div id="rpt-body"></div>
+
+  <!-- 追问区 -->
+  <div class="ask-wrap" id="ask-wrap">
+    <div class="ask-context" id="ask-context">💡 正在基于本周报告数据回答你的问题</div>
+    <div class="ask-tips" id="ask-tips">
+      <button class="ask-tip" onclick="sendTip(this)">帮我写一封给负责人的跟进邮件</button>
+      <button class="ask-tip" onclick="sendTip(this)">把本周红灯部门问题汇总发给老板</button>
+      <button class="ask-tip" onclick="sendTip(this)">当前选中部门下周应该优先做什么</button>
+      <button class="ask-tip" onclick="sendTip(this)">这个问题的根本原因是什么</button>
+      <button class="ask-tip" onclick="sendTip(this)">帮我生成一个简短的会议议题</button>
+    </div>
+    <div class="ask-history" id="ask-history"></div>
+    <div class="ask-input-row">
+      <textarea class="ask-input" id="ask-input" placeholder="针对报告内容追问 AI，如：天猫销售额下降的原因分析、帮我写跟进邮件..." rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAsk()}"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+      <button class="ask-send" id="ask-send" onclick="sendAsk()">发送</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ OVERVIEW PAGE ═══ -->
@@ -328,6 +416,25 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
   <div class="sh">本周待决策事项</div>
   <div class="decs" id="decs"></div>
   <div id="opening-area"></div>
+  <div id="ov-ask-area"></div>
+
+  <!-- 总览页追问区 -->
+  <div class="ask-wrap" id="ask-wrap-ov" style="margin-top:20px">
+    <div class="ask-context">💡 基于本周全公司经营数据回答问题</div>
+    <div class="ask-tips">
+      <button class="ask-tip" onclick="sendTipOv(this)">生成本周经营简报（200字以内）</button>
+      <button class="ask-tip" onclick="sendTipOv(this)">帮我列出本周周会的议程</button>
+      <button class="ask-tip" onclick="sendTipOv(this)">哪个部门最需要老板今天关注</button>
+      <button class="ask-tip" onclick="sendTipOv(this)">下周公司层面最重要的3件事</button>
+    </div>
+    <div class="ask-history" id="ask-history-ov"></div>
+    <div class="ask-input-row">
+      <textarea class="ask-input" id="ask-input-ov" placeholder="针对全公司经营情况追问..." rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAskOv()}"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+      <button class="ask-send" onclick="sendAskOv()">发送</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ HISTORY PAGE ═══ -->
@@ -747,11 +854,155 @@ async function runAll() {
     steps[i].status='ai'; renderSteps();
     try {
       const text=await callAI(
-        '你是渔之源（钓鱼/户外电商）的经营分析师。只输出合法JSON，不输出任何其他内容。格式：{"rag":"r|a|g","metrics":[{"label":"指标","value":"值","delta":"如+3.2%或null","trend":"up|down|flat"}],"findings":[{"type":"good|warn|risk|action","text":"不超过45字"}],"suggestions":[{"text":"不超过45字"}]}。红灯=完成率<20%或严重异常；黄灯=20-50%或有风险；绿灯=50%+且正常。metrics最多4条，findings最多4条，suggestions最多3条。',
-        buildSummary(d)
+        `你是渔之源（钓鱼/户外用品电商公司）的首席经营分析师，风格直接、专业、有判断力。
+
+你的分析任务和要求：
+
+【业务部门（天猫/京东/拼多多/抖音/直播等电商平台部门）】
+重点关注数据异动，特别是环比变化幅度超过±20%的指标，必须：
+1. 指出具体异常指标和幅度
+2. 给出2-3个可能的原因（结合电商行业规律，如竞品打价格战、季节性波动、活动节点、流量分配变化等）
+3. 给出具体可执行的排查步骤和优化方案（精确到操作层面，如"检查XX链接的投放出价是否被竞品超越"）
+
+【非业务部门（品牌/视频/达人/客服/仓储/财务/HR等）】
+根据填报的工作内容，结合部门职能特性和年度规划对比分析：
+1. 本周工作完成质量和进度评估
+2. 对照年度规划判断是否有偏差、延期或方向性问题
+3. 给出下周的工作重点建议和调整方向
+
+【渔之源公司 2026年度规划知识库】
+
+使用说明：以下是公司各部门2026年度规划目标，按部门整理。
+分析时不要拘泥于部门名称是否完全匹配，应根据工作内容的性质和职能来对照最相关的部门规划。
+例如：上传文件叫"抖音平台"或"6 抖音平台"都对应抖音平台规划；"品牌视频部"对应品牌部+视频中心规划。
+当前时间节点：2026年Q2（4-6月），重点关注Q2规划的执行进度。
+
+【天猫平台】
+年度核心目标：各类目产品布局达成、S/A级重点新品销售额达成；打造类目TOP链接；新品上新率每月不低于2款
+Q1重点：输出S/A级产品推广布局方案；类目年度作战节奏地图；搭建关键词词库；优化基础运营SOP
+Q2重点：618大促策略执行；集中资源打爆S级新品2个以上；利用Q1爆款经验复盘迭代
+Q3重点：下半年新品升级规划；99大促节点布局；店铺流量结构优化
+Q4重点：双11/年货节大促冲刺；全年新品成功率复盘；输出改善建议
+关键指标：销售额达成率、新品上新率、S/A级链接数量、类目排名
+
+【京东平台】
+年度核心目标：POP+自营双线增长；品牌排名提升；推广ROI优化
+Q1重点：京东站内搜索优化；新品上新节奏梳理；POP与自营差异化运营策略
+Q2重点：618大促资源申请与执行；自营新品推广；流量付费占比优化
+Q3重点：秋季大促布局；品类销售趋势跟踪；竞品价格监控
+Q4重点：双11+年货节冲刺；全年数据复盘
+关键指标：POP合计销售额、自营销售额、推广费率、品牌排名、店铺转化率
+
+【拼多多平台】
+年度核心目标：百亿补贴链接运营；多店铺矩阵管理；成本率控制
+Q1重点：百亿补贴链接优化；各店铺销售目标拆解；推广费率优化
+Q2重点：618节点多多进宝布局；店铺主推链接打爆；竞品价格跟踪
+Q3重点：秋季大促布局；新品引流测试
+Q4重点：双11冲刺；年货节备货与推广
+
+【抖音平台】
+年度核心目标：店铺销售净额增长；自然流提升；付费ROI优化；品牌排名提升
+Q1重点：抖音搜索排名优化；直播间配合；主推品选品优化
+Q2重点：618抖音大促节点运营；投流策略优化；自然流内容配合
+Q3重点：秋季大促布局；达人合作放量
+Q4重点：双11+年货节冲刺；店铺品牌形象升级
+
+【达人部】
+年度核心目标：达人带货销售额1755万；新渠道拓展小红书；达人资源库建设
+Q1重点：小红书平台操作流程SOP梳理；达人资源库构建；年框合作达人更替；协同品牌部做好蓄水期种草
+Q2重点：618大促达人放量；小红书平台达人建联增量；水下达人曝光8500万+；星图达人2500万+
+Q3重点：8/9月大物竿上市达人种草；Q3达人爆款外溢流量1575万
+Q4重点：双11+年货节达人蓄水；年框达人规划；全年复盘
+关键指标：达人带货GMV、水下达人曝光量、星图达人曝光量、小红书建联数量
+
+【视频中心】
+年度核心目标：视频产能覆盖100%需求；竞品视频分析报告每季1份；工作流优化标准化
+Q1重点：优化编-拍-剪工作流；确定人员架构（3编导4剪辑5拍摄）；新版岗位SOP产出；第一份竞品视频分析报告
+Q2重点：视频产能评估与架构优化；618大促视频内容生产；新版绩效考核制度
+Q3重点：8/9月大物竿上市视频内容；Q3竞品视频分析报告
+Q4重点：双11视频冲刺；全年视频数据复盘；新增编导评估
+关键指标：视频需求覆盖率、竞品报告产出、工作流SOP完成度
+
+【视觉中心】
+年度核心目标：电商设计产出支撑各平台运营；品牌视觉规范建立；AI设计流程引入
+Q1重点：主图/详情页设计标准化；AI设计工具流程建立；品牌视觉规范输出
+Q2重点：618大促视觉物料生产；三维设计能力建设
+Q3重点：秋季新品视觉支撑；竞品视觉分析
+Q4重点：年底大促视觉冲刺；年度视觉风格复盘
+关键指标：设计交付件数、交付及时率、AI工具覆盖率
+
+【财务中心】
+年度核心目标：财务预算覆盖全渠道分品类；月报出具准确及时率100%；深度赋能业务决策
+Q1重点：制定下发《2026年公司总预算》（分渠道分类目）；建立销售额滚动预测机制；每周出具销售完成率预估表
+Q2重点：半年度预算回顾；输出《预算差异分析表》；为第二增长曲线建立独立财务核算
+Q3重点：月度销售预测持续；费用超支预警；成本率分析
+Q4重点：启动2027年预算编制；全年财务复盘；《2026年公司总预算》总结
+关键指标：销售预算达成率、月报及时率100%、预算差异分析准确性
+
+【人力中心】
+年度核心目标：人效目标140万/人；关键岗位招聘达成；绩效体系优化
+Q1重点：关键岗位补招（品牌部文案1人、会员运营1人等）；绩效考核优化落地；员工培训计划
+Q2重点：人才盘点（九宫格模型）；绩效Q1复盘；关键人才梯队建设
+Q3重点：Q2人才盘点结果落地；激励方案执行；招聘持续推进
+Q4重点：年度人才复盘；2027年组织规划；年终绩效结算
+关键指标：人效140万/人、关键岗位填充率、员工满意度、离职率控制
+
+【跨境事业部】
+年度核心目标：跨境销售额1315万；亚马逊/eBay双平台运营；渔具类目BSR排名提升
+Q1重点：渔具类目销售趋势地图；竞品卡斯丁店铺品类拆解；爆款案例库建立；年度销售拆解
+Q2重点：欧美旺季备货；亚马逊广告ACoS优化；海外达人/KOL合作测试；新品Listing优化
+Q3重点：Q3旺季冲刺（欧美钓鱼旺季）；BSR排名提升行动
+Q4重点：年货节跨境布局；2027年选品规划；全年数据复盘
+关键指标：跨境销售额1315万、广告ACoS、BSR排名、新品上架数
+
+【PAA事业部】
+年度核心目标：PAA宠物保健品新项目启动；销售额目标达成；品牌能力从零搭建
+Q1重点：PAA品牌定位方案；产品选品与供应链对接；电商平台店铺搭建
+Q2重点：首批产品上线；天猫/京东店铺运营启动；达人试水合作；品牌内容建设
+Q3重点：主推品打爆测试；销售数据复盘；运营节奏优化
+Q4重点：年底大促冲刺；年度复盘；2027年规划
+关键指标：销售额达成率、新品上线数量、ROI、店铺评分
+
+【品牌部】
+年度核心目标：总曝光6.2亿，精准曝光1.25亿；A3人群总量580万；会员GMV1200万；营销预算400万
+Q1重点（1-3月）：3月S级推广方案落地；总曝光1亿精准3000万；A3人群504万；首购率21%复购率25%；品牌核心人群包搭建；竞品监控表建立
+Q2重点（4-6月）：5月S级新品上新推广；总曝光2.2亿精准4500万；A3人群530万；首购率24%复购率28%；618大促品牌支撑
+Q3重点（7-9月）：8/9月大物竿品牌推广；总曝光2.1亿精准4000万；A3人群555万；首购率27%复购率33%
+Q4重点（10-12月）：年货节品牌活动；总曝光0.9亿精准1000万；A3人群583万；首购率30%复购率35%
+关键指标：曝光量、精准曝光占比、A3人群总量、首购率、复购率、达人曝光量
+
+分析要求：
+①对照本部门年度规划，判断本周工作是否在推进正确方向
+②识别是否有偏离规划、延期或遗漏的重要工作
+③结合当前Q2节点，指出下周最应该聚焦的事项
+
+【输出格式要求】
+只输出合法JSON，不输出任何其他内容，格式如下：
+{
+  "rag": "r|a|g",
+  "summary": "一句话核心结论，直接点出本周最重要的问题或亮点，不超过50字",
+  "metrics": [{"label":"指标名","value":"值","delta":"如+3.2%或null","trend":"up|down|flat"}],
+  "findings": [{"type":"good|warn|risk|action","text":"具体发现，包含数字依据，不超过80字"}],
+  "suggestions": [{"priority":"高|中|低","owner":"建议执行人如运营/负责人/老板","deadline":"如本周内/下周前","text":"具体可执行的建议，说清楚做什么、怎么做，不超过80字"}]
+}
+
+红灯判断标准：核心指标环比下降超30%，或月完成率低于15%，或存在严重风险需老板立即介入
+黄灯判断标准：核心指标环比下降20-30%，或月完成率15-40%，或有潜在风险需关注
+绿灯判断标准：整体正常，核心指标无异常下降，月完成率40%以上
+
+metrics最多4条，findings最多5条，suggestions最多4条。`,
+        buildSummary(d),
+        1500
       );
-      const json=JSON.parse(text.replace(/```json|```/g,'').trim());
-      d._rag=json.rag||'g';
+      const cleaned = text.replace(/```json|```/g,'').trim();
+      const json = JSON.parse(cleaned);
+      // 兼容 DeepSeek 等模型可能返回不同格式
+      if (!json.metrics)    json.metrics    = [];
+      if (!json.findings)   json.findings   = [];
+      if (!json.suggestions)json.suggestions= [];
+      const ragRaw = (json.rag||'g').toLowerCase().trim();
+      d._rag = ['r','a','g'].includes(ragRaw) ? ragRaw : 'g';
+      json.rag = d._rag;
       aiReports[d.dept]=renderReport(json,d);
     } catch(e) {
       d._rag='a'; d._err=e.message;
@@ -769,61 +1020,204 @@ async function runAll() {
 }
 
 function buildSummary(d) {
-  const m=d.metrics.slice(0,6).map(x=>`${x.label}：本周${x.curVal||'—'}`+(x.prevVal?`（上周${x.prevVal}）`:'')+( x.deltaRate?`（环比${x.deltaRate}）`:'')+( x.completion?`（月完成率${x.completion}）`:'')).join('；');
-  const sg=d.subGroups.slice(0,4).map(x=>`${x.account||x.label}/${x.metric||''}：${x.curVal||'—'}${x.completion?'，完成率'+x.completion:''}`).join('；');
-  const rk=d.rankData.slice(0,4).map(x=>`${x.label}第${x.curVal}名${x.delta?'（环比'+x.delta+')':''}`).join('；');
-  return `${d.deptName}本周数据（${d.curWeek||''}）：${m}${sg?'；子账号：'+sg:''}${rk?'；排名：'+rk:''}。请分析经营状况并判断整体状态。`;
+  const bizDepts = ['tmall','jd','pdd','douyin','live'];
+  const isBiz = bizDepts.includes(d.dept);
+
+  // 找出异常指标（环比变化超过±20%）
+  const anomalies = d.metrics.filter(m => {
+    if (!m.deltaRate) return false;
+    const pct = parseFloat(m.deltaRate);
+    return !isNaN(pct) && Math.abs(pct) >= 20;
+  }).map(m => `${m.label}环比${m.deltaRate}（本周${m.curVal}，上周${m.prevVal||'—'}）`);
+
+  const m = d.metrics.slice(0,8).map(x =>
+    `${x.label}：本周${x.curVal||'—'}` +
+    (x.prevVal    ? `（上周${x.prevVal}）`       : '') +
+    (x.deltaRate  ? `（环比${x.deltaRate}）`     : '') +
+    (x.completion ? `（月完成率${x.completion}，目标${x.target||'未知'}）` : '')
+  ).join('；');
+
+  const sg = d.subGroups.slice(0,6).map(x =>
+    `${x.account||x.label}·${x.metric||''}：本周${x.curVal||'—'}` +
+    (x.prevVal    ? `上周${x.prevVal}` : '') +
+    (x.completion ? `完成率${x.completion}` : '') +
+    (x.target     ? `目标${x.target}` : '')
+  ).join('；');
+
+  const rk = d.rankData.slice(0,6).map(x =>
+    `${x.label}：第${x.curVal}名` +
+    (x.prevVal ? `（上周第${x.prevVal}名）` : '') +
+    (x.delta   ? `（变化${x.delta}）` : '')
+  ).join('；');
+
+  const anomalyText = anomalies.length
+    ? `
+⚠ 异常指标（环比变化超±20%，需重点分析）：${anomalies.join('；')}`
+    : '';
+
+  const deptTypeMap = {
+    brand: '品牌部（非业务职能部门，有年度规划参考）',
+    kol: '达人/内容部（非业务职能部门）',
+    cs: '客服部（非业务职能部门）',
+    warehouse: '仓储/供应链部（非业务职能部门）',
+    finance: '财务部（非业务职能部门）',
+    hr: 'HR/行政部（非业务职能部门）',
+    it: 'IT/数据部（非业务职能部门）',
+  };
+  const deptType = isBiz ? '电商业务部门' : (deptTypeMap[d.dept] || '职能支持部门');
+
+  return `【${deptType}】${d.deptName}，数据周期：${d.curWeek||'本周'}
+
+核心指标：${m}
+${sg ? '各账号/分组：' + sg : ''}
+${rk ? '店铺排名：' + rk : ''}
+${anomalyText}
+
+请按要求进行专业分析，${isBiz ? '重点针对异常指标给出原因分析和可执行的排查优化方案' : '结合部门职能评估本周工作质量和风险'}。`;
 }
 
 // ══════════════════════════════════════════
 // 渲染报告
 // ══════════════════════════════════════════
 function renderReport(ai,d) {
-  const rag=ai.rag||'g';
-  let h=`<div class="rcard"><div class="rcard-head"><div><div class="rcard-title">${d.deptName}</div><div class="rcard-wk">${d.curWeek||''}</div></div><span class="rpill ${RAG[rag].cls}">${RAG[rag].label}</span></div>`;
-  const metrics=ai.metrics?.length?ai.metrics:d.metrics.slice(0,4).map(m=>({label:m.label,value:m.curVal||'—',delta:m.deltaRate,trend:m.trend}));
+  var ragRaw = (ai.rag||'g').toLowerCase().trim();
+  var rag = ['r','a','g'].includes(ragRaw) ? ragRaw : 'g';
+  var h = '<div class="rcard">';
+  h += '<div class="rcard-head">';
+  h += '<div><div class="rcard-title">'+d.deptName+'</div>';
+  h += '<div class="rcard-wk">'+(d.curWeek||'')+'</div></div>';
+  h += '<span class="rpill '+RAG[rag].cls+'">'+RAG[rag].label+'</span>';
+  h += '</div>';
+
+  // 核心结论
+  if (ai.summary) {
+    h += '<div style="padding:12px 14px;background:var(--s3);border-radius:8px;margin-bottom:16px;font-size:13px;color:var(--ink);line-height:1.6">';
+    h += '<span style="font-weight:600;margin-right:6px">本周结论</span>';
+    h += ai.summary+'</div>';
+  }
+
+  // 指标卡
+  var metrics = (ai.metrics&&ai.metrics.length) ? ai.metrics : d.metrics.slice(0,4).map(function(m){
+    return {label:m.label, value:m.curVal||'—', delta:m.deltaRate, trend:m.trend};
+  });
   if (metrics.length) {
-    h+=`<div class="mgrid mg${Math.min(metrics.length,4)}">`;
-    metrics.forEach(m=>{const dc=m.trend==='up'?'up':m.trend==='down'?'dn':'fl2';h+=`<div class="mc"><div class="mc-l">${m.label}</div><div class="mc-v">${m.value||'—'}</div>${m.delta&&m.delta!=='null'?`<div class="mc-d ${dc}">${m.delta}</div>`:''}</div>`;});
-    h+='</div>';
+    var n = Math.min(metrics.length,4);
+    h += '<div class="mgrid mg'+n+'">';
+    metrics.forEach(function(m) {
+      var dc = m.trend==='up'?'up':m.trend==='down'?'dn':'fl2';
+      h += '<div class="mc">';
+      h += '<div class="mc-l">'+m.label+'</div>';
+      h += '<div class="mc-v">'+(m.value||'—')+'</div>';
+      if (m.delta && m.delta!=='null') h += '<div class="mc-d '+dc+'">'+m.delta+'</div>';
+      h += '</div>';
+    });
+    h += '</div>';
   }
-  const compMs=d.metrics.filter(m=>m.completion).slice(0,3);
+
+  // 月完成率卡
+  var compMs = d.metrics.filter(function(m){return m.completion;}).slice(0,3);
   if (compMs.length) {
-    h+=`<div class="mgrid mg${Math.min(compMs.length,3)}">`;
-    compMs.forEach(m=>{const pct=parseFloat(m.completion),color=pct<20?'var(--R)':pct<50?'var(--A)':'var(--G)';h+=`<div class="mc"><div class="mc-l">${m.label}·月完成率</div><div class="mc-v" style="color:${color}">${m.completion}</div>${m.target?`<div class="mc-c">目标 ${m.target}</div>`:''}</div>`;});
-    h+='</div>';
+    h += '<div class="mgrid mg'+Math.min(compMs.length,3)+'">';
+    compMs.forEach(function(m) {
+      var pct = parseFloat(m.completion);
+      var color = pct<20?'var(--R)':pct<50?'var(--A)':'var(--G)';
+      h += '<div class="mc">';
+      h += '<div class="mc-l">'+m.label+'·月完成率</div>';
+      h += '<div class="mc-v" style="color:'+color+'">'+m.completion+'</div>';
+      if (m.target) h += '<div class="mc-c">目标 '+m.target+'</div>';
+      h += '</div>';
+    });
+    h += '</div>';
   }
+
+  // 子账号明细
   if (d.subGroups.length) {
-    h+=`<div class="sh">各账号 / 分组明细</div><div class="tscroll"><table class="stbl"><thead><tr><th>账号</th><th>指标</th><th>本周</th><th>上周</th><th>完成率</th><th>目标</th></tr></thead><tbody>`;
-    d.subGroups.slice(0,15).forEach(sg=>{const up=sg.deltaRate?parseFloat(sg.deltaRate)>=0:null;h+=`<tr><td class="td-b">${sg.account||'—'}</td><td style="color:var(--ink3)">${sg.metric||'—'}</td><td>${sg.curVal||'—'}</td><td style="color:var(--ink3)">${sg.prevVal||'—'}</td><td class="${up===true?'up':up===false?'dn':''}">${sg.completion||sg.deltaRate||'—'}</td><td style="color:var(--ink3)">${sg.target||'—'}</td></tr>`;});
-    h+='</tbody></table></div>';
+    h += '<div class="sh">各账号 / 分组明细</div>';
+    h += '<div class="tscroll"><table class="stbl">';
+    h += '<thead><tr><th>账号</th><th>指标</th><th>本周</th><th>上周</th><th>完成率</th><th>目标</th></tr></thead>';
+    h += '<tbody>';
+    d.subGroups.slice(0,15).forEach(function(sg) {
+      var up = sg.deltaRate ? parseFloat(sg.deltaRate)>=0 : null;
+      h += '<tr>';
+      h += '<td class="td-b">'+(sg.account||'—')+'</td>';
+      h += '<td style="color:var(--ink3)">'+(sg.metric||'—')+'</td>';
+      h += '<td>'+(sg.curVal||'—')+'</td>';
+      h += '<td style="color:var(--ink3)">'+(sg.prevVal||'—')+'</td>';
+      h += '<td class="'+(up===true?'up':up===false?'dn':'')+'">'+(sg.completion||sg.deltaRate||'—')+'</td>';
+      h += '<td style="color:var(--ink3)">'+(sg.target||'—')+'</td>';
+      h += '</tr>';
+    });
+    h += '</tbody></table></div>';
   }
+
+  // 排名
   if (d.rankData.length) {
-    h+=`<div class="sh">店铺 / 品牌排名</div><div class="rl">`;
-    d.rankData.forEach(r=>{const dv=r.delta!==null?parseFloat(r.delta):null,dc=dv===null?'':dv>0?'up':dv<0?'dn':'fl2',arrow=dv===null?'':dv>0?'↑':dv<0?'↓':'→';h+=`<div class="ri"><span class="ri-l" title="${r.label}">${r.label}</span><span class="ri-cur">${r.curVal!==null?'第'+r.curVal+'名':'—'}</span><span class="ri-prev">${r.prevVal!==null?'上周 '+r.prevVal:'—'}</span>${dv!==null?`<span class="ri-d ${dc}">${arrow} ${Math.abs(dv)}</span>`:'<span></span>'}</div>`;});
-    h+='</div>';
+    h += '<div class="sh">店铺 / 品牌排名</div><div class="rl">';
+    d.rankData.forEach(function(r) {
+      var dv = r.delta!==null ? parseFloat(r.delta) : null;
+      var dc = dv===null?'':dv>0?'up':dv<0?'dn':'fl2';
+      var arrow = dv===null?'':dv>0?'↑':dv<0?'↓':'→';
+      h += '<div class="ri">';
+      h += '<span class="ri-l" title="'+r.label+'">'+r.label+'</span>';
+      h += '<span class="ri-cur">'+(r.curVal!==null?'第'+r.curVal+'名':'—')+'</span>';
+      h += '<span class="ri-prev">'+(r.prevVal!==null?'上周 '+r.prevVal:'—')+'</span>';
+      if (dv!==null) h += '<span class="ri-d '+dc+'">'+arrow+' '+Math.abs(dv)+'</span>';
+      h += '</div>';
+    });
+    h += '</div>';
   }
-  if (ai.findings?.length) {
-    h+=`<div class="sh">关键发现</div><div class="fds">`;
-    ai.findings.forEach(f=>{h+=`<div class="fd ${f.type||'action'}"><span class="fd-txt">${f.text}</span></div>`;});
-    h+='</div>';
+
+  // 关键发现
+  if (ai.findings&&ai.findings.length) {
+    h += '<div class="sh">关键发现</div><div class="fds">';
+    ai.findings.forEach(function(f) {
+      h += '<div class="fd '+(f.type||'action')+'"><span class="fd-txt">'+f.text+'</span></div>';
+    });
+    h += '</div>';
   }
-  if (ai.suggestions?.length) {
-    h+=`<div class="sh">优化建议</div><div class="sgs">`;
-    ai.suggestions.forEach((s,i)=>{h+=`<div class="sg"><span class="sg-n">${i+1}</span><span>${s.text}</span></div>`;});
-    h+='</div>';
+
+  // 优化建议
+  if (ai.suggestions&&ai.suggestions.length) {
+    h += '<div class="sh">优化建议 / 行动清单</div><div class="sgs">';
+    ai.suggestions.forEach(function(s,i) {
+      var pcolor = s.priority==='高'?'var(--R)':s.priority==='中'?'var(--A)':'var(--G)';
+      var parts = [];
+      if (s.priority) parts.push('<span style="color:'+pcolor+';font-weight:600">'+s.priority+'优先</span>');
+      if (s.owner)    parts.push('<span style="color:var(--ink3)">'+s.owner+'</span>');
+      if (s.deadline) parts.push('<span style="color:var(--ink3)">'+s.deadline+'</span>');
+      var meta = parts.join(' · ');
+      h += '<div class="sg"><span class="sg-n">'+(i+1)+'</span><div style="flex:1">';
+      if (meta) h += '<div style="font-size:11px;margin-bottom:3px">'+meta+'</div>';
+      h += '<span>'+s.text+'</span></div></div>';
+    });
+    h += '</div>';
   }
-  h+='</div>';
+
+  h += '</div>';
   return h;
 }
+
 function buildFallback(d) {
-  let h=`<div class="rcard"><div class="rcard-head"><div><div class="rcard-title">${d.deptName}</div><div class="rcard-wk">${d.curWeek||''}</div></div><span class="rpill rp-a">原始数据</span></div>`;
+  d._rag = 'a';
+  var h = '<div class="rcard">';
+  h += '<div class="rcard-head">';
+  h += '<div><div class="rcard-title">'+d.deptName+'</div>';
+  h += '<div class="rcard-wk">'+(d.curWeek||'')+'</div></div>';
+  h += '<span class="rpill rp-a">原始数据</span></div>';
   if (d.metrics.length) {
-    h+=`<div class="mgrid mg${Math.min(d.metrics.length,4)}">`;
-    d.metrics.slice(0,4).forEach(m=>{const dc=m.trend==='up'?'up':m.trend==='down'?'dn':'fl2';h+=`<div class="mc"><div class="mc-l">${m.label}</div><div class="mc-v">${m.curVal||'—'}</div>${m.deltaRate?`<div class="mc-d ${dc}">${m.deltaRate}</div>`:''}</div>`;});
-    h+='</div>';
+    var n = Math.min(d.metrics.length,4);
+    h += '<div class="mgrid mg'+n+'">';
+    d.metrics.slice(0,4).forEach(function(m) {
+      var dc = m.trend==='up'?'up':m.trend==='down'?'dn':'fl2';
+      h += '<div class="mc"><div class="mc-l">'+m.label+'</div>';
+      h += '<div class="mc-v">'+(m.curVal||'—')+'</div>';
+      if (m.deltaRate) h += '<div class="mc-d '+dc+'">'+m.deltaRate+'</div>';
+      h += '</div>';
+    });
+    h += '</div>';
   }
-  h+=`<div class="fd warn"><span class="fd-txt">AI 分析失败：${d._err||'请检查接口配置'}。以上为原始数据。</span></div></div>`;
+  h += '<div class="fd warn"><span class="fd-txt">AI 分析失败：'+(d._err||'请检查接口配置')+'。以上为原始数据。</span></div>';
+  h += '</div>';
   return h;
 }
 
@@ -831,14 +1225,11 @@ function buildFallback(d) {
 // 报告 Tab
 // ══════════════════════════════════════════
 function buildReportTabs() {
-  document.getElementById('rtabs').innerHTML=parsedDepts.map(d=>{const rag=d._rag||'g';return `<button class="rt" id="rt-${d.dept}" onclick="showRpt('${d.dept}')"><span class="rt-dot" style="background:${RAG[rag].color}"></span>${d.deptName}</button>`;}).join('');
+  document.getElementById('rtabs').innerHTML=parsedDepts.map(d=>{const ragRaw=(d._rag||'g').toLowerCase().trim();const rag=['r','a','g'].includes(ragRaw)?ragRaw:'g';return `<button class="rt" id="rt-${d.dept}" onclick="showRpt('${d.dept}')"><span class="rt-dot" style="background:${RAG[rag].color}"></span>${d.deptName}</button>`;}).join('');
   if (parsedDepts.length) showRpt(parsedDepts[0].dept);
 }
-function showRpt(dept) {
-  document.querySelectorAll('.rt').forEach(b=>b.classList.remove('on'));
-  document.getElementById('rt-'+dept)?.classList.add('on');
-  document.getElementById('rpt-body').innerHTML=aiReports[dept]||'<div style="padding:40px;text-align:center;color:var(--ink3)">暂无数据</div>';
-}
+// showRpt is defined in the ask section above
+
 
 // ══════════════════════════════════════════
 // 老板总览
@@ -863,6 +1254,7 @@ function buildOverview() {
   if (!decHtml) decHtml='<div class="dei"><div class="dei-dot" style="background:var(--G)"></div><div><div class="dei-tag" style="color:var(--G)">本周无紧急决策事项</div><div class="dei-txt">各部门运行正常，按计划推进。</div></div></div>';
   document.getElementById('decs').innerHTML=decHtml;
   document.getElementById('opening-area').innerHTML='';
+  renderOvAsk();
 }
 async function getAdvice(dept) {
   const d=parsedDepts.find(x=>x.dept===dept); if(!d)return;
@@ -881,6 +1273,181 @@ async function genOpening() {
     const text=await callAI('帮写电商公司周会开场白，风格简练有力，直接切主题，不用"大家好"开头，60字以内。',`本周经营：${summary}。写周会开场白。`,150);
     area.innerHTML=`<div class="ob"><div class="ob-l">本周周会开场白</div><div class="ob-txt">"${text}"</div></div>`;
   } catch(e) { area.innerHTML=`<div class="rcard" style="margin-top:14px"><div class="fd risk"><span class="fd-txt">生成失败：${e.message}</span></div></div>`; }
+}
+
+// ══════════════════════════════════════════
+// 追问功能
+// ══════════════════════════════════════════
+var askHistory = [];      // 报告页对话历史
+var askHistoryOv = [];    // 总览页对话历史
+
+function showRpt(dept) {
+  document.querySelectorAll('.rt').forEach(function(b){b.classList.remove('on');});
+  var btn = document.getElementById('rt-'+dept);
+  if (btn) btn.classList.add('on');
+  document.getElementById('rpt-body').innerHTML = aiReports[dept] || '<div style="padding:40px;text-align:center;color:var(--ink3)">暂无数据</div>';
+  // 显示追问框并更新上下文提示
+  var wrap = document.getElementById('ask-wrap');
+  if (wrap && parsedDepts.length) {
+    wrap.style.display = 'block';
+    var deptData = parsedDepts.find(function(d){return d.dept===dept;});
+    var deptName = deptData ? deptData.deptName : dept;
+    document.getElementById('ask-context').textContent = '💡 当前查看：' + deptName + ' · 可针对该部门数据和报告内容追问';
+    // 重置对话历史
+    askHistory = [];
+    document.getElementById('ask-history').innerHTML = '';
+    document.getElementById('ask-input').value = '';
+    // 更新快捷提问
+    document.getElementById('ask-tips').innerHTML = [
+      '帮我写一封给' + deptName + '负责人的跟进邮件',
+      deptName + '下周应该优先做什么',
+      deptName + '这个问题的根本原因是什么',
+      '这个问题在行业里通常怎么解决',
+      '帮我列一个改善行动清单'
+    ].map(function(tip){
+      return '<button class="ask-tip" onclick="sendTip(this)">'+tip+'</button>';
+    }).join('');
+  }
+}
+
+function sendTip(btn) {
+  document.getElementById('ask-input').value = btn.textContent;
+  sendAsk();
+}
+
+function sendTipOv(btn) {
+  document.getElementById('ask-input-ov').value = btn.textContent;
+  sendAskOv();
+}
+
+function buildAskContext() {
+  // 收集当前部门的完整数据作为上下文
+  var dept = document.querySelector('.rt.on');
+  var deptId = dept ? dept.id.replace('rt-','') : '';
+  var deptData = parsedDepts.find(function(d){return d.dept===deptId;});
+  if (!deptData) return '（无部门数据）';
+  return buildSummary(deptData) + ' AI分析：' + (document.getElementById('rpt-body').innerText||'').slice(0,600);
+}
+
+function buildOvContext() {
+  var parts = parsedDepts.slice(0,6).map(function(d){
+    var m = d.metrics[0];
+    return d.deptName + '（' + ({r:'红灯',a:'黄灯',g:'绿灯'}[d._rag||'g']) + '）：' + (m ? m.label+m.curVal : '无数据');
+  });
+  return '本周全公司经营数据：' + parts.join('；');
+}
+
+async 
+function renderOvAsk() {
+  var area = document.getElementById('ov-ask-area');
+  if (!area) return;
+  area.innerHTML = '<div class="ask-wrap" style="display:block" id="ov-ask-wrap">' +
+    '<div class="ask-context" id="ov-ask-context">💡 基于本周全公司经营数据提问</div>' +
+    '<div class="ask-tips" id="ov-ask-tips">' +
+    ['把所有红黄灯问题汇总成200字老板汇报','本周哪个部门最需要关注，为什么','对比各部门，整体趋势如何','生成本周管理层会议议程'].map(function(t){
+      return '<button class="ask-tip" onclick="sendOvTip(this)">'+ t +'</button>';
+    }).join('') +
+    '</div>' +
+    '<div class="ask-history" id="ov-ask-history"></div>' +
+    '<div class="ask-input-row">' +
+    '<textarea class="ask-input" id="ov-ask-input" placeholder="针对全公司本周经营数据提问..." rows="1" oninput="autoResizeAsk(this)" onkeydown="if(event.key==String.fromCharCode(13)&&!event.shiftKey){event.preventDefault();sendOvAsk();}"></textarea>' +
+    '<button class="ask-send" id="ov-ask-btn" onclick="sendOvAsk()">发送</button>' +
+    '</div></div>';
+}
+
+function sendOvTip(btn) {
+  var input = document.getElementById('ov-ask-input');
+  if (input) { input.value = btn.textContent; sendOvAsk(); }
+}
+
+async function sendOvAsk() {
+  var input = document.getElementById('ov-ask-input');
+  var btn = document.getElementById('ov-ask-btn');
+  var histEl = document.getElementById('ov-ask-history');
+  if (!input||!btn||!histEl) return;
+  var q = input.value.trim(); if (!q) return;
+  input.value=''; input.style.height='auto'; btn.disabled=true;
+  var context = parsedDepts.slice(0,8).map(function(d){
+    return d.deptName+'（'+{r:'红灯',a:'黄灯',g:'绿灯'}[d._rag||'g']+'）：'+buildSummary(d).slice(0,200);
+  }).join('; ');
+  await doAsk(q, '全公司经营数据：' + context, histEl, btn);
+}
+
+async function sendAsk() {
+  var input = document.getElementById('ask-input');
+  var q = input.value.trim();
+  if (!q) return;
+  var sendBtn = document.getElementById('ask-btn');
+  sendBtn.disabled = true;
+  input.value = '';
+  input.style.height = 'auto';
+
+  var history = document.getElementById('ask-history');
+  // 显示用户问题
+  history.innerHTML += '<div class="ask-bubble"><div class="ask-q"><span class="ask-q-label">你</span><span class="ask-q-text">'+q+'</span></div><div class="ask-a"><span class="ask-a-label">AI</span><span class="ask-a-text ask-a-loading" id="ask-loading">思考中...</span></div></div>';
+  history.scrollTop = history.scrollHeight;
+
+  // 构建消息历史
+  askHistory.push({role:'user', content: q});
+    var messages = [{role:'user', content: buildAskContext() + ' 用户问题：' + askHistory[0].content}];
+  if (askHistory.length > 1) {
+    for (var i = 1; i < askHistory.length; i++) {
+      messages.push(askHistory[i]);
+    }
+  }
+
+  try {
+    var text = await callAI(
+      '你是渔之源电商公司的AI助理，已经看过了本周的经营数据和分析报告。请根据数据内容回答用户的问题，回答要具体、有针对性，直接引用报告里的数据。如果要写邮件或文档，格式要专业实用。',
+      messages[messages.length-1].content,
+      600
+    );
+    askHistory.push({role:'assistant', content: text});
+    var loadingEl = document.getElementById('ask-loading');
+    if (loadingEl) {
+      loadingEl.className = 'ask-a-text';
+      loadingEl.textContent = text;
+    }
+  } catch(e) {
+    var loadingEl = document.getElementById('ask-loading');
+    if (loadingEl) {
+      loadingEl.className = 'ask-a-text';
+      loadingEl.style.color = 'var(--R)';
+      loadingEl.textContent = '请求失败：' + e.message;
+    }
+  }
+  history.scrollTop = history.scrollHeight;
+  sendBtn.disabled = false;
+  input.focus();
+}
+
+async function sendAskOv() {
+  var input = document.getElementById('ask-input-ov');
+  var q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+  input.style.height = 'auto';
+
+  var history = document.getElementById('ask-history-ov');
+  history.innerHTML += '<div class="ask-bubble"><div class="ask-q"><span class="ask-q-label">你</span><span class="ask-q-text">'+q+'</span></div><div class="ask-a"><span class="ask-a-label">AI</span><span class="ask-a-text ask-a-loading" id="ask-loading-ov">思考中...</span></div></div>';
+  history.scrollTop = history.scrollHeight;
+
+  askHistoryOv.push({role:'user', content: q});
+
+  try {
+    var text = await callAI(
+      '你是渔之源电商公司老板的AI助理，已掌握本周全公司经营数据。请简洁有力地回答问题，如需生成文档则格式专业。',
+      buildOvContext() + ' 问题：' + q,
+      600
+    );
+    askHistoryOv.push({role:'assistant', content: text});
+    var el = document.getElementById('ask-loading-ov');
+    if (el) { el.className = 'ask-a-text'; el.textContent = text; }
+  } catch(e) {
+    var el = document.getElementById('ask-loading-ov');
+    if (el) { el.className = 'ask-a-text'; el.style.color='var(--R)'; el.textContent = '失败：'+e.message; }
+  }
+  history.scrollTop = history.scrollHeight;
 }
 
 // ══════════════════════════════════════════
