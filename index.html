@@ -8,26 +8,25 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --ink:#1a1a1a;--ink2:#4a4a4a;--ink3:#999;
-  --bg:#f5f4f0;--sf:#fff;--s2:#f7f6f3;--s3:#f0efe9;
-  --bd:#e5e4de;--bd2:#d0cfc8;
-  --G:#2d7a3a;--Gbg:#edf7ee;--Gbd:#c3e6c9;
-  --A:#9a5f00;--Abg:#fff8ec;--Abd:#f5d78e;
-  --R:#c0392b;--Rbg:#fdf0ee;--Rbd:#f5c0ba;
-  --B:#1a5faa;--Bbg:#eef4fc;
+--ink:#1a1a1a;--ink2:#4a4a4a;--ink3:#999;
+--bg:#f5f4f0;--sf:#fff;--s2:#f7f6f3;--s3:#f0efe9;
+--bd:#e5e4de;--bd2:#d0cfc8;
+--G:#2d7a3a;--Gbg:#edf7ee;--Gbd:#c3e6c9;
+--A:#9a5f00;--Abg:#fff8ec;--Abd:#f5d78e;
+--R:#c0392b;--Rbg:#fdf0ee;--Rbd:#f5c0ba;
+--B:#1a5faa;--Bbg:#eef4fc;
 }
 @media(prefers-color-scheme:dark){:root{
-  --ink:#e8e6df;--ink2:#aaa8a0;--ink3:#666;
-  --bg:#141412;--sf:#1c1b18;--s2:#242320;--s3:#2a2926;
-  --bd:#2e2d2a;--bd2:#3a3936;
-  --G:#5dba6e;--Gbg:#1a2e1c;--Gbd:#2d5c35;
-  --A:#e8a030;--Abg:#2a2010;--Abd:#5a3a00;
-  --R:#e87060;--Rbg:#2a1815;--Rbd:#5a2520;
-  --B:#6baae8;--Bbg:#101f30;
+--ink:#e8e6df;--ink2:#aaa8a0;--ink3:#666;
+--bg:#141412;--sf:#1c1b18;--s2:#242320;--s3:#2a2926;
+--bd:#2e2d2a;--bd2:#3a3936;
+--G:#5dba6e;--Gbg:#1a2e1c;--Gbd:#2d5c35;
+--A:#e8a030;--Abg:#2a2010;--Abd:#5a3a00;
+--R:#e87060;--Rbg:#2a1815;--Rbd:#5a2520;
+--B:#6baae8;--Bbg:#101f30;
 }}
 html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;color:var(--ink);font-size:14px}
 .w{max-width:1040px;margin:0 auto;padding:0 20px 60px}
-
 /* Header */
 .hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 0 14px;border-bottom:1px solid var(--bd);margin-bottom:20px;gap:10px;flex-wrap:wrap}
 .logo{font-size:15px;font-weight:700;letter-spacing:-.3px}
@@ -36,7 +35,6 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 .nb{font-size:12px;padding:6px 13px;border-radius:7px;border:.5px solid var(--bd2);background:transparent;color:var(--ink2);cursor:pointer;font-family:inherit;transition:all .15s}
 .nb:hover{background:var(--s2)}
 .nb.on{background:var(--ink);color:var(--sf);border-color:var(--ink)}
-
 /* AI 配置面板 */
 .cfg-panel{background:var(--sf);border:.5px solid var(--bd);border-radius:12px;padding:16px 20px;margin-bottom:18px}
 .cfg-top{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
@@ -48,13 +46,11 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 .cfg-arrow.open{transform:rotate(180deg)}
 .cfg-body{margin-top:14px;display:none}
 .cfg-body.open{display:block}
-
 /* 预设按钮 */
 .presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .preset{font-size:11px;padding:5px 12px;border-radius:6px;border:.5px solid var(--bd2);background:transparent;color:var(--ink2);cursor:pointer;font-family:inherit;transition:all .15s}
 .preset:hover{background:var(--s2);color:var(--ink)}
 .preset.on{background:var(--ink);color:var(--sf);border-color:var(--ink)}
-
 /* 配置字段 */
 .cfg-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .cfg-field{display:flex;flex-direction:column;gap:4px}
@@ -67,10 +63,8 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 .cfg-hint{font-size:11px;color:var(--ink3);line-height:1.6;margin-top:8px}
 .cfg-hint a{color:var(--B);text-decoration:none}
 .cfg-hint a:hover{text-decoration:underline}
-
 /* Pages */
 .pg{display:none}.pg.on{display:block}
-
 /* Upload */
 .dz{border:2px dashed var(--bd2);border-radius:14px;padding:44px 24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--sf);position:relative}
 .dz:hover,.dz.drag{border-color:var(--ink);background:var(--s2)}
@@ -92,7 +86,6 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 .btn{font-size:13px;padding:9px 20px;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:500;transition:all .15s;white-space:nowrap;border:none}
 .bp{background:var(--ink);color:var(--sf)}.bp:hover{opacity:.82}.bp:disabled{opacity:.35;cursor:not-allowed}
 .bs{background:transparent;color:var(--ink2);border:.5px solid var(--bd2)}.bs:hover{background:var(--s2)}
-
 /* Processing */
 .proc{display:none;padding:50px 20px;text-align:center}
 .proc.on{display:block}
@@ -111,7 +104,6 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 .si.err .si-dot{background:var(--R)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .si-r{margin-left:auto;font-size:11px}
-
 /* Report */
 .rtabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
 .rt{font-size:12px;padding:6px 13px;border-radius:7px;border:.5px solid var(--bd);background:transparent;color:var(--ink3);cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;gap:5px}
@@ -160,7 +152,6 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 .sgs{display:flex;flex-direction:column;gap:6px}
 .sg{display:flex;gap:8px;font-size:12.5px;color:var(--ink2);line-height:1.6;padding:9px 12px;background:var(--s2);border-radius:7px}
 .sg-n{font-size:11px;font-weight:700;color:var(--ink3);min-width:16px;margin-top:2px;flex-shrink:0}
-
 /* Overview */
 .ov-top{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:20px}
 .ovm{background:var(--sf);border:.5px solid var(--bd);border-radius:9px;padding:13px 15px}
@@ -185,7 +176,6 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 .ob{background:var(--sf);border:.5px solid var(--bd2);border-radius:12px;padding:18px 20px;margin-top:14px}
 .ob-l{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
 .ob-txt{font-size:15px;line-height:1.8;font-style:italic}
-
 /* History */
 .htscroll{overflow-x:auto}
 .htbl{width:100%;border-collapse:collapse;font-size:12px}
@@ -223,7 +213,6 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 .ask-a-dot:nth-child(2){animation-delay:.2s}
 .ask-a-dot:nth-child(3){animation-delay:.4s}
 @keyframes ask-pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
-
 /* 追问框 */
 .ask-wrap{margin-top:20px;background:var(--sf);border:.5px solid var(--bd);border-radius:12px;overflow:hidden}
 .ask-history{max-height:320px;overflow-y:auto;padding:0}
@@ -247,16 +236,14 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 .ask-tip{font-size:11px;padding:4px 10px;border-radius:20px;border:.5px solid var(--bd2);color:var(--ink3);cursor:pointer;background:transparent;font-family:inherit;transition:all .15s}
 .ask-tip:hover{background:var(--s2);color:var(--ink);border-color:var(--ink3)}
 .ask-context{font-size:11px;color:var(--ink3);padding:8px 16px;border-bottom:.5px solid var(--bd)}
-
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--sf);font-size:13px;padding:10px 20px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.show{opacity:1}
 @media(max-width:640px){
-  .ov-top{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .dg{grid-template-columns:1fr}
-  .mg4,.mg3{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .cfg-fields{grid-template-columns:1fr}
+.ov-top{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dg{grid-template-columns:1fr}
+.mg4,.mg3{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cfg-fields{grid-template-columns:1fr}
 }
-
 /* ─ Chat 追问 ─ */
 .chat-box{margin-top:14px;background:var(--sf);border:.5px solid var(--bd);border-radius:12px;overflow:hidden}
 .chat-header{padding:11px 16px;border-bottom:.5px solid var(--bd);font-size:12px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:6px}
@@ -282,2169 +269,1511 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 </head>
 <body>
 <div class="w">
-
 <!-- Header -->
 <div class="hdr">
-  <div style="display:flex;align-items:center">
-    <span class="logo">渔之源 · 周度经营中心</span>
-    <span class="wpill" id="wpill">—</span>
-  </div>
-  <div class="nav">
-    <button class="nb on" id="nb-upload" onclick="goPage('upload')">上传数据</button>
-    <button class="nb" id="nb-planning" onclick="showPlanningMenu()">规划管理</button>
-    <button class="nb" id="nb-mapping" onclick="goPage('mapping')">关联管理</button>
-    <button class="nb" id="nb-report" onclick="goPage('report')">分析报告</button>
-    <button class="nb" id="nb-overview" onclick="goPage('overview')">老板总览</button>
-    <button class="nb" id="nb-history" onclick="goPage('history')">历史对比</button>
-  </div>
+<div style="display:flex;align-items:center">
+<span class="logo">渔之源 · 周度经营中心</span>
+<span class="wpill" id="wpill">—</span>
 </div>
-
+<div class="nav">
+<button class="nb on" id="nb-upload" onclick="goPage('upload')">上传数据</button>
+<button class="nb" id="nb-planning" onclick="showPlanningMenu()">规划管理</button>
+<button class="nb" id="nb-mapping" onclick="goPage('mapping')">关联管理</button>
+<button class="nb" id="nb-report" onclick="goPage('report')">分析报告</button>
+<button class="nb" id="nb-overview" onclick="goPage('overview')">老板总览</button>
+<button class="nb" id="nb-history" onclick="goPage('history')">历史对比</button>
+</div>
+</div>
 <!-- AI 接口配置面板 -->
 <div class="cfg-panel" id="cfg-panel">
-  <div class="cfg-top" onclick="toggleCfg()">
-    <div class="cfg-title">
-      <span>🤖</span>
-      <span>AI 接口配置</span>
-      <span class="cfg-status cfg-no" id="cfg-status">未配置</span>
-    </div>
-    <span class="cfg-arrow" id="cfg-arrow">▼</span>
-  </div>
-  <div class="cfg-body" id="cfg-body">
-    <div class="presets" id="presets">
-      <button class="preset" onclick="applyPreset('claude')">Claude (Anthropic)</button>
-      <button class="preset" onclick="applyPreset('deepseek')">DeepSeek</button>
-      <button class="preset" onclick="applyPreset('qwen')">通义千问</button>
-      <button class="preset" onclick="applyPreset('moonshot')">Moonshot (Kimi)</button>
-      <button class="preset" onclick="applyPreset('openai')">OpenAI</button>
-      <button class="preset" onclick="applyPreset('custom')">自定义</button>
-    </div>
-    <div class="cfg-fields">
-      <div class="cfg-field full">
-        <label class="cfg-label">Base URL</label>
-        <input class="cfg-input" id="cfg-url" type="text" placeholder="https://api.anthropic.com/v1" autocomplete="off">
-      </div>
-      <div class="cfg-field">
-        <label class="cfg-label">API Key</label>
-        <input class="cfg-input" id="cfg-key" type="password" placeholder="sk-..." autocomplete="off">
-      </div>
-      <div class="cfg-field">
-        <label class="cfg-label">模型名称</label>
-        <input class="cfg-input" id="cfg-model" type="text" placeholder="claude-sonnet-4-20250514" autocomplete="off">
-      </div>
-      <div class="cfg-field full">
-        <label class="cfg-label">代理地址（填你的 Vercel 代理网址，解决跨域问题）</label>
-        <input class="cfg-input" id="cfg-proxy" type="text" placeholder="https://你的项目名.vercel.app" autocomplete="off">
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <button class="cfg-save" onclick="saveCfg()">保存配置</button>
-      <button class="cfg-save" style="background:var(--s2);color:var(--ink2);border:.5px solid var(--bd2)" onclick="testCfg()">测试连接</button>
-      <span id="test-result" style="font-size:12px;color:var(--ink3)"></span>
-    </div>
-    <div class="cfg-hint" id="cfg-hint"></div>
-  </div>
+<div class="cfg-top" onclick="toggleCfg()">
+<div class="cfg-title">
+<span>🤖</span>
+<span>AI 接口配置</span>
+<span class="cfg-status cfg-no" id="cfg-status">未配置</span>
 </div>
-
+<span class="cfg-arrow" id="cfg-arrow">▼</span>
+</div>
+<div class="cfg-body" id="cfg-body">
+<div class="presets" id="presets">
+<button class="preset" onclick="applyPreset('claude')">Claude (Anthropic)</button>
+<button class="preset" onclick="applyPreset('deepseek')">DeepSeek</button>
+<button class="preset" onclick="applyPreset('qwen')">通义千问</button>
+<button class="preset" onclick="applyPreset('moonshot')">Moonshot (Kimi)</button>
+<button class="preset" onclick="applyPreset('openai')">OpenAI</button>
+<button class="preset" onclick="applyPreset('custom')">自定义</button>
+</div>
+<div class="cfg-fields">
+<div class="cfg-field full">
+<label class="cfg-label">Base URL</label>
+<input class="cfg-input" id="cfg-url" type="text" placeholder="https://api.anthropic.com/v1" autocomplete="off">
+</div>
+<div class="cfg-field">
+<label class="cfg-label">API Key</label>
+<input class="cfg-input" id="cfg-key" type="password" placeholder="sk-..." autocomplete="off">
+</div>
+<div class="cfg-field">
+<label class="cfg-label">模型名称</label>
+<input class="cfg-input" id="cfg-model" type="text" placeholder="claude-sonnet-4-20250514" autocomplete="off">
+</div>
+<div class="cfg-field full">
+<label class="cfg-label">代理地址（填你的 Vercel 代理网址，解决跨域问题）</label>
+<input class="cfg-input" id="cfg-proxy" type="text" placeholder="https://你的项目名.vercel.app" autocomplete="off">
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:10px">
+<button class="cfg-save" onclick="saveCfg()">保存配置</button>
+<button class="cfg-save" style="background:var(--s2);color:var(--ink2);border:.5px solid var(--bd2)" onclick="testCfg()">测试连接</button>
+<span id="test-result" style="font-size:12px;color:var(--ink3)"></span>
+</div>
+<div class="cfg-hint" id="cfg-hint"></div>
+</div>
+</div>
 <!-- ═══ UPLOAD PAGE ═══ -->
 <div id="pg-upload" class="pg on">
-  <div class="dz" id="dz"
-    ondragover="event.preventDefault();this.classList.add('drag')"
-    ondragleave="this.classList.remove('drag')"
-    ondrop="onDrop(event)">
-    <input type="file" id="file-input" multiple accept=".xlsx,.xls" onchange="onPick(this.files)">
-    <div class="dz-icon">📊</div>
-    <div class="dz-title">拖拽或点击选择各部门数据表</div>
-    <div class="dz-sub">支持同时上传多个 xlsx 文件，系统自动识别部门<br>天猫、京东、拼多多、抖音、直播部、财务... 文件名含部门名即可</div>
-  </div>
-  <div class="fl" id="fl"></div>
-  <div class="proc" id="proc">
-    <div class="spin"></div>
-    <div class="proc-title">正在处理数据</div>
-    <div class="proc-sub" id="proc-sub">请稍候...</div>
-    <div class="slist" id="slist"></div>
-  </div>
-  <div class="abar" id="abar" style="display:none">
-    <div class="pt"><div class="pf" id="pf" style="width:0%"></div></div>
-    <span class="ptxt" id="ptxt">0 个文件就绪</span>
-    <button class="btn bs" onclick="clearAll()">清空</button>
-    <button class="btn bp" id="run-btn" onclick="runAll()" disabled>解析 + AI 分析</button>
-  </div>
+<div class="dz" id="dz"
+ondragover="event.preventDefault();this.classList.add('drag')"
+ondragleave="this.classList.remove('drag')"
+ondrop="onDrop(event)">
+<input type="file" id="file-input" multiple accept=".xlsx,.xls" onchange="onPick(this.files)">
+<div class="dz-icon">📊</div>
+<div class="dz-title">拖拽或点击选择各部门数据表</div>
+<div class="dz-sub">支持同时上传多个 xlsx 文件，系统自动识别部门<br>天猫、京东、拼多多、抖音、直播部、财务... 文件名含部门名即可</div>
 </div>
-
+<div class="fl" id="fl"></div>
+<div class="proc" id="proc">
+<div class="spin"></div>
+<div class="proc-title">正在处理数据</div>
+<div class="proc-sub" id="proc-sub">请稍候...</div>
+<div class="slist" id="slist"></div>
+</div>
+<div class="abar" id="abar" style="display:none">
+<div class="pt"><div class="pf" id="pf" style="width:0%"></div></div>
+<span class="ptxt" id="ptxt">0 个文件就绪</span>
+<button class="btn bs" onclick="clearAll()">清空</button>
+<button class="btn bp" id="run-btn" onclick="runAll()" disabled>解析 + AI 分析</button>
+</div>
+</div>
 <!-- ═══ REPORT PAGE ═══ -->
 <div id="pg-report" class="pg">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap">
-    <div style="font-size:15px;font-weight:700">AI 分析报告</div>
-    <div style="display:flex;gap:8px">
-      <button class="btn bs" style="padding:7px 13px;font-size:12px" onclick="goPage('upload')">← 重新上传</button>
-      <button class="btn bp" style="padding:7px 13px;font-size:12px" onclick="goPage('overview')">老板总览 →</button>
-    </div>
-  </div>
-  <div class="rtabs" id="rtabs"></div>
-  <div id="rpt-body"></div>
-
-  <!-- 追问区 -->
-  <div class="ask-wrap" id="ask-wrap">
-    <div class="ask-context" id="ask-context">💡 正在基于本周报告数据回答你的问题</div>
-    <div class="ask-tips" id="ask-tips">
-      <button class="ask-tip" onclick="sendTip(this)">帮我写一封给负责人的跟进邮件</button>
-      <button class="ask-tip" onclick="sendTip(this)">把本周红灯部门问题汇总发给老板</button>
-      <button class="ask-tip" onclick="sendTip(this)">当前选中部门下周应该优先做什么</button>
-      <button class="ask-tip" onclick="sendTip(this)">这个问题的根本原因是什么</button>
-      <button class="ask-tip" onclick="sendTip(this)">帮我生成一个简短的会议议题</button>
-    </div>
-    <div class="ask-history" id="ask-history"></div>
-    <div class="ask-input-row">
-      <textarea class="ask-input" id="ask-input" placeholder="针对报告内容追问 AI，如：天猫销售额下降的原因分析、帮我写跟进邮件..." rows="1"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAsk()}"
-        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
-      <button class="ask-send" id="ask-send" onclick="sendAsk()">发送</button>
-    </div>
-  </div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap">
+<div style="font-size:15px;font-weight:700">AI 分析报告</div>
+<div style="display:flex;gap:8px">
+<button class="btn bs" style="padding:7px 13px;font-size:12px" onclick="goPage('upload')">← 重新上传</button>
+<button class="btn bp" style="padding:7px 13px;font-size:12px" onclick="goPage('overview')">老板总览 →</button>
 </div>
-
+</div>
+<div class="rtabs" id="rtabs"></div>
+<div id="rpt-body"></div>
+<!-- 追问区 -->
+<div class="ask-wrap" id="ask-wrap">
+<div class="ask-context" id="ask-context">💡 正在基于本周报告数据回答你的问题</div>
+<div class="ask-tips" id="ask-tips">
+<button class="ask-tip" onclick="sendTip(this)">帮我写一封给负责人的跟进邮件</button>
+<button class="ask-tip" onclick="sendTip(this)">把本周红灯部门问题汇总发给老板</button>
+<button class="ask-tip" onclick="sendTip(this)">当前选中部门下周应该优先做什么</button>
+<button class="ask-tip" onclick="sendTip(this)">这个问题的根本原因是什么</button>
+<button class="ask-tip" onclick="sendTip(this)">帮我生成一个简短的会议议题</button>
+</div>
+<div class="ask-history" id="ask-history"></div>
+<div class="ask-input-row">
+<textarea class="ask-input" id="ask-input" placeholder="针对报告内容追问 AI，如：天猫销售额下降的原因分析、帮我写跟进邮件..." rows="1"
+onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAsk()}"
+oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+<button class="ask-send" id="ask-send" onclick="sendAsk()">发送</button>
+</div>
+</div>
+</div>
 <!-- ═══ OVERVIEW PAGE ═══ -->
 <div id="pg-overview" class="pg">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:10px;flex-wrap:wrap">
-    <div>
-      <div style="font-size:16px;font-weight:700">本周经营总览</div>
-      <div style="font-size:12px;color:var(--ink3);margin-top:3px" id="ov-sub"></div>
-    </div>
-    <button class="btn bp" onclick="genOpening()">生成周会开场白 →</button>
-  </div>
-  <div class="ov-top" id="ov-top"></div>
-  <div class="sh">各部门状态</div>
-  <div class="dg" id="dg"></div>
-  <div class="sh">本周待决策事项</div>
-  <div class="decs" id="decs"></div>
-  <div id="opening-area"></div>
-  <div id="ov-ask-area"></div>
-
-  <!-- 总览页追问区 -->
-  <div class="ask-wrap" id="ask-wrap-ov" style="margin-top:20px">
-    <div class="ask-context">💡 基于本周全公司经营数据回答问题</div>
-    <div class="ask-tips">
-      <button class="ask-tip" onclick="sendTipOv(this)">生成本周经营简报（200字以内）</button>
-      <button class="ask-tip" onclick="sendTipOv(this)">帮我列出本周周会的议程</button>
-      <button class="ask-tip" onclick="sendTipOv(this)">哪个部门最需要老板今天关注</button>
-      <button class="ask-tip" onclick="sendTipOv(this)">下周公司层面最重要的3件事</button>
-    </div>
-    <div class="ask-history" id="ask-history-ov"></div>
-    <div class="ask-input-row">
-      <textarea class="ask-input" id="ask-input-ov" placeholder="针对全公司经营情况追问..." rows="1"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAskOv()}"
-        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
-      <button class="ask-send" onclick="sendAskOv()">发送</button>
-    </div>
-  </div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:10px;flex-wrap:wrap">
+<div>
+<div style="font-size:16px;font-weight:700">本周经营总览</div>
+<div style="font-size:12px;color:var(--ink3);margin-top:3px" id="ov-sub"></div>
 </div>
-
+<button class="btn bp" onclick="genOpening()">生成周会开场白 →</button>
+</div>
+<div class="ov-top" id="ov-top"></div>
+<div class="sh">各部门状态</div>
+<div class="dg" id="dg"></div>
+<div class="sh">本周待决策事项</div>
+<div class="decs" id="decs"></div>
+<div id="opening-area"></div>
+<div id="ov-ask-area"></div>
+<!-- 总览页追问区 -->
+<div class="ask-wrap" id="ask-wrap-ov" style="margin-top:20px">
+<div class="ask-context">💡 基于本周全公司经营数据回答问题</div>
+<div class="ask-tips">
+<button class="ask-tip" onclick="sendTipOv(this)">生成本周经营简报（200字以内）</button>
+<button class="ask-tip" onclick="sendTipOv(this)">帮我列出本周周会的议程</button>
+<button class="ask-tip" onclick="sendTipOv(this)">哪个部门最需要老板今天关注</button>
+<button class="ask-tip" onclick="sendTipOv(this)">下周公司层面最重要的3件事</button>
+</div>
+<div class="ask-history" id="ask-history-ov"></div>
+<div class="ask-input-row">
+<textarea class="ask-input" id="ask-input-ov" placeholder="针对全公司经营情况追问..." rows="1"
+onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAskOv()}"
+oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+<button class="ask-send" onclick="sendAskOv()">发送</button>
+</div>
+</div>
+</div>
 <!-- ═══ HISTORY PAGE ═══ -->
 <div id="pg-history" class="pg">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-    <div style="font-size:15px;font-weight:700">历史数据 · 跨周对比</div>
-    <button class="btn bs" style="font-size:11px;padding:5px 11px" onclick="clearHist()">清除记录</button>
-  </div>
-  <div id="hist-body"></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+<div style="font-size:15px;font-weight:700">历史数据 · 跨周对比</div>
+<button class="btn bs" style="font-size:11px;padding:5px 11px" onclick="clearHist()">清除记录</button>
 </div>
-
+<div id="hist-body"></div>
 </div>
-
+</div>
 <!-- ═══ MAPPING PAGE ═══ -->
 <div id="pg-mapping" class="pg">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-    <div style="font-size:15px;font-weight:700">部门关联管理</div>
-    <button class="btn bp" style="font-size:11px;padding:5px 11px" onclick="saveMapping()">保存关联</button>
-  </div>
-  
-  <div style="margin-bottom:20px;padding:12px;background:var(--s2);border-radius:8px;font-size:13px;line-height:1.5">
-    <div style="font-weight:600;margin-bottom:6px">💡 功能介绍</div>
-    <div>建立周度数据部门与年度规划部门的关联关系，实现智能匹配分析。</div>
-    <div style="font-size:12px;color:var(--ink3);margin-top:6px">
-      例如：周度数据中的"天猫平台"可以关联到"电商一部"、"电商二部"等多个规划部门
-    </div>
-  </div>
-  
-  <div id="mapping-container">
-    <!-- 关联管理界面将在这里动态生成 -->
-  </div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+<div style="font-size:15px;font-weight:700">部门关联管理</div>
+<button class="btn bp" style="font-size:11px;padding:5px 11px" onclick="saveMapping()">保存关联</button>
 </div>
-
+<div style="margin-bottom:20px;padding:12px;background:var(--s2);border-radius:8px;font-size:13px;line-height:1.5">
+<div style="font-weight:600;margin-bottom:6px">💡 功能介绍</div>
+<div>建立周度数据部门与年度规划部门的关联关系，实现智能匹配分析。</div>
+<div style="font-size:12px;color:var(--ink3);margin-top:6px">
+例如：周度数据中的"天猫平台"可以关联到"电商一部"、"电商二部"等多个规划部门
+</div>
+</div>
+<div id="mapping-container">
+<!-- 关联管理界面将在这里动态生成 -->
+</div>
+</div>
 <div class="toast" id="toast"></div>
-
 <script>
 // ══════════════════════════════════════════
 // 常量
 // ══════════════════════════════════════════
 const DEPT_MAP = [
-  ['天猫','tmall'],['京东','jd'],['拼多多','pdd'],
-  ['抖音平台','douyin'],['直播部','live'],['直播间','live'],['直播','live'],
-  ['达人','kol'],['品牌视频','brand'],['品牌','brand'],['视频中心','brand'],
-  ['客服','cs'],['仓储','warehouse'],['供应链','warehouse'],
-  ['大客户','key'],['跨境','cross'],['财务','finance'],
-  ['人力','hr'],['HR','hr'],['IT','it'],['数据','it'],
-  // 新增部门映射（基于2026年各部门规划文件）
-  ['渔之源事','biz4'],['渔之源事业四部','biz4'],
-  ['彩麦','purchase'],['采购','purchase'],
-  ['视觉中心','visual'],['视觉','visual'],
-  ['PAA事业部','paa'],['PAA事','paa'],['PAA','paa'],['PAA事业','paa'],
-  ['电商一部','ec1'],['电商一','ec1'],['电商一部（钓竿）','ec1'],
-  ['电商二部','ec2'],['电商二','ec2'],['电商二部（钓椅&配件&鱼钩)','ec2'],
-  ['电商三部','ec3'],['电商三','ec3'],['电商三部（钓伞&线&台钓装备）','ec3'],
-  ['电商四部','ec4'],['电商四','ec4'],['电商四部（渔具包&盒类&漂）','ec4'],
-  ['电商五部','ec5'],['电商五','ec5'],['电商五部（鱼护&水桶&钓箱&服装防护）','ec5'],
-  ['电商六部','ec6'],['电商六','ec6'],['电商六部（支架及&路亚竿&路亚装备)','ec6'],
-  ['电商七部','ec7'],['电商七','ec7'],['电商七部（抄网&渔轮）','ec7'],
+['天猫','tmall'],['京东','jd'],['拼多多','pdd'],
+['抖音平台','douyin'],['直播部','live'],['直播间','live'],['直播','live'],
+['达人','kol'],['品牌视频','brand'],['品牌','brand'],['视频中心','brand'],
+['客服','cs'],['仓储','warehouse'],['供应链','warehouse'],
+['大客户','key'],['跨境','cross'],['财务','finance'],
+['人力','hr'],['HR','hr'],['IT','it'],['数据','it'],
+// 新增部门映射（基于2026年各部门规划文件）
+['渔之源事','biz4'],['渔之源事业四部','biz4'],
+['彩麦','purchase'],['采购','purchase'],
+['视觉中心','visual'],['视觉','visual'],
+['PAA事业部','paa'],['PAA事','paa'],['PAA','paa'],['PAA事业','paa'],
+['电商一部','ec1'],['电商一','ec1'],['电商一部（钓竿）','ec1'],
+['电商二部','ec2'],['电商二','ec2'],['电商二部（钓椅&配件&鱼钩)','ec2'],
+['电商三部','ec3'],['电商三','ec3'],['电商三部（钓伞&线&台钓装备）','ec3'],
+['电商四部','ec4'],['电商四','ec4'],['电商四部（渔具包&盒类&漂）','ec4'],
+['电商五部','ec5'],['电商五','ec5'],['电商五部（鱼护&水桶&钓箱&服装防护）','ec5'],
+['电商六部','ec6'],['电商六','ec6'],['电商六部（支架及&路亚竿&路亚装备)','ec6'],
+['电商七部','ec7'],['电商七','ec7'],['电商七部（抄网&渔轮）','ec7'],
 ];
 const DEPT_NAMES = {
-  tmall:'天猫平台',jd:'京东平台',pdd:'拼多多平台',
-  douyin:'抖音平台',live:'直播部',kol:'达人/内容部',
-  brand:'品牌/视频部',cs:'客服部',warehouse:'仓储/供应链',
-  key:'大客户部',cross:'跨境部',finance:'财务部',
-  hr:'HR/行政',it:'IT/数据部',other:'其他部门',
-  // 新增部门显示名称
-  biz4:'渔之源事业四部',purchase:'采购中心',
-  visual:'视觉中心',paa:'PAA事业部',
-  ec1:'电商一部（钓竿）',ec2:'电商二部（钓椅&配件&鱼钩)',
-  ec3:'电商三部（钓伞&线&台钓装备）',ec4:'电商四部（渔具包&盒类&漂）',
-  ec5:'电商五部（鱼护&水桶&钓箱&服装防护）',ec6:'电商六部（支架及&路亚竿&路亚装备)',
-  ec7:'电商七部（抄网&渔轮）'
+tmall:'天猫平台',jd:'京东平台',pdd:'拼多多平台',
+douyin:'抖音平台',live:'直播部',kol:'达人/内容部',
+brand:'品牌/视频部',cs:'客服部',warehouse:'仓储/供应链',
+key:'大客户部',cross:'跨境部',finance:'财务部',
+hr:'HR/行政',it:'IT/数据部',other:'其他部门',
+// 新增部门显示名称
+biz4:'渔之源事业四部',purchase:'采购中心',
+visual:'视觉中心',paa:'PAA事业部',
+ec1:'电商一部（钓竿）',ec2:'电商二部（钓椅&配件&鱼钩)',
+ec3:'电商三部（钓伞&线&台钓装备）',ec4:'电商四部（渔具包&盒类&漂）',
+ec5:'电商五部（鱼护&水桶&钓箱&服装防护）',ec6:'电商六部（支架及&路亚竿&路亚装备)',
+ec7:'电商七部（抄网&渔轮）'
 };
 const RAG = {
-  r:{cls:'rp-r',label:'红灯 · 需决策',color:'var(--R)'},
-  a:{cls:'rp-a',label:'黄灯 · 需关注',color:'var(--A)'},
-  g:{cls:'rp-g',label:'绿灯 · 正常',color:'var(--G)'}
+r:{cls:'rp-r',label:'红灯 · 需决策',color:'var(--R)'},
+a:{cls:'rp-a',label:'黄灯 · 需关注',color:'var(--A)'},
+g:{cls:'rp-g',label:'绿灯 · 正常',color:'var(--G)'}
 };
-
 // 各服务商预设
 const PRESETS = {
-  claude: {
-    url: 'https://api.anthropic.com/v1',
-    model: 'claude-sonnet-4-20250514',
-    hint: '获取 Key：<a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key（需充值 $5 才能调用）',
-    mode: 'anthropic'
-  },
-  deepseek: {
-    url: 'https://api.deepseek.com/v1',
-    model: 'deepseek-chat',
-    hint: '获取 Key：<a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a> → API Keys（价格极低，有免费额度）',
-    mode: 'openai'
-  },
-  qwen: {
-    url: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-    model: 'qwen-plus',
-    hint: '获取 Key：<a href="https://dashscope.console.aliyun.com" target="_blank">阿里云百炼控制台</a> → API Key 管理（有免费额度）',
-    mode: 'openai'
-  },
-  moonshot: {
-    url: 'https://api.moonshot.cn/v1',
-    model: 'moonshot-v1-8k',
-    hint: '获取 Key：<a href="https://platform.moonshot.cn" target="_blank">platform.moonshot.cn</a> → API Key（有免费额度）',
-    mode: 'openai'
-  },
-  openai: {
-    url: 'https://api.openai.com/v1',
-    model: 'gpt-4o-mini',
-    hint: '获取 Key：<a href="https://platform.openai.com" target="_blank">platform.openai.com</a> → API Keys',
-    mode: 'openai'
-  },
-  custom: {
-    url: '',
-    model: '',
-    hint: '填入任何兼容 OpenAI 格式的接口地址和 Key 即可',
-    mode: 'openai'
-  }
+claude: {
+url: 'https://api.anthropic.com/v1',
+model: 'claude-sonnet-4-20250514',
+hint: '获取 Key：<a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys → Create Key（需充值 $5 才能调用）',
+mode: 'anthropic'
+},
+deepseek: {
+url: 'https://api.deepseek.com/v1',
+model: 'deepseek-chat',
+hint: '获取 Key：<a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a> → API Keys（价格极低，有免费额度）',
+mode: 'openai'
+},
+qwen: {
+url: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+model: 'qwen-plus',
+hint: '获取 Key：<a href="https://dashscope.console.aliyun.com" target="_blank">阿里云百炼控制台</a> → API Key 管理（有免费额度）',
+mode: 'openai'
+},
+moonshot: {
+url: 'https://api.moonshot.cn/v1',
+model: 'moonshot-v1-8k',
+hint: '获取 Key：<a href="https://platform.moonshot.cn" target="_blank">platform.moonshot.cn</a> → API Key（有免费额度）',
+mode: 'openai'
+},
+openai: {
+url: 'https://api.openai.com/v1',
+model: 'gpt-4o-mini',
+hint: '获取 Key：<a href="https://platform.openai.com" target="_blank">platform.openai.com</a> → API Keys',
+mode: 'openai'
+},
+custom: {
+url: '',
+model: '',
+hint: '填入任何兼容 OpenAI 格式的接口地址和 Key 即可',
+mode: 'openai'
+}
 };
-
 // ══════════════════════════════════════════
 // 状态
 // ══════════════════════════════════════════
 let pendingFiles = [];
 let parsedDepts  = [];
 let aiReports    = {};
-
 // ══════════════════════════════════════════
 // 工具
 // ══════════════════════════════════════════
 function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2400);
+const t = document.getElementById('toast');
+t.textContent = msg; t.classList.add('show');
+clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2400);
 }
 function wkNum() {
-  const d = new Date(), s = new Date(d.getFullYear(),0,1);
-  return Math.ceil(((d-s)/864e5+s.getDay()+1)/7);
+const d = new Date(), s = new Date(d.getFullYear(),0,1);
+return Math.ceil(((d-s)/864e5+s.getDay()+1)/7);
 }
 function fmtM(n) {
-  const x = parseFloat(n);
-  if (!x||isNaN(x)) return '—';
-  if (Math.abs(x)>=1e8) return (x/1e8).toFixed(2)+'亿';
-  if (Math.abs(x)>=1e4) return (x/1e4).toFixed(1)+'万';
-  return Math.round(x).toLocaleString();
+const x = parseFloat(n);
+if (!x||isNaN(x)) return '—';
+if (Math.abs(x)>=1e8) return (x/1e8).toFixed(2)+'亿';
+if (Math.abs(x)>=1e4) return (x/1e4).toFixed(1)+'万';
+return Math.round(x).toLocaleString();
 }
 function cleanVal(v) {
-  if (v===null||v===undefined||v==='') return null;
-  const s = String(v).trim().toLowerCase();
-  if (['#div/0!','#value!','#ref!','#n/a','#name?','/','无数据','小二暂未回复'].includes(s)) return null;
-  return v;
+if (v===null||v===undefined||v==='') return null;
+const s = String(v).trim().toLowerCase();
+if (['#div/0!','#value!','#ref!','#n/a','#name?','/','无数据','小二暂未回复'].includes(s)) return null;
+return v;
 }
 function fmtVal(v) {
-  if (v===null) return null;
-  const n = parseFloat(v);
-  if (isNaN(n)) return String(v);
-  if (Math.abs(n)<2&&n!==0) return (n*100).toFixed(1)+'%';
-  if (Math.abs(n)>=1e4) return (n/1e4).toFixed(1)+'万';
-  return Math.round(n).toLocaleString();
+if (v===null) return null;
+const n = parseFloat(v);
+if (isNaN(n)) return String(v);
+if (Math.abs(n)<2&&n!==0) return (n*100).toFixed(1)+'%';
+if (Math.abs(n)>=1e4) return (n/1e4).toFixed(1)+'万';
+return Math.round(n).toLocaleString();
 }
 function detectDept(fn) {
-  const f = fn.replace(/\.xlsx?$/i,'');
-  for (const [kw,dept] of DEPT_MAP) if (f.includes(kw)) return dept;
-  return 'other';
+const f = fn.replace(/\.xlsx?$/i,'');
+for (const [kw,dept] of DEPT_MAP) if (f.includes(kw)) return dept;
+return 'other';
 }
-
 // 判断是否为排名数据
 function isRankData(label) {
-  if (!label || typeof label !== 'string') return false;
-  
-  const lcLabel = label.toLowerCase();
-  
-  // 排除业务指标关键词 - 这些绝对不是排名数据
-  const businessKeywords = [
-    '销售', 'gmv', '金额', '收入', '成交', '访客', '流量', '转化',
-    'uv', 'pv', '客单价', '订单', '支付', '退款', '退货',
-    '成本', '利润', '毛利', '净利', '费用', '预算', '花费'
-  ];
-  
-  // 检查是否包含业务指标关键词（中英文）
-  for (const kw of businessKeywords) {
-    if (lcLabel.includes(kw.toLowerCase())) {
-      return false; // 包含业务关键词，不是排名数据
-    }
-  }
-  
-  // 检查英文业务关键词
-  const englishBusinessKeywords = [
-    'sale', 'revenue', 'income', 'gmv', 'transaction', 'visitor',
-    'traffic', 'conversion', 'order', 'payment', 'refund', 'return',
-    'cost', 'profit', 'margin', 'expense', 'budget', 'spend'
-  ];
-  
-  for (const kw of englishBusinessKeywords) {
-    if (lcLabel.includes(kw)) {
-      return false;
-    }
-  }
-  
-  // 排名数据的关键特征
-  const rankPatterns = [
-    /【.*】/,  // 包含【】符号
-    /排名/,     // 包含"排名"字样
-    /第[一二三四五六七八九十\d]+名/,  // "第X名"格式
-    /top\s*\d+/i,  // "TOP 10"格式
-    /位$/,      // 以"位"结尾
-    /名次/,     // 包含"名次"
-    /rank/i,    // 包含"rank"
-    /position/i // 包含"position"
-  ];
-  
-  // 检查是否匹配排名模式
-  for (const pattern of rankPatterns) {
-    if (pattern.test(label)) {
-      return true;
-    }
-  }
-  
-  return false;
+if (!label || typeof label !== 'string') return false;
+const lcLabel = label.toLowerCase();
+// 排除业务指标关键词 - 这些绝对不是排名数据
+const businessKeywords = [
+'销售', 'gmv', '金额', '收入', '成交', '访客', '流量', '转化',
+'uv', 'pv', '客单价', '订单', '支付', '退款', '退货',
+'成本', '利润', '毛利', '净利', '费用', '预算', '花费'
+];
+// 检查是否包含业务指标关键词（中英文）
+for (const kw of businessKeywords) {
+if (lcLabel.includes(kw.toLowerCase())) {
+return false; // 包含业务关键词，不是排名数据
 }
-
+}
+// 检查英文业务关键词
+const englishBusinessKeywords = [
+'sale', 'revenue', 'income', 'gmv', 'transaction', 'visitor',
+'traffic', 'conversion', 'order', 'payment', 'refund', 'return',
+'cost', 'profit', 'margin', 'expense', 'budget', 'spend'
+];
+for (const kw of englishBusinessKeywords) {
+if (lcLabel.includes(kw)) {
+return false;
+}
+}
+// 排名数据的关键特征
+const rankPatterns = [
+/【.*】/,  // 包含【】符号
+/排名/,     // 包含"排名"字样
+/第[一二三四五六七八九十\d]+名/,  // "第X名"格式
+/top\s*\d+/i,  // "TOP 10"格式
+/位$/,      // 以"位"结尾
+/名次/,     // 包含"名次"
+/rank/i,    // 包含"rank"
+/position/i // 包含"position"
+];
+// 检查是否匹配排名模式
+for (const pattern of rankPatterns) {
+if (pattern.test(label)) {
+return true;
+}
+}
+return false;
+}
 // ══════════════════════════════════════════
 // AI 接口配置
 // ══════════════════════════════════════════
 function loadCfg() {
-  try { return JSON.parse(localStorage.getItem('yz_cfg')||'{}'); } catch(e) { return {}; }
+try { return JSON.parse(localStorage.getItem('yz_cfg')||'{}'); } catch(e) { return {}; }
 }
 function saveCfg() {
-  const cfg = {
-    url:   document.getElementById('cfg-url').value.trim().replace(/\/+$/,''),
-    key:   document.getElementById('cfg-key').value.trim(),
-    model: document.getElementById('cfg-model').value.trim(),
-    proxy: document.getElementById('cfg-proxy').value.trim().replace(/\/+$/,''),
-    mode:  loadCfg().mode || 'openai'
-  };
-  if (!cfg.url || !cfg.key || !cfg.model) { toast('请填写完整配置'); return; }
-  localStorage.setItem('yz_cfg', JSON.stringify(cfg));
-  refreshCfgStatus();
-  toggleCfg(false);
-  toast('配置已保存');
+const cfg = {
+url:   document.getElementById('cfg-url').value.trim().replace(/\/+$/,''),
+key:   document.getElementById('cfg-key').value.trim(),
+model: document.getElementById('cfg-model').value.trim(),
+proxy: document.getElementById('cfg-proxy').value.trim().replace(/\/+$/,''),
+mode:  loadCfg().mode || 'openai'
+};
+if (!cfg.url || !cfg.key || !cfg.model) { toast('请填写完整配置'); return; }
+localStorage.setItem('yz_cfg', JSON.stringify(cfg));
+refreshCfgStatus();
+toggleCfg(false);
+toast('配置已保存');
 }
 function refreshCfgStatus() {
-  const cfg = loadCfg();
-  const ok  = !!(cfg.url && cfg.key && cfg.model);
-  const el  = document.getElementById('cfg-status');
-  el.textContent = ok ? `✓ ${cfg.model}` : '未配置';
-  el.className   = 'cfg-status ' + (ok ? 'cfg-ok' : 'cfg-no');
-  document.getElementById('run-btn').disabled = !ok || pendingFiles.length===0;
+const cfg = loadCfg();
+const ok  = !!(cfg.url && cfg.key && cfg.model);
+const el  = document.getElementById('cfg-status');
+el.textContent = ok ? `✓ ${cfg.model}` : '未配置';
+el.className   = 'cfg-status ' + (ok ? 'cfg-ok' : 'cfg-no');
+document.getElementById('run-btn').disabled = !ok || pendingFiles.length===0;
 }
 function toggleCfg(force) {
-  const body  = document.getElementById('cfg-body');
-  const arrow = document.getElementById('cfg-arrow');
-  const open  = force !== undefined ? force : !body.classList.contains('open');
-  body.classList.toggle('open', open);
-  arrow.classList.toggle('open', open);
-  if (open) {
-    const cfg = loadCfg();
-    if (cfg.url)   document.getElementById('cfg-url').value   = cfg.url;
-    if (cfg.key)   document.getElementById('cfg-key').value   = cfg.key;
-    if (cfg.model) document.getElementById('cfg-model').value = cfg.model;
-    if (cfg.proxy) document.getElementById('cfg-proxy').value = cfg.proxy;
-  }
+const body  = document.getElementById('cfg-body');
+const arrow = document.getElementById('cfg-arrow');
+const open  = force !== undefined ? force : !body.classList.contains('open');
+body.classList.toggle('open', open);
+arrow.classList.toggle('open', open);
+if (open) {
+const cfg = loadCfg();
+if (cfg.url)   document.getElementById('cfg-url').value   = cfg.url;
+if (cfg.key)   document.getElementById('cfg-key').value   = cfg.key;
+if (cfg.model) document.getElementById('cfg-model').value = cfg.model;
+if (cfg.proxy) document.getElementById('cfg-proxy').value = cfg.proxy;
+}
 }
 function applyPreset(name) {
-  const p = PRESETS[name];
-  if (!p) return;
-  document.querySelectorAll('.preset').forEach(b => b.classList.remove('on'));
-  event.target.classList.add('on');
-  if (p.url)   document.getElementById('cfg-url').value   = p.url;
-  if (p.model) document.getElementById('cfg-model').value = p.model;
-  document.getElementById('cfg-hint').innerHTML = p.hint || '';
-  // 保存 mode
-  const cfg = loadCfg();
-  cfg.mode = p.mode;
-  localStorage.setItem('yz_cfg', JSON.stringify(cfg));
-  document.getElementById('cfg-key').focus();
+const p = PRESETS[name];
+if (!p) return;
+document.querySelectorAll('.preset').forEach(b => b.classList.remove('on'));
+event.target.classList.add('on');
+if (p.url)   document.getElementById('cfg-url').value   = p.url;
+if (p.model) document.getElementById('cfg-model').value = p.model;
+document.getElementById('cfg-hint').innerHTML = p.hint || '';
+// 保存 mode
+const cfg = loadCfg();
+cfg.mode = p.mode;
+localStorage.setItem('yz_cfg', JSON.stringify(cfg));
+document.getElementById('cfg-key').focus();
 }
 async function testCfg() {
-  const el = document.getElementById('test-result');
-  el.textContent = '测试中...'; el.style.color = 'var(--ink3)';
-  try {
-    const text = await callAI('你是助手，请用一句话回复。', '你好，连接测试', 50);
-    el.textContent = '✓ 连接成功：' + text.slice(0,30);
-    el.style.color = 'var(--G)';
-  } catch(e) {
-    el.textContent = '✗ ' + e.message;
-    el.style.color = 'var(--R)';
-  }
+const el = document.getElementById('test-result');
+el.textContent = '测试中...'; el.style.color = 'var(--ink3)';
+try {
+const text = await callAI('你是助手，请用一句话回复。', '你好，连接测试', 50);
+el.textContent = '✓ 连接成功：' + text.slice(0,30);
+el.style.color = 'var(--G)';
+} catch(e) {
+el.textContent = '✗ ' + e.message;
+el.style.color = 'var(--R)';
 }
-
+}
 // ══════════════════════════════════════════
 // 通用 AI 调用（支持 OpenAI 格式 + Anthropic 格式）
 // ══════════════════════════════════════════
 async function callAI(system, userMsg, maxTokens=900) {
-  const cfg = loadCfg();
-  if (!cfg.url || !cfg.key || !cfg.model) throw new Error('请先配置 AI 接口');
-
-  const isAnthropic = cfg.url.includes('anthropic.com');
-  const targetUrl   = cfg.url + (isAnthropic ? '/messages' : '/chat/completions');
-
-  // 通过代理转发，解决浏览器 CORS 限制
-  // 代理地址：优先用配置的代理，否则用相对路径（同域部署时可用）
-  const proxyBase = cfg.proxy || '';
-  const useProxy  = !!proxyBase;
-  const fetchUrl  = useProxy ? proxyBase + '/api/proxy' : targetUrl;
-
-  const headers = { 'Content-Type': 'application/json' };
-
-  let body;
-  if (isAnthropic) {
-    headers['x-api-key']         = cfg.key;
-    headers['anthropic-version'] = '2023-06-01';
-    if (!useProxy) headers['anthropic-dangerous-direct-browser-access'] = 'true';
-    body = { model: cfg.model, max_tokens: maxTokens, system, messages: [{role:'user',content:userMsg}] };
-  } else {
-    headers['Authorization'] = `Bearer ${cfg.key}`;
-    body = { model: cfg.model, max_tokens: maxTokens,
-      messages: [{ role:'system', content:system }, { role:'user', content:userMsg }] };
-  }
-
-  if (useProxy) {
-    // 通过代理时，把认证信息放进 body，代理负责转发给 AI 服务
-    body.target_url = targetUrl;
-    body.api_key    = cfg.key;
-    body.api_mode   = isAnthropic ? 'anthropic' : 'openai';
-    // 代理不需要在 header 里带认证
-    delete headers['Authorization'];
-    delete headers['x-api-key'];
-    delete headers['anthropic-version'];
-    delete headers['anthropic-dangerous-direct-browser-access'];
-  }
-
-  const resp = await fetch(fetchUrl, { method:'POST', headers, body: JSON.stringify(body) });
-
-  if (!resp.ok) {
-    const err = await resp.json().catch(()=>({}));
-    const msg = err.error?.message || err.message || '';
-    const s   = resp.status;
-    if (s===401) throw new Error('API Key 无效，请检查是否填写正确');
-    if (s===402) throw new Error('账号余额不足，请充值后重试');
-    if (s===403) throw new Error('无访问权限：' + msg);
-    if (s===429) throw new Error('请求太频繁，请稍后重试');
-    throw new Error(`请求失败 (${s})：${msg||'未知错误'}`);
-  }
-
-  const data = await resp.json();
-  return isAnthropic
-    ? (data.content?.map(i=>i.text||'').join('') || '')
-    : (data.choices?.[0]?.message?.content || '');
+const cfg = loadCfg();
+if (!cfg.url || !cfg.key || !cfg.model) throw new Error('请先配置 AI 接口');
+const isAnthropic = cfg.url.includes('anthropic.com');
+const targetUrl   = cfg.url + (isAnthropic ? '/messages' : '/chat/completions');
+// 通过代理转发，解决浏览器 CORS 限制
+// 代理地址：优先用配置的代理，否则用相对路径（同域部署时可用）
+const proxyBase = cfg.proxy || '';
+const useProxy  = !!proxyBase;
+const fetchUrl  = useProxy ? proxyBase + '/api/proxy' : targetUrl;
+const headers = { 'Content-Type': 'application/json' };
+let body;
+if (isAnthropic) {
+headers['x-api-key']         = cfg.key;
+headers['anthropic-version'] = '2023-06-01';
+if (!useProxy) headers['anthropic-dangerous-direct-browser-access'] = 'true';
+body = { model: cfg.model, max_tokens: maxTokens, system, messages: [{role:'user',content:userMsg}] };
+} else {
+headers['Authorization'] = `Bearer ${cfg.key}`;
+body = { model: cfg.model, max_tokens: maxTokens,
+messages: [{ role:'system', content:system }, { role:'user', content:userMsg }] };
 }
-
+if (useProxy) {
+// 通过代理时，把认证信息放进 body，代理负责转发给 AI 服务
+body.target_url = targetUrl;
+body.api_key    = cfg.key;
+body.api_mode   = isAnthropic ? 'anthropic' : 'openai';
+// 代理不需要在 header 里带认证
+delete headers['Authorization'];
+delete headers['x-api-key'];
+delete headers['anthropic-version'];
+delete headers['anthropic-dangerous-direct-browser-access'];
+}
+const resp = await fetch(fetchUrl, { method:'POST', headers, body: JSON.stringify(body) });
+if (!resp.ok) {
+const err = await resp.json().catch(()=>({}));
+const msg = err.error?.message || err.message || '';
+const s   = resp.status;
+if (s===401) throw new Error('API Key 无效，请检查是否填写正确');
+if (s===402) throw new Error('账号余额不足，请充值后重试');
+if (s===403) throw new Error('无访问权限：' + msg);
+if (s===429) throw new Error('请求太频繁，请稍后重试');
+throw new Error(`请求失败 (${s})：${msg||'未知错误'}`);
+}
+const data = await resp.json();
+return isAnthropic
+? (data.content?.map(i=>i.text||'').join('') || '')
+: (data.choices?.[0]?.message?.content || '');
+}
 // ══════════════════════════════════════════
 // JSON 修复工具（增强版）
 // ══════════════════════════════════════════
 function repairJSON(jsonString) {
-  if (!jsonString || typeof jsonString !== 'string') return jsonString;
-  
-  let fixed = jsonString;
-  
-  // 1. 移除可能包裹的代码块标记
-  fixed = fixed.replace(/```json|```/g, '').trim();
-  
-  // 2. 处理中文引号
-  fixed = fixed.replace(/[“”]/g, '"');
-  fixed = fixed.replace(/[‘’]/g, "'");
-  
-  // 3. 先尝试直接解析，如果成功则直接返回
-  try {
-    JSON.parse(fixed);
-    return fixed;
-  } catch (e) {
-    console.log('JSON 需要修复，原始错误:', e.message);
-  }
-  
-  // 4. 增强修复：处理常见JSON格式错误
-  
-  // 4.1 修复字符串内部的未转义引号（使用状态机）
-  let result = '';
-  let inString = false;
-  let escapeNext = false;
-  let quoteChar = '';
-  
-  for (let i = 0; i < fixed.length; i++) {
-    const char = fixed[i];
-    
-    if (escapeNext) {
-      result += char;
-      escapeNext = false;
-      continue;
-    }
-    
-    if (char === '\\') {
-      escapeNext = true;
-      result += char;
-      continue;
-    }
-    
-    if (!inString && (char === '"' || char === "'")) {
-      inString = true;
-      quoteChar = char;
-      result += char;
-      continue;
-    }
-    
-    if (inString && char === quoteChar) {
-      inString = false;
-      quoteChar = '';
-      result += char;
-      continue;
-    }
-    
-    if (inString && char === '"' && quoteChar === '"') {
-      // 字符串内部未转义的双引号，需要转义
-      result += '\\"';
-    } else if (inString && char === "'" && quoteChar === "'") {
-      // 字符串内部未转义的单引号，需要转义
-      result += "\\'";
-    } else {
-      result += char;
-    }
-  }
-  
-  fixed = result;
-  
-  // 4.2 修复尾随逗号（在对象或数组末尾）
-  // 匹配: }, ] 前面的逗号
-  fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
-  
-  // 4.3 修复缺失的逗号（关键修复：处理 "Expected ',' or '}' after property value" 错误）
-  // 模式：值后直接跟着属性名或结束符，缺少逗号
-  // 使用状态机更准确地修复
-  let repaired = '';
-  let depth = 0; // 大括号深度
-  let inStr = false;
-  let escaping = false;
-  let lastChar = '';
-  
-  for (let i = 0; i < fixed.length; i++) {
-    const char = fixed[i];
-    
-    if (escaping) {
-      repaired += char;
-      escaping = false;
-      lastChar = char;
-      continue;
-    }
-    
-    if (char === '\\') {
-      escaping = true;
-      repaired += char;
-      lastChar = char;
-      continue;
-    }
-    
-    if (char === '"' && !escaping) {
-      inStr = !inStr;
-      repaired += char;
-      lastChar = char;
-      continue;
-    }
-    
-    if (!inStr) {
-      if (char === '{' || char === '[') {
-        depth++;
-      } else if (char === '}' || char === ']') {
-        depth--;
-      }
-      
-      // 检查是否需要添加逗号的情况：
-      // 1. 在对象中：值后跟着新属性（"value""key" 或 "value" "key"）
-      // 2. 在对象中：值后跟着 }（但已经处理了尾随逗号）
-      // 3. 在数组中：值后跟着新值
-      
-      if (depth > 0) {
-        // 检查模式：值结束（数字、字符串、true/false/null、对象、数组）后缺少逗号
-        const prevChars = fixed.slice(Math.max(0, i - 10), i + 1);
-        const nextChars = fixed.slice(i + 1, Math.min(fixed.length, i + 10));
-        
-        // 如果当前字符是 " 且不在字符串中，并且前面是值结束符
-        if (char === '"' && nextChars.match(/^\s*"/)) {
-          // "value1""value2" 的情况，中间需要逗号
-          const before = fixed.slice(0, i + 1);
-          const after = fixed.slice(i + 1);
-          // 插入逗号
-          fixed = before + ',' + after;
-          i++; // 跳过新增的逗号
-        }
-      }
-    }
-    
-    repaired += char;
-    lastChar = char;
-  }
-  
-  fixed = repaired;
-  
-  // 4.4 修复其他常见模式
-  // 模式：}"key" 或 ]"key"（缺少逗号）
-  fixed = fixed.replace(/([}\]])"(\w+)"/g, '$1,"$2"');
-  // 模式：}"key": 或 ]"key":
-  fixed = fixed.replace(/([}\]])"\s*(\w+)"\s*:/g, '$1,"$2":');
-  // 模式：数字后直接跟着 "key"
-  fixed = fixed.replace(/(\d)\s*"(\w+)"/g, '$1,"$2"');
-  // 模式：true/false/null后直接跟着 "key"
-  fixed = fixed.replace(/(true|false|null)\s*"(\w+)"/g, '$1,"$2"');
-  
-  // 4.5 修复未闭合的括号
-  const openBraces = (fixed.match(/{/g) || []).length;
-  const closeBraces = (fixed.match(/}/g) || []).length;
-  if (openBraces > closeBraces) {
-    fixed = fixed + '}'.repeat(openBraces - closeBraces);
-  }
-  
-  const openBrackets = (fixed.match(/\[/g) || []).length;
-  const closeBrackets = (fixed.match(/\]/g) || []).length;
-  if (openBrackets > closeBrackets) {
-    fixed = fixed + ']'.repeat(openBrackets - closeBrackets);
-  }
-  
-  // 4.6 移除控制字符（不在字符串内的）
-  result = '';
-  inStr = false;
-  escaping = false;
-  
-  for (let i = 0; i < fixed.length; i++) {
-    const char = fixed[i];
-    const code = char.charCodeAt(0);
-    
-    if (escaping) {
-      result += char;
-      escaping = false;
-      continue;
-    }
-    
-    if (char === '\\') {
-      escaping = true;
-      result += char;
-      continue;
-    }
-    
-    if (char === '"') {
-      inStr = !inStr;
-      result += char;
-      continue;
-    }
-    
-    if (!inStr && (code <= 0x1F || (code >= 0x7F && code <= 0x9F))) {
-      // 控制字符，不在字符串内，移除
-      continue;
-    }
-    
-    result += char;
-  }
-  
-  fixed = result;
-  
-  // 5. 最终尝试解析
-  try {
-    JSON.parse(fixed);
-    console.log('JSON 修复成功');
-    return fixed;
-  } catch (e) {
-    console.warn('JSON 修复失败:', e.message);
-    // 返回最基础的清理版本
-    return jsonString.replace(/```json|```/g, '').trim()
-      .replace(/[“”]/g, '"')
-      .replace(/[‘’]/g, "'")
-      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-  }
+if (!jsonString || typeof jsonString !== 'string') return jsonString;
+let fixed = jsonString;
+// 1. 移除可能包裹的代码块标记
+fixed = fixed.replace(/```json|```/g, '').trim();
+// 2. 处理中文引号
+fixed = fixed.replace(/[“”]/g, '"');
+fixed = fixed.replace(/[‘’]/g, "'");
+// 3. 先尝试直接解析，如果成功则直接返回
+try {
+JSON.parse(fixed);
+return fixed;
+} catch (e) {
+console.log('JSON 需要修复，原始错误:', e.message);
 }
-  if (!jsonString || typeof jsonString !== 'string') return jsonString;
-  
-  let fixed = jsonString;
-  
-  // 1. 移除可能包裹的代码块标记
-  fixed = fixed.replace(/```json|```/g, '').trim();
-  
-  // 2. 处理中文引号
-  fixed = fixed.replace(/[“”]/g, '"');
-  fixed = fixed.replace(/[‘’]/g, "'");
-  
-  // 3. 先尝试直接解析，如果成功则直接返回
-  try {
-    JSON.parse(fixed);
-    return fixed;
-  } catch (e) {
-    console.log('JSON 需要修复，原始错误:', e.message);
-  }
-  
-  // 4. 逐步修复常见问题
-  
-  // 4.1 修复字符串内部的未转义双引号
-  // 使用状态机方法，更可靠
-  let result = '';
-  let inString = false;
-  let escapeNext = false;
-  let quoteChar = '';
-  
-  for (let i = 0; i < fixed.length; i++) {
-    const char = fixed[i];
-    
-    if (escapeNext) {
-      result += char;
-      escapeNext = false;
-      continue;
-    }
-    
-    if (char === '\\') {
-      escapeNext = true;
-      result += char;
-      continue;
-    }
-    
-    if (!inString && (char === '"' || char === "'")) {
-      inString = true;
-      quoteChar = char;
-      result += char;
-      continue;
-    }
-    
-    if (inString && char === quoteChar) {
-      inString = false;
-      quoteChar = '';
-      result += char;
-      continue;
-    }
-    
-    if (inString && char === '"' && quoteChar === '"') {
-      // 字符串内部未转义的双引号，需要转义
-      result += '\\"';
-    } else if (inString && char === "'" && quoteChar === "'") {
-      // 字符串内部未转义的单引号，需要转义
-      result += "\\'";
-    } else {
-      result += char;
-    }
-  }
-  
-  fixed = result;
-  
-  // 4.2 修复尾随逗号
-  fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
-  
-  // 4.3 修复缺少逗号的情况
-  fixed = fixed.replace(/}(\s*")/g, '},$1');
-  fixed = fixed.replace(/}(\s*{)/g, '},$1');
-  fixed = fixed.replace(/](\s*")/g, '],$1');
-  fixed = fixed.replace(/](\s*{)/g, '],$1');
-  
-  // 4.4 修复未闭合的括号
-  const openBraces = (fixed.match(/{/g) || []).length;
-  const closeBraces = (fixed.match(/}/g) || []).length;
-  if (openBraces > closeBraces) {
-    fixed = fixed + '}'.repeat(openBraces - closeBraces);
-  }
-  
-  const openBrackets = (fixed.match(/\[/g) || []).length;
-  const closeBrackets = (fixed.match(/\]/g) || []).length;
-  if (openBrackets > closeBrackets) {
-    fixed = fixed + ']'.repeat(openBrackets - closeBrackets);
-  }
-  
-  // 4.5 移除控制字符（不在字符串内的）
-  // 再次使用状态机保护字符串内容
-  result = '';
-  inString = false;
-  escapeNext = false;
-  
-  for (let i = 0; i < fixed.length; i++) {
-    const char = fixed[i];
-    const code = char.charCodeAt(0);
-    
-    if (escapeNext) {
-      result += char;
-      escapeNext = false;
-      continue;
-    }
-    
-    if (char === '\\') {
-      escapeNext = true;
-      result += char;
-      continue;
-    }
-    
-    if (char === '"') {
-      inString = !inString;
-      result += char;
-      continue;
-    }
-    
-    if (!inString && (code <= 0x1F || (code >= 0x7F && code <= 0x9F))) {
-      // 控制字符，不在字符串内，移除
-      continue;
-    }
-    
-    result += char;
-  }
-  
-  fixed = result;
-  
-  // 5. 最终尝试解析
-  try {
-    JSON.parse(fixed);
-    console.log('JSON 修复成功');
-    return fixed;
-  } catch (e) {
-    console.warn('JSON 修复失败:', e.message);
-    // 返回最基础的清理版本
-    return jsonString.replace(/```json|```/g, '').trim()
-      .replace(/[“”]/g, '"')
-      .replace(/[‘’]/g, "'")
-      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-  }
+// 4. 增强修复：处理常见JSON格式错误
+// 4.1 修复字符串内部的未转义引号（使用状态机）
+let result = '';
+let inString = false;
+let escapeNext = false;
+let quoteChar = '';
+for (let i = 0; i < fixed.length; i++) {
+const char = fixed[i];
+if (escapeNext) {
+result += char;
+escapeNext = false;
+continue;
 }
-
+if (char === '\\') {
+escapeNext = true;
+result += char;
+continue;
+}
+if (!inString && (char === '"' || char === "'")) {
+inString = true;
+quoteChar = char;
+result += char;
+continue;
+}
+if (inString && char === quoteChar) {
+inString = false;
+quoteChar = '';
+result += char;
+continue;
+}
+if (inString && char === '"' && quoteChar === '"') {
+// 字符串内部未转义的双引号，需要转义
+result += '\\"';
+} else if (inString && char === "'" && quoteChar === "'") {
+// 字符串内部未转义的单引号，需要转义
+result += "\\'";
+} else {
+result += char;
+}
+}
+fixed = result;
+// 4.2 修复尾随逗号（在对象或数组末尾）
+// 匹配: }, ] 前面的逗号
+fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
+// 4.3 修复缺失的逗号（关键修复：处理 "Expected ',' or '}' after property value" 错误）
+// 模式：值后直接跟着属性名或结束符，缺少逗号
+// 使用状态机更准确地修复
+let repaired = '';
+let depth = 0; // 大括号深度
+let inStr = false;
+let escaping = false;
+let lastChar = '';
+for (let i = 0; i < fixed.length; i++) {
+const char = fixed[i];
+if (escaping) {
+repaired += char;
+escaping = false;
+lastChar = char;
+continue;
+}
+if (char === '\\') {
+escaping = true;
+repaired += char;
+lastChar = char;
+continue;
+}
+if (char === '"' && !escaping) {
+inStr = !inStr;
+repaired += char;
+lastChar = char;
+continue;
+}
+if (!inStr) {
+if (char === '{' || char === '[') {
+depth++;
+} else if (char === '}' || char === ']') {
+depth--;
+}
+// 检查是否需要添加逗号的情况：
+// 1. 在对象中：值后跟着新属性（"value""key" 或 "value" "key"）
+// 2. 在对象中：值后跟着 }（但已经处理了尾随逗号）
+// 3. 在数组中：值后跟着新值
+if (depth > 0) {
+// 检查模式：值结束（数字、字符串、true/false/null、对象、数组）后缺少逗号
+const prevChars = fixed.slice(Math.max(0, i - 10), i + 1);
+const nextChars = fixed.slice(i + 1, Math.min(fixed.length, i + 10));
+// 如果当前字符是 " 且不在字符串中，并且前面是值结束符
+if (char === '"' && nextChars.match(/^\s*"/)) {
+// "value1""value2" 的情况，中间需要逗号
+const before = fixed.slice(0, i + 1);
+const after = fixed.slice(i + 1);
+// 插入逗号
+fixed = before + ',' + after;
+i++; // 跳过新增的逗号
+}
+}
+}
+repaired += char;
+lastChar = char;
+}
+fixed = repaired;
+// 4.4 修复其他常见模式
+// 模式：}"key" 或 ]"key"（缺少逗号）
+fixed = fixed.replace(/([}\]])"(\w+)"/g, '$1,"$2"');
+// 模式：}"key": 或 ]"key":
+fixed = fixed.replace(/([}\]])"\s*(\w+)"\s*:/g, '$1,"$2":');
+// 模式：数字后直接跟着 "key"
+fixed = fixed.replace(/(\d)\s*"(\w+)"/g, '$1,"$2"');
+// 模式：true/false/null后直接跟着 "key"
+fixed = fixed.replace(/(true|false|null)\s*"(\w+)"/g, '$1,"$2"');
+// 4.5 修复未闭合的括号
+const openBraces = (fixed.match(/{/g) || []).length;
+const closeBraces = (fixed.match(/}/g) || []).length;
+if (openBraces > closeBraces) {
+fixed = fixed + '}'.repeat(openBraces - closeBraces);
+}
+const openBrackets = (fixed.match(/\[/g) || []).length;
+const closeBrackets = (fixed.match(/\]/g) || []).length;
+if (openBrackets > closeBrackets) {
+fixed = fixed + ']'.repeat(openBrackets - closeBrackets);
+}
+// 4.6 移除控制字符（不在字符串内的）
+result = '';
+inStr = false;
+escaping = false;
+for (let i = 0; i < fixed.length; i++) {
+const char = fixed[i];
+const code = char.charCodeAt(0);
+if (escaping) {
+result += char;
+escaping = false;
+continue;
+}
+if (char === '\\') {
+escaping = true;
+result += char;
+continue;
+}
+if (char === '"') {
+inStr = !inStr;
+result += char;
+continue;
+}
+if (!inStr && (code <= 0x1F || (code >= 0x7F && code <= 0x9F))) {
+// 控制字符，不在字符串内，移除
+continue;
+}
+result += char;
+}
+fixed = result;
+// 5. 最终尝试解析
+try {
+JSON.parse(fixed);
+console.log('JSON 修复成功');
+return fixed;
+} catch (e) {
+console.warn('JSON 修复失败:', e.message);
+// 返回最基础的清理版本
+return jsonString.replace(/```json|```/g, '').trim()
+.replace(/[“”]/g, '"')
+.replace(/[‘’]/g, "'")
+.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+}
+}
+// 1. 移除可能包裹的代码块标记
+fixed = fixed.replace(/```json|```/g, '').trim();
+// 2. 处理中文引号
+fixed = fixed.replace(/[“”]/g, '"');
+fixed = fixed.replace(/[‘’]/g, "'");
+// 3. 先尝试直接解析，如果成功则直接返回
+try {
+JSON.parse(fixed);
+return fixed;
+} catch (e) {
+console.log('JSON 需要修复，原始错误:', e.message);
+}
+// 4. 逐步修复常见问题
+// 4.1 修复字符串内部的未转义双引号
+// 使用状态机方法，更可靠
+let result = '';
+let inString = false;
+let escapeNext = false;
+let quoteChar = '';
+for (let i = 0; i < fixed.length; i++) {
+const char = fixed[i];
+if (escapeNext) {
+result += char;
+escapeNext = false;
+continue;
+}
+if (char === '\\') {
+escapeNext = true;
+result += char;
+continue;
+}
+if (!inString && (char === '"' || char === "'")) {
+inString = true;
+quoteChar = char;
+result += char;
+continue;
+}
+if (inString && char === quoteChar) {
+inString = false;
+quoteChar = '';
+result += char;
+continue;
+}
+if (inString && char === '"' && quoteChar === '"') {
+// 字符串内部未转义的双引号，需要转义
+result += '\\"';
+} else if (inString && char === "'" && quoteChar === "'") {
+// 字符串内部未转义的单引号，需要转义
+result += "\\'";
+} else {
+result += char;
+}
+}
+fixed = result;
+// 4.2 修复尾随逗号
+fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
+// 4.3 修复缺少逗号的情况
+fixed = fixed.replace(/}(\s*")/g, '},$1');
+fixed = fixed.replace(/}(\s*{)/g, '},$1');
+fixed = fixed.replace(/](\s*")/g, '],$1');
+fixed = fixed.replace(/](\s*{)/g, '],$1');
+// 4.4 修复未闭合的括号
+const openBraces = (fixed.match(/{/g) || []).length;
+const closeBraces = (fixed.match(/}/g) || []).length;
+if (openBraces > closeBraces) {
+fixed = fixed + '}'.repeat(openBraces - closeBraces);
+}
+const openBrackets = (fixed.match(/\[/g) || []).length;
+const closeBrackets = (fixed.match(/\]/g) || []).length;
+if (openBrackets > closeBrackets) {
+fixed = fixed + ']'.repeat(openBrackets - closeBrackets);
+}
+// 4.5 移除控制字符（不在字符串内的）
+// 再次使用状态机保护字符串内容
+result = '';
+inString = false;
+escapeNext = false;
+for (let i = 0; i < fixed.length; i++) {
+const char = fixed[i];
+const code = char.charCodeAt(0);
+if (escapeNext) {
+result += char;
+escapeNext = false;
+continue;
+}
+if (char === '\\') {
+escapeNext = true;
+result += char;
+continue;
+}
+if (char === '"') {
+inString = !inString;
+result += char;
+continue;
+}
+if (!inString && (code <= 0x1F || (code >= 0x7F && code <= 0x9F))) {
+// 控制字符，不在字符串内，移除
+continue;
+}
+result += char;
+}
+fixed = result;
+// 5. 最终尝试解析
+try {
+JSON.parse(fixed);
+console.log('JSON 修复成功');
+return fixed;
+} catch (e) {
+console.warn('JSON 修复失败:', e.message);
+// 返回最基础的清理版本
+return jsonString.replace(/```json|```/g, '').trim()
+.replace(/[“”]/g, '"')
+.replace(/[‘’]/g, "'")
+.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+}
+}
 // ══════════════════════════════════════════
 // 页面导航
 // ══════════════════════════════════════════
 function goPage(p) {
-  ['upload','mapping','report','overview','history'].forEach(pg => {
-    document.getElementById('pg-'+pg).classList.toggle('on', pg===p);
-    document.getElementById('nb-'+pg).classList.toggle('on', pg===p);
-  });
-  if (p==='overview') buildOverview();
-  if (p==='history')  renderHist();
-  if (p==='mapping')  renderMapping();
+['upload','mapping','report','overview','history'].forEach(pg => {
+document.getElementById('pg-'+pg).classList.toggle('on', pg===p);
+document.getElementById('nb-'+pg).classList.toggle('on', pg===p);
+});
+if (p==='overview') buildOverview();
+if (p==='history')  renderHist();
+if (p==='mapping')  renderMapping();
 }
-
 // ============================================================================
 // 年度规划管理器（最小可行性版本）
 // ============================================================================
-
 // 存储已加载的规划数据
 let PLANNING_DATA = {};
-
 // 保存规划数据到本地存储
 function savePlanningData() {
-    try {
-        localStorage.setItem('yz_planning_data', JSON.stringify(PLANNING_DATA));
-    } catch (e) {
-        console.error('保存规划数据失败:', e);
-    }
+try {
+localStorage.setItem('yz_planning_data', JSON.stringify(PLANNING_DATA));
+} catch (e) {
+console.error('保存规划数据失败:', e);
 }
-
+}
 // 从本地存储加载规划数据
 function loadPlanningData() {
-    try {
-        const saved = localStorage.getItem('yz_planning_data');
-        if (saved) {
-            PLANNING_DATA = JSON.parse(saved);
-        }
-    } catch (e) {
-        console.error('加载规划数据失败:', e);
-    }
+try {
+const saved = localStorage.getItem('yz_planning_data');
+if (saved) {
+PLANNING_DATA = JSON.parse(saved);
+}
+} catch (e) {
+console.error('加载规划数据失败:', e);
+}
 };
-
 // 智能摘要算法（简化版）
 function summarizePlanningText(text, maxChars = 4000) {
-    if (!text || text.length <= maxChars) return text;
-    
-    // 查找关键部分
-    const sections = [];
-    
-    // 查找总体目的
-    const purposeMatch = text.match(/总体目的[：:]([^\n]{50,300})/);
-    if (purposeMatch) sections.push('总体目的：' + purposeMatch[1].trim());
-    
-    // 查找年度目标
-    const goalMatch = text.match(/年度目标[：:]([^\n]{50,300})/);
-    if (goalMatch) sections.push('年度目标：' + goalMatch[1].trim());
-    
-    // 查找Q2行动计划
-    const q2Match = text.match(/第二季度[^：:]*[：:]([^\n]{100,400})/);
-    if (q2Match) sections.push('Q2行动计划：' + q2Match[1].trim());
-    
-    // 如果找到关键部分，组合它们
-    if (sections.length > 0) {
-        let summary = sections.join('\n\n');
-        if (summary.length > maxChars) {
-            summary = summary.substring(0, maxChars);
-            // 在完整句子处截断
-            for (let i = maxChars - 1; i > maxChars - 100; i--) {
-                if ('。；，.;,\n'.includes(summary[i])) {
-                    summary = summary.substring(0, i + 1);
-                    break;
-                }
-            }
-        }
-        return summary;
-    }
-    
-    // 如果没有找到特定格式，取前800字符
-    return text.substring(0, maxChars);
+if (!text || text.length <= maxChars) return text;
+// 查找关键部分
+const sections = [];
+// 查找总体目的
+const purposeMatch = text.match(/总体目的[：:]([^\n]{50,300})/);
+if (purposeMatch) sections.push('总体目的：' + purposeMatch[1].trim());
+// 查找年度目标
+const goalMatch = text.match(/年度目标[：:]([^\n]{50,300})/);
+if (goalMatch) sections.push('年度目标：' + goalMatch[1].trim());
+// 查找Q2行动计划
+const q2Match = text.match(/第二季度[^：:]*[：:]([^\n]{100,400})/);
+if (q2Match) sections.push('Q2行动计划：' + q2Match[1].trim());
+// 如果找到关键部分，组合它们
+if (sections.length > 0) {
+let summary = sections.join('\n\n');
+if (summary.length > maxChars) {
+summary = summary.substring(0, maxChars);
+// 在完整句子处截断
+for (let i = maxChars - 1; i > maxChars - 100; i--) {
+if ('。；，.;,\n'.includes(summary[i])) {
+summary = summary.substring(0, i + 1);
+break;
 }
-
+}
+}
+return summary;
+}
+// 如果没有找到特定格式，取前800字符
+return text.substring(0, maxChars);
+}
 // 加载规划文件（通过手动调用）
 function loadPlanningFile(file, callback) {
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-        try {
-            const data = e.target.result;
-            const workbook = XLSX.read(data, { type: 'binary' });
-            
-            // 提取所有文本内容
-            let allText = '';
-            workbook.SheetNames.forEach(sheetName => {
-                const worksheet = workbook.Sheets[sheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                
-                jsonData.forEach(row => {
-                    row.forEach(cell => {
-                        if (cell !== null && cell !== undefined) {
-                            allText += String(cell).trim() + ' ';
-                        }
-                    });
-                    allText += '\n';
-                });
-            });
-            
-            // 生成智能摘要
-            const summary = summarizePlanningText(allText, 4000);
-            
-            // 检测部门
-            let deptCode = 'other';
-            const fileName = file.name;
-            
-            for (const [keyword, code] of DEPT_MAP) {
-                if (fileName.includes(keyword)) {
-                    deptCode = code;
-                    break;
-                }
-            }
-            
-            const planningItem = {
-                id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
-                filename: file.name,
-                deptCode: deptCode,
-                deptName: DEPT_NAMES[deptCode] || fileName,
-                summary: summary,
-                fullText: allText.substring(0, 10000), // 存储最多10000字符的完整文本
-                timestamp: new Date().toLocaleString()
-            };
-            
-            // 存储规划数据
-            PLANNING_DATA[deptCode] = planningItem;
-            savePlanningData();
-            
-            // 显示成功消息
-            const escapedFileName = (file.name || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-            const escapedDeptName = (planningItem.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-            alert(`成功加载规划文件：${escapedFileName}\n部门：${escapedDeptName}\n摘要长度：${summary.length}字符`);
-            
-            if (callback) callback(planningItem);
-        } catch (error) {
-            alert('解析规划文件失败：' + error.message);
-            console.error('解析规划文件失败:', file.name, error);
-        }
-    };
-    
-    reader.onerror = function(e) {
-        alert('读取文件失败：' + e.target.error);
-    };
-    
-    reader.readAsBinaryString(file);
+const reader = new FileReader();
+reader.onload = function(e) {
+try {
+const data = e.target.result;
+const workbook = XLSX.read(data, { type: 'binary' });
+// 提取所有文本内容
+let allText = '';
+workbook.SheetNames.forEach(sheetName => {
+const worksheet = workbook.Sheets[sheetName];
+const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+jsonData.forEach(row => {
+row.forEach(cell => {
+if (cell !== null && cell !== undefined) {
+allText += String(cell).trim() + ' ';
 }
-
+});
+allText += '\n';
+});
+});
+// 生成智能摘要
+const summary = summarizePlanningText(allText, 4000);
+// 检测部门
+let deptCode = 'other';
+const fileName = file.name;
+for (const [keyword, code] of DEPT_MAP) {
+if (fileName.includes(keyword)) {
+deptCode = code;
+break;
+}
+}
+const planningItem = {
+id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+filename: file.name,
+deptCode: deptCode,
+deptName: DEPT_NAMES[deptCode] || fileName,
+summary: summary,
+fullText: allText.substring(0, 10000), // 存储最多10000字符的完整文本
+timestamp: new Date().toLocaleString()
+};
+// 存储规划数据
+PLANNING_DATA[deptCode] = planningItem;
+savePlanningData();
+// 显示成功消息
+const escapedFileName = (file.name || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+const escapedDeptName = (planningItem.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+alert(`成功加载规划文件：${escapedFileName}\n部门：${escapedDeptName}\n摘要长度：${summary.length}字符`);
+if (callback) callback(planningItem);
+} catch (error) {
+alert('解析规划文件失败：' + error.message);
+console.error('解析规划文件失败:', file.name, error);
+}
+};
+reader.onerror = function(e) {
+alert('读取文件失败：' + e.target.error);
+};
+reader.readAsBinaryString(file);
+}
 // 手动触发规划文件上传
 function triggerPlanningUpload() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.xlsx,.xls';
-    input.multiple = true;
-    
-    input.onchange = function(e) {
-        const files = e.target.files;
-        if (!files.length) return;
-        
-        for (let i = 0; i < files.length; i++) {
-            loadPlanningFile(files[i], function(item) {
-                console.log('规划文件已加载:', item);
-            });
-        }
-    };
-    
-    input.click();
+const input = document.createElement('input');
+input.type = 'file';
+input.accept = '.xlsx,.xls';
+input.multiple = true;
+input.onchange = function(e) {
+const files = e.target.files;
+if (!files.length) return;
+for (let i = 0; i < files.length; i++) {
+loadPlanningFile(files[i], function(item) {
+console.log('规划文件已加载:', item);
+});
 }
-
+};
+input.click();
+}
 // 查看已加载的规划
 function showLoadedPlanning() {
-    if (Object.keys(PLANNING_DATA).length === 0) {
-        alert('尚未加载任何规划文件');
-        return;
-    }
-    
-    let msg = '已加载的规划文件：\n\n';
-    Object.values(PLANNING_DATA).forEach(item => {
-        msg += `📋 ${(item.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}\n`;
-        msg += `   文件：${(item.filename || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}\n`;
-        msg += `   摘要：${(item.summary.substring(0, 80) || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}...\n\n`;
-    });
-    
-    alert(msg);
+if (Object.keys(PLANNING_DATA).length === 0) {
+alert('尚未加载任何规划文件');
+return;
 }
-
+let msg = '已加载的规划文件：\n\n';
+Object.values(PLANNING_DATA).forEach(item => {
+msg += `📋 ${(item.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}\n`;
+msg += `   文件：${(item.filename || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}\n`;
+msg += `   摘要：${(item.summary.substring(0, 80) || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}...\n\n`;
+});
+alert(msg);
+}
 // 清空规划数据
 function clearPlanningData() {
-    if (confirm('确认清空所有已加载的规划文件？')) {
-        PLANNING_DATA = {};
-        savePlanningData();
-        alert('已清空所有规划数据');
-    }
+if (confirm('确认清空所有已加载的规划文件？')) {
+PLANNING_DATA = {};
+savePlanningData();
+alert('已清空所有规划数据');
 }
-
+}
 // 规划管理菜单
 function showPlanningMenu() {
-    // 移除已存在的菜单
-    const existing = document.getElementById('planning-menu');
-    if (existing) {
-        existing.remove();
-        return;
-    }
-    
-    // 创建菜单容器
-    const menu = document.createElement('div');
-    menu.id = 'planning-menu';
-    menu.style.cssText = `
-        position: absolute;
-        top: 50px;
-        right: 20px;
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 1000;
-        min-width: 180px;
-        overflow: hidden;
-    `;
-    
-    // 创建菜单项
-    const items = [
-        { label: '📂 加载年度规划文件', action: () => triggerPlanningUpload() },
-        { label: '👁️ 查看已加载规划', action: () => showLoadedPlanning() },
-        { label: '🗑️ 清空规划数据', action: () => clearPlanningData() },
-        { label: '❌ 关闭菜单', action: () => menu.remove() }
-    ];
-    
-    items.forEach(item => {
-        const button = document.createElement('button');
-        button.textContent = item.label;
-        button.style.cssText = `
-            display: block;
-            width: 100%;
-            padding: 10px 16px;
-            border: none;
-            background: none;
-            text-align: left;
-            cursor: pointer;
-            font-size: 13px;
-            color: #333;
-            border-bottom: 1px solid #f0f0f0;
-        `;
-        button.addEventListener('mouseenter', () => {
-            button.style.backgroundColor = '#f5f5f5';
-        });
-        button.addEventListener('mouseleave', () => {
-            button.style.backgroundColor = 'white';
-        });
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-            item.action();
-            menu.remove();
-        });
-        menu.appendChild(button);
-    });
-    
-    // 点击外部关闭菜单
-    const closeMenu = (e) => {
-        if (!menu.contains(e.target) && e.target.id !== 'nb-planning') {
-            menu.remove();
-            document.removeEventListener('click', closeMenu);
-        }
-    };
-    
-    document.body.appendChild(menu);
-    setTimeout(() => {
-        document.addEventListener('click', closeMenu);
-    }, 10);
+// 移除已存在的菜单
+const existing = document.getElementById('planning-menu');
+if (existing) {
+existing.remove();
+return;
 }
-
-
+// 创建菜单容器
+const menu = document.createElement('div');
+menu.id = 'planning-menu';
+menu.style.cssText = `
+position: absolute;
+top: 50px;
+right: 20px;
+background: white;
+border: 1px solid #ddd;
+border-radius: 8px;
+box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+z-index: 1000;
+min-width: 180px;
+overflow: hidden;
+`;
+// 创建菜单项
+const items = [
+{ label: '📂 加载年度规划文件', action: () => triggerPlanningUpload() },
+{ label: '👁️ 查看已加载规划', action: () => showLoadedPlanning() },
+{ label: '🗑️ 清空规划数据', action: () => clearPlanningData() },
+{ label: '❌ 关闭菜单', action: () => menu.remove() }
+];
+items.forEach(item => {
+const button = document.createElement('button');
+button.textContent = item.label;
+button.style.cssText = `
+display: block;
+width: 100%;
+padding: 10px 16px;
+border: none;
+background: none;
+text-align: left;
+cursor: pointer;
+font-size: 13px;
+color: #333;
+border-bottom: 1px solid #f0f0f0;
+`;
+button.addEventListener('mouseenter', () => {
+button.style.backgroundColor = '#f5f5f5';
+});
+button.addEventListener('mouseleave', () => {
+button.style.backgroundColor = 'white';
+});
+button.addEventListener('click', (e) => {
+e.stopPropagation();
+item.action();
+menu.remove();
+});
+menu.appendChild(button);
+});
+// 点击外部关闭菜单
+const closeMenu = (e) => {
+if (!menu.contains(e.target) && e.target.id !== 'nb-planning') {
+menu.remove();
+document.removeEventListener('click', closeMenu);
+}
+};
+document.body.appendChild(menu);
+setTimeout(() => {
+document.addEventListener('click', closeMenu);
+}, 10);
+}
 // ============================================================================
 // 部门关联管理器（完整方案B）
 // ============================================================================
-
 // 存储部门关联关系
 let DEPT_MAPPING = {};
-
 // 预设的业务关联关系（初始建议）
 const BUSINESS_RELATIONS = {
-    'tmall': ['ec1', 'ec2', 'ec3', 'ec4', 'ec5', 'ec6', 'ec7'], // 天猫平台对应所有电商部门
-    'jd': ['ec1', 'ec2', 'ec3', 'ec4', 'ec5', 'ec6', 'ec7'], // 京东平台对应所有电商部门
-    'pdd': ['ec1', 'ec2', 'ec3', 'ec4', 'ec5', 'ec6', 'ec7'], // 拼多多平台对应所有电商部门
-    'douyin': ['ec1', 'ec2', 'ec3', 'ec4', 'ec5', 'ec6', 'ec7'], // 抖音平台对应所有电商部门
-    'brand': ['visual', 'video', 'kol'], // 品牌部关联视觉、视频、达人
-    'warehouse': ['purchase'], // 仓储关联采购
-    'finance': ['purchase'], // 财务关联采购
-    'hr': ['it', 'finance'], // 人力关联IT、财务
+'tmall': ['ec1', 'ec2', 'ec3', 'ec4', 'ec5', 'ec6', 'ec7'], // 天猫平台对应所有电商部门
+'jd': ['ec1', 'ec2', 'ec3', 'ec4', 'ec5', 'ec6', 'ec7'], // 京东平台对应所有电商部门
+'pdd': ['ec1', 'ec2', 'ec3', 'ec4', 'ec5', 'ec6', 'ec7'], // 拼多多平台对应所有电商部门
+'douyin': ['ec1', 'ec2', 'ec3', 'ec4', 'ec5', 'ec6', 'ec7'], // 抖音平台对应所有电商部门
+'brand': ['visual', 'video', 'kol'], // 品牌部关联视觉、视频、达人
+'warehouse': ['purchase'], // 仓储关联采购
+'finance': ['purchase'], // 财务关联采购
+'hr': ['it', 'finance'], // 人力关联IT、财务
 };
-
 // 加载关联配置
 function loadMapping() {
-    try {
-        const saved = localStorage.getItem('yz_dept_mapping');
-        if (saved) {
-            DEPT_MAPPING = JSON.parse(saved);
-        } else {
-            // 如果没有保存的配置，使用预设建议
-            DEPT_MAPPING = {};
-        }
-    } catch (e) {
-        console.error('加载关联配置失败:', e);
-        DEPT_MAPPING = {};
-    }
+try {
+const saved = localStorage.getItem('yz_dept_mapping');
+if (saved) {
+DEPT_MAPPING = JSON.parse(saved);
+} else {
+// 如果没有保存的配置，使用预设建议
+DEPT_MAPPING = {};
 }
-
+} catch (e) {
+console.error('加载关联配置失败:', e);
+DEPT_MAPPING = {};
+}
+}
 // 保存关联配置
 function saveMapping() {
-    try {
-        // 从界面收集所有关联
-        const container = document.getElementById('mapping-container');
-        if (!container) return;
-        
-        const newMapping = {};
-        const weekDeptSections = container.querySelectorAll('.week-dept-section');
-        
-        weekDeptSections.forEach(section => {
-            const weekDept = section.getAttribute('data-week-dept');
-            const checkboxes = section.querySelectorAll('input[type="checkbox"]:checked');
-            const selectedPlans = Array.from(checkboxes).map(cb => cb.value);
-            
-            if (selectedPlans.length > 0) {
-                newMapping[weekDept] = selectedPlans;
-            }
-        });
-        
-        DEPT_MAPPING = newMapping;
-        localStorage.setItem('yz_dept_mapping', JSON.stringify(DEPT_MAPPING));
-        toast('✅ 关联配置已保存');
-        
-        // 重新渲染界面以显示已保存状态
-        setTimeout(() => {
-            renderMapping();
-        }, 500);
-    } catch (e) {
-        console.error('保存关联配置失败:', e);
-        toast('❌ 保存失败：' + e.message);
-    }
+try {
+// 从界面收集所有关联
+const container = document.getElementById('mapping-container');
+if (!container) return;
+const newMapping = {};
+const weekDeptSections = container.querySelectorAll('.week-dept-section');
+weekDeptSections.forEach(section => {
+const weekDept = section.getAttribute('data-week-dept');
+const checkboxes = section.querySelectorAll('input[type="checkbox"]:checked');
+const selectedPlans = Array.from(checkboxes).map(cb => cb.value);
+if (selectedPlans.length > 0) {
+newMapping[weekDept] = selectedPlans;
 }
-
+});
+DEPT_MAPPING = newMapping;
+localStorage.setItem('yz_dept_mapping', JSON.stringify(DEPT_MAPPING));
+toast('✅ 关联配置已保存');
+// 重新渲染界面以显示已保存状态
+setTimeout(() => {
+renderMapping();
+}, 500);
+} catch (e) {
+console.error('保存关联配置失败:', e);
+toast('❌ 保存失败：' + e.message);
+}
+}
 // 渲染关联管理界面
 function renderMapping() {
-    const container = document.getElementById('mapping-container');
-    if (!container) return;
-    
-    // 确保已加载关联配置
-    if (Object.keys(DEPT_MAPPING).length === 0) {
-        loadMapping();
-    }
-    
-    // 获取所有可能的周数据部门
-    const weekDepts = Object.keys(DEPT_NAMES).filter(dept => 
-        !['other'].includes(dept) // 排除其他部门
-    );
-    
-    // 获取所有已加载的规划部门
-    const planningDepts = Object.values(PLANNING_DATA).map(item => item.deptCode);
-    const allPlanningDepts = [...new Set([...planningDepts, ...Object.keys(DEPT_NAMES)])];
-    
-    let html = '';
-    
-    // 周数据部门列表
-    weekDepts.forEach(weekDept => {
-        const weekDeptName = DEPT_NAMES[weekDept] || weekDept;
-        const currentMapping = DEPT_MAPPING[weekDept] || [];
-        
-        // 预设建议
-        const presetSuggestions = BUSINESS_RELATIONS[weekDept] || [];
-        
-        html += `
-        <div class="week-dept-section" data-week-dept="${weekDept}">
-            <div class="mapping-header">
-                <div style="display:flex;align-items:center;gap:8px">
-                    <span style="font-weight:600;font-size:14px">${weekDeptName}</span>
-                    <span style="font-size:11px;color:var(--ink3);background:var(--s2);padding:2px 6px;border-radius:4px">${weekDept}</span>
-                </div>
-                <div style="font-size:12px;color:var(--ink3);margin-top:4px">
-                    请勾选相关的年度规划部门（可多选）
-                </div>
-            </div>
-            
-            <div class="planning-options" style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:8px">
-        `;
-        
-        // 显示所有可能的规划部门选项
-        allPlanningDepts.forEach(planDept => {
-            const planDeptName = DEPT_NAMES[planDept] || planDept;
-            const isChecked = currentMapping.includes(planDept);
-            const isPreset = presetSuggestions.includes(planDept);
-            const hasPlanning = planningDepts.includes(planDept);
-            
-            html += `
-                <label class="planning-option" style="display:flex;align-items:center;gap:6px;padding:8px;background:${isChecked ? 'var(--s3)' : 'var(--s1)'};border-radius:6px;cursor:pointer;border:1px solid ${isChecked ? 'var(--ink3)' : 'var(--bd2)'}">
-                    <input type="checkbox" value="${planDept}" ${isChecked ? 'checked' : ''} 
-                        onchange="updateMappingPreview()"
-                        style="margin:0">
-                    <span style="flex:1;font-size:13px">${planDeptName}</span>
-                    ${isPreset ? '<span style="font-size:10px;color:var(--A);background:var(--s2);padding:1px 4px;border-radius:3px">建议</span>' : ''}
-                    ${hasPlanning ? '<span style="font-size:10px;color:var(--G);background:var(--s2);padding:1px 4px;border-radius:3px">已加载</span>' : ''}
-                </label>
-            `;
-        });
-        
-        html += `
-            </div>
-            
-            <div class="mapping-preview" style="margin-top:12px;font-size:12px;color:var(--ink3);display:${currentMapping.length > 0 ? 'block' : 'none'};">
-                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-                    <span style="font-weight:500">当前关联：</span>
-                    ${currentMapping.map(p => `<span style="background:var(--s2);padding:2px 6px;border-radius:4px">${DEPT_NAMES[p] || p}</span>`).join('')}
-                </div>
-            </div>
-            
-            ${presetSuggestions.length > 0 ? `
-            <div class="preset-suggestions" style="margin-top:12px;font-size:11px;color:var(--ink3);background:var(--s2);padding:8px;border-radius:6px;">
-                <span style="display:block;margin-bottom:4px">💡 业务关联建议：</span>
-                ${presetSuggestions.map(p => `<span style="background:white;padding:1px 4px;border-radius:3px;margin-right:4px">${DEPT_NAMES[p] || p}</span>`).join('')}
-            </div>
-            ` : ''}
-            
-            <div style="height:1px;background:var(--bd2);margin:20px 0"></div>
-        </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-    
-    // 如果没有已加载的规划文件，显示提示
-    if (planningDepts.length === 0) {
-        const info = document.createElement('div');
-        info.innerHTML = `
-            <div style="text-align:center;padding:20px;color:var(--ink3);font-size:13px">
-                <div style="margin-bottom:8px">📝 尚未加载任何年度规划文件</div>
-                <div style="font-size:12px">请先点击导航栏的"规划管理" → "📂 加载年度规划文件"</div>
-            </div>
-        `;
-        container.insertBefore(info, container.firstChild);
-    }
+const container = document.getElementById('mapping-container');
+if (!container) return;
+// 确保已加载关联配置
+if (Object.keys(DEPT_MAPPING).length === 0) {
+loadMapping();
 }
-
+// 获取所有可能的周数据部门
+const weekDepts = Object.keys(DEPT_NAMES).filter(dept => 
+!['other'].includes(dept) // 排除其他部门
+);
+// 获取所有已加载的规划部门
+const planningDepts = Object.values(PLANNING_DATA).map(item => item.deptCode);
+const allPlanningDepts = [...new Set([...planningDepts, ...Object.keys(DEPT_NAMES)])];
+let html = '';
+// 周数据部门列表
+weekDepts.forEach(weekDept => {
+const weekDeptName = DEPT_NAMES[weekDept] || weekDept;
+const currentMapping = DEPT_MAPPING[weekDept] || [];
+// 预设建议
+const presetSuggestions = BUSINESS_RELATIONS[weekDept] || [];
+html += `
+<div class="week-dept-section" data-week-dept="${weekDept}">
+<div class="mapping-header">
+<div style="display:flex;align-items:center;gap:8px">
+<span style="font-weight:600;font-size:14px">${weekDeptName}</span>
+<span style="font-size:11px;color:var(--ink3);background:var(--s2);padding:2px 6px;border-radius:4px">${weekDept}</span>
+</div>
+<div style="font-size:12px;color:var(--ink3);margin-top:4px">
+请勾选相关的年度规划部门（可多选）
+</div>
+</div>
+<div class="planning-options" style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:8px">
+`;
+// 显示所有可能的规划部门选项
+allPlanningDepts.forEach(planDept => {
+const planDeptName = DEPT_NAMES[planDept] || planDept;
+const isChecked = currentMapping.includes(planDept);
+const isPreset = presetSuggestions.includes(planDept);
+const hasPlanning = planningDepts.includes(planDept);
+html += `
+<label class="planning-option" style="display:flex;align-items:center;gap:6px;padding:8px;background:${isChecked ? 'var(--s3)' : 'var(--s1)'};border-radius:6px;cursor:pointer;border:1px solid ${isChecked ? 'var(--ink3)' : 'var(--bd2)'}">
+<input type="checkbox" value="${planDept}" ${isChecked ? 'checked' : ''} 
+onchange="updateMappingPreview()"
+style="margin:0">
+<span style="flex:1;font-size:13px">${planDeptName}</span>
+${isPreset ? '<span style="font-size:10px;color:var(--A);background:var(--s2);padding:1px 4px;border-radius:3px">建议</span>' : ''}
+${hasPlanning ? '<span style="font-size:10px;color:var(--G);background:var(--s2);padding:1px 4px;border-radius:3px">已加载</span>' : ''}
+</label>
+`;
+});
+html += `
+</div>
+<div class="mapping-preview" style="margin-top:12px;font-size:12px;color:var(--ink3);display:${currentMapping.length > 0 ? 'block' : 'none'};">
+<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+<span style="font-weight:500">当前关联：</span>
+${currentMapping.map(p => `<span style="background:var(--s2);padding:2px 6px;border-radius:4px">${DEPT_NAMES[p] || p}</span>`).join('')}
+</div>
+</div>
+${presetSuggestions.length > 0 ? `
+<div class="preset-suggestions" style="margin-top:12px;font-size:11px;color:var(--ink3);background:var(--s2);padding:8px;border-radius:6px;">
+<span style="display:block;margin-bottom:4px">💡 业务关联建议：</span>
+${presetSuggestions.map(p => `<span style="background:white;padding:1px 4px;border-radius:3px;margin-right:4px">${DEPT_NAMES[p] || p}</span>`).join('')}
+</div>
+` : ''}
+<div style="height:1px;background:var(--bd2);margin:20px 0"></div>
+</div>
+`;
+});
+container.innerHTML = html;
+// 如果没有已加载的规划文件，显示提示
+if (planningDepts.length === 0) {
+const info = document.createElement('div');
+info.innerHTML = `
+<div style="text-align:center;padding:20px;color:var(--ink3);font-size:13px">
+<div style="margin-bottom:8px">📝 尚未加载任何年度规划文件</div>
+<div style="font-size:12px">请先点击导航栏的"规划管理" → "📂 加载年度规划文件"</div>
+</div>
+`;
+container.insertBefore(info, container.firstChild);
+}
+}
 // 更新映射预览
 function updateMappingPreview() {
-    // 这个函数会在复选框状态改变时被调用
-    // 这里可以添加实时预览更新的逻辑，但现在先留空
+// 这个函数会在复选框状态改变时被调用
+// 这里可以添加实时预览更新的逻辑，但现在先留空
 }
-
 // 获取关联的规划数据
 function getMappedPlanningData(weekDept) {
-    const mapping = DEPT_MAPPING[weekDept];
-    if (!mapping || mapping.length === 0) {
-        return null; // 没有关联配置
-    }
-    
-    const relatedPlans = [];
-    mapping.forEach(planDept => {
-        if (PLANNING_DATA[planDept]) {
-            relatedPlans.push(PLANNING_DATA[planDept]);
-        }
-    });
-    
-    return relatedPlans.length > 0 ? relatedPlans : null;
+const mapping = DEPT_MAPPING[weekDept];
+if (!mapping || mapping.length === 0) {
+return null; // 没有关联配置
 }
-
+const relatedPlans = [];
+mapping.forEach(planDept => {
+if (PLANNING_DATA[planDept]) {
+relatedPlans.push(PLANNING_DATA[planDept]);
+}
+});
+return relatedPlans.length > 0 ? relatedPlans : null;
+}
 // 在页面加载时初始化关联配置
 window.addEventListener('DOMContentLoaded', () => {
-    loadMapping();
-    loadPlanningData();
+loadMapping();
+loadPlanningData();
 });
-
-
 // ══════════════════════════════════════════
 // 文件操作
 // ══════════════════════════════════════════
 function onDrop(e) { e.preventDefault(); document.getElementById('dz').classList.remove('drag'); addFiles(e.dataTransfer.files); }
 function onPick(files) { addFiles(files); }
 function addFiles(files) {
-  for (const f of files) {
-    if (!f.name.match(/\.xlsx?$/i)) continue;
-    if (pendingFiles.find(x=>x.name===f.name)) continue;
-    pendingFiles.push(f);
-  }
-  renderFL();
+for (const f of files) {
+if (!f.name.match(/\.xlsx?$/i)) continue;
+if (pendingFiles.find(x=>x.name===f.name)) continue;
+pendingFiles.push(f);
+}
+renderFL();
 }
 function removeFile(i) { pendingFiles.splice(i,1); renderFL(); }
 function clearAll() { pendingFiles=[]; renderFL(); document.getElementById('file-input').value=''; }
 function renderFL() {
-  const fl   = document.getElementById('fl');
-  const abar = document.getElementById('abar');
-  if (!pendingFiles.length) { fl.innerHTML=''; abar.style.display='none'; return; }
-  abar.style.display='flex';
-  document.getElementById('pf').style.width='100%';
-  document.getElementById('ptxt').textContent=`${pendingFiles.length} 个文件就绪`;
-  const cfg = loadCfg();
-  document.getElementById('run-btn').disabled = !(cfg.url&&cfg.key&&cfg.model);
-  fl.innerHTML = pendingFiles.map((f,i)=>{
-    const dept=detectDept(f.name), dn=DEPT_NAMES[dept]||dept;
-    return `<div class="fi"><span class="fi-ico">📄</span>
-      <span class="fi-name" title="${f.name}">${f.name}</span>
-      <span class="fi-dept">${dn}</span>
-      <button class="fi-rm" onclick="removeFile(${i})">×</button></div>`;
-  }).join('');
+const fl   = document.getElementById('fl');
+const abar = document.getElementById('abar');
+if (!pendingFiles.length) { fl.innerHTML=''; abar.style.display='none'; return; }
+abar.style.display='flex';
+document.getElementById('pf').style.width='100%';
+document.getElementById('ptxt').textContent=`${pendingFiles.length} 个文件就绪`;
+const cfg = loadCfg();
+document.getElementById('run-btn').disabled = !(cfg.url&&cfg.key&&cfg.model);
+fl.innerHTML = pendingFiles.map((f,i)=>{
+const dept=detectDept(f.name), dn=DEPT_NAMES[dept]||dept;
+return `<div class="fi"><span class="fi-ico">📄</span>
+<span class="fi-name" title="${f.name}">${f.name}</span>
+<span class="fi-dept">${dn}</span>
+<button class="fi-rm" onclick="removeFile(${i})">×</button></div>`;
+}).join('');
 }
-
 // ══════════════════════════════════════════
 // Excel 解析
 // ══════════════════════════════════════════
 async function parseExcel(file) {
-  const buf  = await file.arrayBuffer();
-  const wb   = XLSX.read(buf, {type:'array',cellFormula:false,cellDates:false});
-  const ws   = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(ws, {header:1,defval:null,raw:true});
-  return buildDeptData(rows, detectDept(file.name), file.name);
+const buf  = await file.arrayBuffer();
+const wb   = XLSX.read(buf, {type:'array',cellFormula:false,cellDates:false});
+const ws   = wb.Sheets[wb.SheetNames[0]];
+const rows = XLSX.utils.sheet_to_json(ws, {header:1,defval:null,raw:true});
+return buildDeptData(rows, detectDept(file.name), file.name);
 }
 function buildDeptData(rows, dept, filename) {
-  const r = { dept, deptName:DEPT_NAMES[dept]||filename, filename, curWeek:null, prevWeek:null, metrics:[], subGroups:[], rankData:[] };
-  if (rows.length<2) return r;
-  let hIdx=-1;
-  for (let i=0;i<Math.min(rows.length,6);i++) {
-    if (rows[i].some(v=>v&&/\d+\.\d+/.test(String(v)))) { hIdx=i; break; }
-  }
-  if (hIdx<0) return r;
-  const hrow=rows[hIdx], dateCols=[], sp={};
-  hrow.forEach((h,ci)=>{
-    if (!h||ci===0) return;
-    const s=String(h).replace(/\n/g,'').trim();
-    if (s.includes('环比')&&s.includes('率'))  { sp.dr=ci; return; }
-    if (s.includes('环比')&&s.includes('值'))  { sp.dv=ci; return; }
-    if (s.includes('累计'))                    { sp.acc=ci; return; }
-    if (s.includes('目标')&&!s.includes('完成')){ sp.tgt=ci; return; }
-    if (s.includes('完成率'))                  { sp.comp=ci; return; }
-    if (['账号','直播间'].some(k=>s.includes(k))) { sp.acct=ci; return; }
-    if (/\d+\.\d+/.test(s)&&!['销售','成本','推广','未抓'].some(k=>s.includes(k))) dateCols.push({ci,label:s});
-  });
-  dateCols.sort((a,b)=>a.ci-b.ci);
-  const curCol=dateCols[dateCols.length-1], prevCol=dateCols[dateCols.length-2];
-  if (!curCol) return r;
-  r.curWeek=curCol.label; r.prevWeek=prevCol?.label||null;
-  const SKIP=new Set(['双周数据','店铺排名','店铺流量','店铺转化率','类目销售额','类目成本率','类目推广率','渔之源旗舰店排名']);
-  let curMetric='';
-  for (let ri=hIdx+1;ri<rows.length;ri++) {
-    const row=rows[ri];
-    const label=row[0]?String(row[0]).replace(/\n/g,'').trim():'';
-    if (label) curMetric=label;
-    if (SKIP.has(label)) continue;
-    if (sp.acct!==undefined) {
-      const acct=row[sp.acct]?String(row[sp.acct]).trim():'';
-      if (!acct) continue;
-      const cv=cleanVal(row[curCol.ci]), pv=cleanVal(prevCol?row[prevCol.ci]:null);
-      if (cv===null&&pv===null) continue;
-      const comp=sp.comp!==undefined?cleanVal(row[sp.comp]):null;
-      const tgt=sp.tgt!==undefined?cleanVal(row[sp.tgt]):null;
-      const dr=pv&&cv?((parseFloat(cv)-parseFloat(pv))/Math.abs(parseFloat(pv))*100).toFixed(1)+'%':null;
-      r.subGroups.push({metric:curMetric,account:acct,curVal:fmtVal(cv),prevVal:fmtVal(pv),rawCur:cv,rawPrev:pv,completion:comp?fmtVal(comp):null,target:tgt?fmtM(tgt):null,deltaRate:dr});
-    } else {
-      if (!label) continue;
-      const cv=cleanVal(row[curCol.ci]), pv=cleanVal(prevCol?row[prevCol.ci]:null);
-      if (cv===null&&pv===null) continue;
-      const drRaw=sp.dr!==undefined?cleanVal(row[sp.dr]):null;
-      const comp=sp.comp!==undefined?cleanVal(row[sp.comp]):null;
-      const tgt=sp.tgt!==undefined?cleanVal(row[sp.tgt]):null;
-      const isRank = isRankData(label);
-      if (isRank) {
-        r.rankData.push({label,curVal:cv!==null?String(cv):null,prevVal:pv!==null?String(pv):null,delta:sp.dv!==undefined?String(cleanVal(row[sp.dv])||''):null});
-        continue;
-      }
-      const trend=(pv!==null&&cv!==null)?(parseFloat(cv)>=parseFloat(pv)?'up':'down'):'flat';
-      r.metrics.push({label,trend,curVal:fmtVal(cv),prevVal:fmtVal(pv),rawCur:cv,rawPrev:pv,deltaRate:drRaw?fmtVal(drRaw):null,completion:comp?fmtVal(comp):null,target:tgt?fmtM(tgt):null,accum:null});
-    }
-  }
-  // 直播部汇总
-  if (sp.acct!==undefined&&r.subGroups.length) {
-    const bm={};
-    for (const sg of r.subGroups) {
-      if (!bm[sg.metric]) bm[sg.metric]={cur:0,prev:0,cnt:0,comp:sg.completion};
-      const c=parseFloat(sg.rawCur)||0, p=parseFloat(sg.rawPrev)||0;
-      if (!isNaN(c)) { bm[sg.metric].cur+=c; bm[sg.metric].cnt++; }
-      if (!isNaN(p)) bm[sg.metric].prev+=p;
-    }
-    for (const [metric,agg] of Object.entries(bm)) {
-      if (!agg.cnt) continue;
-      const dr=agg.prev?((agg.cur-agg.prev)/Math.abs(agg.prev)*100).toFixed(1)+'%':null;
-      r.metrics.push({label:metric,curVal:fmtM(agg.cur),prevVal:fmtM(agg.prev),rawCur:agg.cur,rawPrev:agg.prev,deltaRate:dr,completion:agg.comp,target:null,accum:null,trend:agg.prev?(agg.cur>=agg.prev?'up':'down'):'flat'});
-    }
-  }
-  return r;
+const r = { dept, deptName:DEPT_NAMES[dept]||filename, filename, curWeek:null, prevWeek:null, metrics:[], subGroups:[], rankData:[] };
+if (rows.length<2) return r;
+let hIdx=-1;
+for (let i=0;i<Math.min(rows.length,6);i++) {
+if (rows[i].some(v=>v&&/\d+\.\d+/.test(String(v)))) { hIdx=i; break; }
 }
-
+if (hIdx<0) return r;
+const hrow=rows[hIdx], dateCols=[], sp={};
+hrow.forEach((h,ci)=>{
+if (!h||ci===0) return;
+const s=String(h).replace(/\n/g,'').trim();
+if (s.includes('环比')&&s.includes('率'))  { sp.dr=ci; return; }
+if (s.includes('环比')&&s.includes('值'))  { sp.dv=ci; return; }
+if (s.includes('累计'))                    { sp.acc=ci; return; }
+if (s.includes('目标')&&!s.includes('完成')){ sp.tgt=ci; return; }
+if (s.includes('完成率'))                  { sp.comp=ci; return; }
+if (['账号','直播间'].some(k=>s.includes(k))) { sp.acct=ci; return; }
+if (/\d+\.\d+/.test(s)&&!['销售','成本','推广','未抓'].some(k=>s.includes(k))) dateCols.push({ci,label:s});
+});
+dateCols.sort((a,b)=>a.ci-b.ci);
+const curCol=dateCols[dateCols.length-1], prevCol=dateCols[dateCols.length-2];
+if (!curCol) return r;
+r.curWeek=curCol.label; r.prevWeek=prevCol?.label||null;
+const SKIP=new Set(['双周数据','店铺排名','店铺流量','店铺转化率','类目销售额','类目成本率','类目推广率','渔之源旗舰店排名']);
+let curMetric='';
+for (let ri=hIdx+1;ri<rows.length;ri++) {
+const row=rows[ri];
+const label=row[0]?String(row[0]).replace(/\n/g,'').trim():'';
+if (label) curMetric=label;
+if (SKIP.has(label)) continue;
+if (sp.acct!==undefined) {
+const acct=row[sp.acct]?String(row[sp.acct]).trim():'';
+if (!acct) continue;
+const cv=cleanVal(row[curCol.ci]), pv=cleanVal(prevCol?row[prevCol.ci]:null);
+if (cv===null&&pv===null) continue;
+const comp=sp.comp!==undefined?cleanVal(row[sp.comp]):null;
+const tgt=sp.tgt!==undefined?cleanVal(row[sp.tgt]):null;
+const dr=pv&&cv?((parseFloat(cv)-parseFloat(pv))/Math.abs(parseFloat(pv))*100).toFixed(1)+'%':null;
+r.subGroups.push({metric:curMetric,account:acct,curVal:fmtVal(cv),prevVal:fmtVal(pv),rawCur:cv,rawPrev:pv,completion:comp?fmtVal(comp):null,target:tgt?fmtM(tgt):null,deltaRate:dr});
+} else {
+if (!label) continue;
+const cv=cleanVal(row[curCol.ci]), pv=cleanVal(prevCol?row[prevCol.ci]:null);
+if (cv===null&&pv===null) continue;
+const drRaw=sp.dr!==undefined?cleanVal(row[sp.dr]):null;
+const comp=sp.comp!==undefined?cleanVal(row[sp.comp]):null;
+const tgt=sp.tgt!==undefined?cleanVal(row[sp.tgt]):null;
+const isRank = isRankData(label);
+if (isRank) {
+r.rankData.push({label,curVal:cv!==null?String(cv):null,prevVal:pv!==null?String(pv):null,delta:sp.dv!==undefined?String(cleanVal(row[sp.dv])||''):null});
+continue;
+}
+const trend=(pv!==null&&cv!==null)?(parseFloat(cv)>=parseFloat(pv)?'up':'down'):'flat';
+r.metrics.push({label,trend,curVal:fmtVal(cv),prevVal:fmtVal(pv),rawCur:cv,rawPrev:pv,deltaRate:drRaw?fmtVal(drRaw):null,completion:comp?fmtVal(comp):null,target:tgt?fmtM(tgt):null,accum:null});
+}
+}
+// 直播部汇总
+if (sp.acct!==undefined&&r.subGroups.length) {
+const bm={};
+for (const sg of r.subGroups) {
+if (!bm[sg.metric]) bm[sg.metric]={cur:0,prev:0,cnt:0,comp:sg.completion};
+const c=parseFloat(sg.rawCur)||0, p=parseFloat(sg.rawPrev)||0;
+if (!isNaN(c)) { bm[sg.metric].cur+=c; bm[sg.metric].cnt++; }
+if (!isNaN(p)) bm[sg.metric].prev+=p;
+}
+for (const [metric,agg] of Object.entries(bm)) {
+if (!agg.cnt) continue;
+const dr=agg.prev?((agg.cur-agg.prev)/Math.abs(agg.prev)*100).toFixed(1)+'%':null;
+r.metrics.push({label:metric,curVal:fmtM(agg.cur),prevVal:fmtM(agg.prev),rawCur:agg.cur,rawPrev:agg.prev,deltaRate:dr,completion:agg.comp,target:null,accum:null,trend:agg.prev?(agg.cur>=agg.prev?'up':'down'):'flat'});
+}
+}
+return r;
+}
 // ══════════════════════════════════════════
 // 主流程
 // ══════════════════════════════════════════
 async function runAll() {
-  if (!pendingFiles.length) return;
-  const cfg=loadCfg();
-  if (!cfg.url||!cfg.key||!cfg.model) { toast('请先配置 AI 接口'); toggleCfg(true); return; }
-  document.getElementById('fl').style.display='none';
-  document.getElementById('abar').style.display='none';
-  document.getElementById('proc').classList.add('on');
-  const steps=pendingFiles.map(f=>({name:f.name,dept:detectDept(f.name),status:'wait'}));
-  const renderSteps=()=>{
-    document.getElementById('slist').innerHTML=steps.map(s=>`
-      <div class="si ${s.status}"><div class="si-dot"></div>
-        <span>${DEPT_NAMES[s.dept]||s.dept}</span>
-        <span class="si-r">${s.status==='done'?'✓ 完成':s.status==='doing'?'解析中...':s.status==='ai'?'AI 分析...':s.status==='err'?'✗ 出错':'等待'}</span>
-      </div>`).join('');
-  };
-  parsedDepts=[]; aiReports={};
-  // 解析
-  document.getElementById('proc-sub').textContent='读取 Excel 文件...';
-  for (let i=0;i<pendingFiles.length;i++) {
-    steps[i].status='doing'; renderSteps();
-    try { parsedDepts.push(await parseExcel(pendingFiles[i])); steps[i].status='done'; }
-    catch(e) { parsedDepts.push({dept:'other',deptName:pendingFiles[i].name,filename:pendingFiles[i].name,curWeek:null,prevWeek:null,metrics:[],subGroups:[],rankData:[],_err:e.message}); steps[i].status='err'; }
-    renderSteps();
-  }
-  // AI 分析
-  document.getElementById('proc-sub').textContent='AI 分析数据中...';
-  for (let i=0;i<parsedDepts.length;i++) {
-    const d=parsedDepts[i];
-    if (d._err) { d._rag='a'; aiReports[d.dept]=buildFallback(d); continue; }
-    steps[i].status='ai'; renderSteps();
-    try {
-      const text=await callAI(
-        `你是渔之源（钓鱼/户外用品电商公司）的首席经营分析师，风格直接、专业、有判断力。
-
+if (!pendingFiles.length) return;
+const cfg=loadCfg();
+if (!cfg.url||!cfg.key||!cfg.model) { toast('请先配置 AI 接口'); toggleCfg(true); return; }
+document.getElementById('fl').style.display='none';
+document.getElementById('abar').style.display='none';
+document.getElementById('proc').classList.add('on');
+const steps=pendingFiles.map(f=>({name:f.name,dept:detectDept(f.name),status:'wait'}));
+const renderSteps=()=>{
+document.getElementById('slist').innerHTML=steps.map(s=>`
+<div class="si ${s.status}"><div class="si-dot"></div>
+<span>${DEPT_NAMES[s.dept]||s.dept}</span>
+<span class="si-r">${s.status==='done'?'✓ 完成':s.status==='doing'?'解析中...':s.status==='ai'?'AI 分析...':s.status==='err'?'✗ 出错':'等待'}</span>
+</div>`).join('');
+};
+parsedDepts=[]; aiReports={};
+// 解析
+document.getElementById('proc-sub').textContent='读取 Excel 文件...';
+for (let i=0;i<pendingFiles.length;i++) {
+steps[i].status='doing'; renderSteps();
+try { parsedDepts.push(await parseExcel(pendingFiles[i])); steps[i].status='done'; }
+catch(e) { parsedDepts.push({dept:'other',deptName:pendingFiles[i].name,filename:pendingFiles[i].name,curWeek:null,prevWeek:null,metrics:[],subGroups:[],rankData:[],_err:e.message}); steps[i].status='err'; }
+renderSteps();
+}
+// AI 分析
+document.getElementById('proc-sub').textContent='AI 分析数据中...';
+for (let i=0;i<parsedDepts.length;i++) {
+const d=parsedDepts[i];
+if (d._err) { d._rag='a'; aiReports[d.dept]=buildFallback(d); continue; }
+steps[i].status='ai'; renderSteps();
+try {
+const text=await callAI(
+`你是渔之源（钓鱼/户外用品电商公司）的首席经营分析师，风格直接、专业、有判断力。
 【重要：无数据部门的分析规则】
 当部门没有数字指标数据时（如品牌部、视频中心、视觉中心、财务中心、人力中心、达人部、跨境部、PAA事业部等职能部门），
 不要输出"数据缺失"或"无法评估"等无价值内容。
 必须：①从文件名/部门名判断是哪个职能部门 ②从知识库找到该部门的年度规划 ③基于Q2（4-6月）应推进的重点工作给出实质性分析
 输出内容要像一个了解公司规划的管理顾问在做工作述评，而非数据分析师在抱怨没有数据。
-
 【业务部门（天猫/京东/拼多多/抖音/直播等电商平台部门）】
 重点关注数据异动，特别是环比变化幅度超过±20%的指标，必须：
 1. 指出具体异常指标和幅度
 2. 给出2-3个可能的原因（结合电商行业规律，如竞品打价格战、季节性波动、活动节点、流量分配变化等）
 3. 给出具体可执行的排查步骤和优化方案（精确到操作层面）
-
 【职能支持部门（品牌/视频/视觉/达人/财务/人力/仓储/跨境/PAA等）】
 无论有无数据，都必须结合知识库中该部门的年度规划进行分析：
 1. 当前是Q2（4-6月），对照知识库里该部门Q2重点工作，评估本周工作是否在正确轨道
 2. 识别哪些Q2关键里程碑可能存在延期或遗漏风险
 3. 给出下周最应该聚焦的2-3件具体工作
-
 【名称匹配说明】
 分析时不要拘泥于部门名称是否完全一致，根据职能性质匹配知识库：
 - "品牌视频部"→ 对照品牌部+视频中心规划
 - "6 抖音平台"→ 对照抖音平台规划  
 - "视觉中心"/"设计中心"→ 对照视觉中心规划
 - 文件叫什么名字不重要，看工作内容属于哪个职能
-
 【输出格式】
 只输出合法JSON，格式：
 {
-  "rag": "r|a|g",
-  "summary": "一句话核心结论，不超过50字。无数据部门要说本周规划执行的核心判断，不是说数据缺失",
-  "metrics": [{"label":"指标名","value":"值","delta":"如+3.2%或null","trend":"up|down|flat"}],
-  "findings": [{"type":"good|warn|risk|action","text":"具体发现，不超过80字。无数据部门要说规划对照的发现"}],
-  "suggestions": [{"priority":"高|中|低","owner":"执行人","deadline":"时间节点","text":"具体行动，不超过80字"}]
+"rag": "r|a|g",
+"summary": "一句话核心结论，不超过50字。无数据部门要说本周规划执行的核心判断，不是说数据缺失",
+"metrics": [{"label":"指标名","value":"值","delta":"如+3.2%或null","trend":"up|down|flat"}],
+"findings": [{"type":"good|warn|risk|action","text":"具体发现，不超过80字。无数据部门要说规划对照的发现"}],
+"suggestions": [{"priority":"高|中|低","owner":"执行人","deadline":"时间节点","text":"具体行动，不超过80字"}]
 }
-
 注意：JSON字符串中必须使用标准双引号（\"），不要使用中文引号（“”）。字符串中的换行符必须转义为\\n。
-
 红灯：核心指标环比下降>30%，或月完成率<15%，或Q2关键里程碑严重滞后需老板介入
 黄灯：环比下降20-30%，或完成率15-40%，或Q2有1-2个重点工作存在延期风险
 绿灯：整体正常，无数据部门默认黄灯（因为无法确认），除非有明确依据显示工作在正轨
-
 metrics最多4条，findings最多5条，suggestions最多4条。`,
-        buildSummary(d),
-        1500
-      );
-      const cleaned = text.replace(/```json|```/g,'').trim();
-      // 使用增强的 JSON 修复函数
-      const fixed = repairJSON(cleaned);
-      
-      try {
-        const json = JSON.parse(fixed);
-        // 兼容 DeepSeek 等模型可能返回不同格式
-        if (!json.metrics)    json.metrics    = [];
-        if (!json.findings)   json.findings   = [];
-        if (!json.suggestions)json.suggestions= [];
-        const ragRaw = (json.rag||'').toLowerCase().trim();
-        const hasAnyData = d.metrics.length > 0 || d.subGroups.length > 0 || d.rankData.length > 0;
-        d._rag = ['r','a','g'].includes(ragRaw) ? ragRaw : (hasAnyData ? 'g' : 'a');
-        json.rag = d._rag;
-        aiReports[d.dept]=renderReport(json,d);
-      } catch(e) {
-        d._rag='a'; d._err=e.message;
-        aiReports[d.dept]=buildFallback(d);
-      }
-    steps[i].status='done'; renderSteps();
-  } catch (e) {
-    console.error('AI分析失败:', e);
-    d._rag = 'a';
-    d._err = e.message;
-    aiReports[d.dept] = buildFallback(d);
-    steps[i].status = 'err';
-    renderSteps();
-  }
-  }
-  saveHist({week:wkNum(),year:new Date().getFullYear(),ts:Date.now(),depts:parsedDepts});
-  document.getElementById('proc').classList.remove('on');
-  document.getElementById('fl').style.display='';
-  document.getElementById('abar').style.display='flex';
-  buildReportTabs();
-  goPage('report');
-  toast(`✓ 分析完成，共 ${parsedDepts.length} 个部门`);
+buildSummary(d),
+1500
+);
+const cleaned = text.replace(/```json|```/g,'').trim();
+// 使用增强的 JSON 修复函数
+const fixed = repairJSON(cleaned);
+try {
+const json = JSON.parse(fixed);
+// 兼容 DeepSeek 等模型可能返回不同格式
+if (!json.metrics)    json.metrics    = [];
+if (!json.findings)   json.findings   = [];
+if (!json.suggestions)json.suggestions= [];
+const ragRaw = (json.rag||'').toLowerCase().trim();
+const hasAnyData = d.metrics.length > 0 || d.subGroups.length > 0 || d.rankData.length > 0;
+d._rag = ['r','a','g'].includes(ragRaw) ? ragRaw : (hasAnyData ? 'g' : 'a');
+json.rag = d._rag;
+aiReports[d.dept]=renderReport(json,d);
+} catch(e) {
+d._rag='a'; d._err=e.message;
+aiReports[d.dept]=buildFallback(d);
 }
-
+steps[i].status='done'; renderSteps();
+} catch (e) {
+console.error('AI分析失败:', e);
+d._rag = 'a';
+d._err = e.message;
+aiReports[d.dept] = buildFallback(d);
+steps[i].status = 'err';
+renderSteps();
+}
+}
+saveHist({week:wkNum(),year:new Date().getFullYear(),ts:Date.now(),depts:parsedDepts});
+document.getElementById('proc').classList.remove('on');
+document.getElementById('fl').style.display='';
+document.getElementById('abar').style.display='flex';
+buildReportTabs();
+goPage('report');
+toast(`✓ 分析完成，共 ${parsedDepts.length} 个部门`);
+}
 function buildSummary(d) {
-  const bizDepts = ['tmall','jd','pdd','douyin','live'];
-  const isBiz = bizDepts.includes(d.dept);
-
-  // 检查是否有年度规划数据可用（精确匹配）
-  const planning = PLANNING_DATA[d.dept];
-  const hasPlanning = !!planning;
-  const planningSummary = hasPlanning ? (planning.fullText || planning.summary) : null;
-  
-  // 检查是否有通过关联管理的规划数据
-  const mappedPlanning = getMappedPlanningData(d.dept);
-  const hasMappedPlanning = !!mappedPlanning && mappedPlanning.length > 0;
-  
-  // 构建规划文本
-  let planningText = '';
-  if (hasPlanning) {
-            const escapedSummary = planningSummary ? planningSummary.replace(/`/g, '\\`').replace(/\\$/g, '\\\\$') : '';
-            planningText = `
+const bizDepts = ['tmall','jd','pdd','douyin','live'];
+const isBiz = bizDepts.includes(d.dept);
+// 检查是否有年度规划数据可用（精确匹配）
+const planning = PLANNING_DATA[d.dept];
+const hasPlanning = !!planning;
+const planningSummary = hasPlanning ? (planning.fullText || planning.summary) : null;
+// 检查是否有通过关联管理的规划数据
+const mappedPlanning = getMappedPlanningData(d.dept);
+const hasMappedPlanning = !!mappedPlanning && mappedPlanning.length > 0;
+// 构建规划文本
+let planningText = '';
+if (hasPlanning) {
+const escapedSummary = planningSummary ? planningSummary.replace(/`/g, '\\`').replace(/\\$/g, '\\\\$') : '';
+planningText = `
 📋 年度规划摘要（来自文件：${planning.filename}）：
 ${escapedSummary}
-
 基于上述年度规划，请参考以下内容进行对照分析：`;
-  } else if (hasMappedPlanning) {
-    // 显示关联的规划数据
-    planningText = `
+} else if (hasMappedPlanning) {
+// 显示关联的规划数据
+planningText = `
 📋 关联年度规划摘要（基于部门关联配置）：
-
 `;
-    mappedPlanning.forEach((item, index) => {
-      const escapedDeptName = (item.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-      const escapedText = (item.fullText || item.summary || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-      planningText += `【${escapedDeptName}】\n${escapedText}\n\n`;
-    });
-    const escapedDeptName2 = (d.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-    planningText += `基于上述关联部门的年度规划，请综合分析对${escapedDeptName2}工作的指导意义：`;
-  }
-
-  // 找出异常指标（环比变化超过±20%）
-  const anomalies = d.metrics.filter(m => {
-    if (!m.deltaRate) return false;
-    const pct = parseFloat(m.deltaRate);
-    return !isNaN(pct) && Math.abs(pct) >= 20;
-  }).map(m => `${(m.label || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}环比${(m.deltaRate || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}（本周${(m.curVal || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}，上周${(m.prevVal || '—').replace(/`/g, '\\`').replace(/\$/g, '\\$')}）`);
-
-  const m = d.metrics.slice(0,8).map(x => {
-    const escape = (s) => (s || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-    return `${escape(x.label)}：本周${escape(x.curVal || '—')}` +
-      (x.prevVal    ? `（上周${escape(x.prevVal)}）`       : '') +
-      (x.deltaRate  ? `（环比${escape(x.deltaRate)}）`     : '') +
-      (x.completion ? `（月完成率${escape(x.completion)}，目标${escape(x.target || '未知')}）` : '');
-  }).join('；');
-
-  const sg = d.subGroups.slice(0,6).map(x => {
-    const escape = (s) => (s || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-    return `${escape(x.account || x.label)}·${escape(x.metric || '')}：本周${escape(x.curVal || '—')}` +
-      (x.prevVal    ? `上周${escape(x.prevVal)}` : '') +
-      (x.completion ? `完成率${escape(x.completion)}` : '') +
-      (x.target     ? `目标${escape(x.target)}` : '');
-  }).join('；');
-
-  const rk = d.rankData.slice(0,6).map(x => {
-    const escape = (s) => (s || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-    return `${escape(x.label)}：第${escape(x.curVal)}名` +
-      (x.prevVal ? `（上周第${escape(x.prevVal)}名）` : '') +
-      (x.delta   ? `（变化${escape(x.delta)}）` : '');
-  }).join('；');
-
-  const anomalyText = anomalies.length
-    ? `
+mappedPlanning.forEach((item, index) => {
+const escapedDeptName = (item.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+const escapedText = (item.fullText || item.summary || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+planningText += `【${escapedDeptName}】\n${escapedText}\n\n`;
+});
+const escapedDeptName2 = (d.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+planningText += `基于上述关联部门的年度规划，请综合分析对${escapedDeptName2}工作的指导意义：`;
+}
+// 找出异常指标（环比变化超过±20%）
+const anomalies = d.metrics.filter(m => {
+if (!m.deltaRate) return false;
+const pct = parseFloat(m.deltaRate);
+return !isNaN(pct) && Math.abs(pct) >= 20;
+}).map(m => `${(m.label || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}环比${(m.deltaRate || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}（本周${(m.curVal || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}，上周${(m.prevVal || '—').replace(/`/g, '\\`').replace(/\$/g, '\\$')}）`);
+const m = d.metrics.slice(0,8).map(x => {
+const escape = (s) => (s || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+return `${escape(x.label)}：本周${escape(x.curVal || '—')}` +
+(x.prevVal    ? `（上周${escape(x.prevVal)}）`       : '') +
+(x.deltaRate  ? `（环比${escape(x.deltaRate)}）`     : '') +
+(x.completion ? `（月完成率${escape(x.completion)}，目标${escape(x.target || '未知')}）` : '');
+}).join('；');
+const sg = d.subGroups.slice(0,6).map(x => {
+const escape = (s) => (s || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+return `${escape(x.account || x.label)}·${escape(x.metric || '')}：本周${escape(x.curVal || '—')}` +
+(x.prevVal    ? `上周${escape(x.prevVal)}` : '') +
+(x.completion ? `完成率${escape(x.completion)}` : '') +
+(x.target     ? `目标${escape(x.target)}` : '');
+}).join('；');
+const rk = d.rankData.slice(0,6).map(x => {
+const escape = (s) => (s || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+return `${escape(x.label)}：第${escape(x.curVal)}名` +
+(x.prevVal ? `（上周第${escape(x.prevVal)}名）` : '') +
+(x.delta   ? `（变化${escape(x.delta)}）` : '');
+}).join('；');
+const anomalyText = anomalies.length
+? `
 ⚠ 异常指标（环比变化超±20%，需重点分析）：${anomalies.join('；')}`
-    : '';
-
-  const deptTypeMap = {
-    brand: '品牌部',  kol: '达人部', cs: '客服部',
-    warehouse: '仓储/供应链部', finance: '财务中心',
-    hr: '人力中心', it: 'IT/数据部', cross: '跨境事业部',
-    key: '大客户部', paa: 'PAA事业部',
-    visual: '视觉中心', video: '视频中心',
-  };
-  const deptType = isBiz ? '电商业务部门' : (deptTypeMap[d.dept] || '职能支持部门');
-
-  // 判断是否有实际数据
-  const hasData = d.metrics.length > 0 || d.subGroups.length > 0;
-  const noDataNote = !hasData
-    ? '\n【本部门本周无数字指标数据】\n文件名：' + (d.filename || d.deptName) + '\n' + (hasPlanning || hasMappedPlanning
-      ? '已检测到该部门的相关年度规划文件，请基于实际规划内容进行分析。\n重点回答：①该部门Q2（4-6月）最关键的3项工作 ②本周是否应有推进或交付 ③给出具体可执行的下周工作建议'
-      : '请从文件名判断部门性质，对照知识库中对应部门的Q2规划进行实质性分析。\n重点回答：①该部门Q2（4-6月）最关键的3项工作 ②本周是否应有推进或交付 ③给出具体可执行的下周工作建议')
-    : '';
-
-  // 构建最终提示词
-  let prompt = `【${deptType}】${d.deptName}（文件：${d.filename||''}），数据周期：${d.curWeek||'本周（2026年Q2）'}`;
-
-  // 如果有规划数据（精确或关联），添加规划摘要
-  if (hasPlanning || hasMappedPlanning) {
-    prompt += `
-    
+: '';
+const deptTypeMap = {
+brand: '品牌部',  kol: '达人部', cs: '客服部',
+warehouse: '仓储/供应链部', finance: '财务中心',
+hr: '人力中心', it: 'IT/数据部', cross: '跨境事业部',
+key: '大客户部', paa: 'PAA事业部',
+visual: '视觉中心', video: '视频中心',
+};
+const deptType = isBiz ? '电商业务部门' : (deptTypeMap[d.dept] || '职能支持部门');
+// 判断是否有实际数据
+const hasData = d.metrics.length > 0 || d.subGroups.length > 0;
+const noDataNote = !hasData
+? '\n【本部门本周无数字指标数据】\n文件名：' + (d.filename || d.deptName) + '\n' + (hasPlanning || hasMappedPlanning
+? '已检测到该部门的相关年度规划文件，请基于实际规划内容进行分析。\n重点回答：①该部门Q2（4-6月）最关键的3项工作 ②本周是否应有推进或交付 ③给出具体可执行的下周工作建议'
+: '请从文件名判断部门性质，对照知识库中对应部门的Q2规划进行实质性分析。\n重点回答：①该部门Q2（4-6月）最关键的3项工作 ②本周是否应有推进或交付 ③给出具体可执行的下周工作建议')
+: '';
+// 构建最终提示词
+let prompt = `【${deptType}】${d.deptName}（文件：${d.filename||''}），数据周期：${d.curWeek||'本周（2026年Q2）'}`;
+// 如果有规划数据（精确或关联），添加规划摘要
+if (hasPlanning || hasMappedPlanning) {
+prompt += `
 ${planningText}`;
-  }
-
-  prompt += `
-
+}
+prompt += `
 核心指标：${m||'（无数字数据）'}
 ${sg ? '各账号/分组：' + sg : ''}
 ${rk ? '店铺排名：' + rk : ''}
 ${anomalyText}
 ${noDataNote}`;
-
-  // 分析指导部分
-  let analysisGuidance = '';
-  if (isBiz) {
-    analysisGuidance = '重点针对异常指标给出原因分析和可执行的排查优化方案。';
-  } else if (hasData) {
-    analysisGuidance = '结合部门职能和年度规划知识库评估本周工作质量、进度和风险。';
-  } else {
-    analysisGuidance = '重要：本部门无数字数据，请完全基于年度规划知识库，分析该部门在Q2应推进的重点工作，并给出具体可执行的工作建议。不要输出"数据缺失"相关内容，而是给出有价值的规划对照分析。';
-  }
-
-  // 如果有规划数据（精确或关联），增强分析指导
-  if (hasPlanning || hasMappedPlanning) {
-    if (isBiz) {
-      analysisGuidance = '重点针对异常指标给出原因分析和可执行的排查优化方案，并结合年度规划评估业务方向一致性。';
-    } else if (hasData) {
-      analysisGuidance = '结合部门职能、实际数据和年度规划内容进行综合分析，评估本周工作对规划目标的贡献度和风险。';
-    } else {
-      analysisGuidance = '基于已加载的年度规划内容，分析该部门在Q2应推进的重点工作，并给出具体可执行的工作建议。参考规划摘要中的关键目标和工作计划。';
-    }
-  }
-
-  prompt += `
-
+// 分析指导部分
+let analysisGuidance = '';
+if (isBiz) {
+analysisGuidance = '重点针对异常指标给出原因分析和可执行的排查优化方案。';
+} else if (hasData) {
+analysisGuidance = '结合部门职能和年度规划知识库评估本周工作质量、进度和风险。';
+} else {
+analysisGuidance = '重要：本部门无数字数据，请完全基于年度规划知识库，分析该部门在Q2应推进的重点工作，并给出具体可执行的工作建议。不要输出"数据缺失"相关内容，而是给出有价值的规划对照分析。';
+}
+// 如果有规划数据（精确或关联），增强分析指导
+if (hasPlanning || hasMappedPlanning) {
+if (isBiz) {
+analysisGuidance = '重点针对异常指标给出原因分析和可执行的排查优化方案，并结合年度规划评估业务方向一致性。';
+} else if (hasData) {
+analysisGuidance = '结合部门职能、实际数据和年度规划内容进行综合分析，评估本周工作对规划目标的贡献度和风险。';
+} else {
+analysisGuidance = '基于已加载的年度规划内容，分析该部门在Q2应推进的重点工作，并给出具体可执行的工作建议。参考规划摘要中的关键目标和工作计划。';
+}
+}
+prompt += `
 请按要求进行专业分析。${analysisGuidance}`;
+// 如果有规划数据且无数据，添加特殊指示
+if ((hasPlanning || hasMappedPlanning) && !hasData) {
+prompt += `
 
-  // 如果有规划数据且无数据，添加特殊指示
-  if ((hasPlanning || hasMappedPlanning) && !hasData) {
-    prompt += `
-
-特别提示：已提供该部门' + (hasPlanning ? '真实' : '关联') + '的年度规划摘要，请基于实际规划内容进行详细分析，不要提及"知识库"或"假设性规划"。`;
-  }
-
-  // 如果有映射规划数据，添加关联说明
-  if (hasMappedPlanning && !hasPlanning) {
-    prompt += `
-
-📌 关联说明：当前分析基于部门关联配置。${d.deptName}关联到${mappedPlanning.length}个规划部门，请综合参考这些部门的规划目标进行分析。`;
-  }
-
-  return prompt;
-}
-
-// ══════════════════════════════════════════
-// 渲染报告
-// ══════════════════════════════════════════
-function renderReport(ai,d) {
-  var ragRaw = (ai.rag||'g').toLowerCase().trim();
-  var rag = ['r','a','g'].includes(ragRaw) ? ragRaw : 'g';
-  var h = '<div class="rcard">';
-  h += '<div class="rcard-head">';
-  h += '<div><div class="rcard-title">'+d.deptName+'</div>';
-  h += '<div class="rcard-wk">'+(d.curWeek||'')+'</div></div>';
-  h += '<span class="rpill '+RAG[rag].cls+'">'+RAG[rag].label+'</span>';
-  h += '</div>';
-
-  // 核心结论
-  if (ai.summary) {
-    h += '<div style="padding:12px 14px;background:var(--s3);border-radius:8px;margin-bottom:16px;font-size:13px;color:var(--ink);line-height:1.6">';
-    h += '<span style="font-weight:600;margin-right:6px">本周结论</span>';
-    h += ai.summary+'</div>';
-  }
-
-  // 指标卡
-  var metrics = (ai.metrics&&ai.metrics.length) ? ai.metrics : d.metrics.slice(0,4).map(function(m){
-    return {label:m.label, value:m.curVal||'—', delta:m.deltaRate, trend:m.trend};
-  });
-  if (metrics.length) {
-    var n = Math.min(metrics.length,4);
-    h += '<div class="mgrid mg'+n+'">';
-    metrics.forEach(function(m) {
-      var dc = m.trend==='up'?'up':m.trend==='down'?'dn':'fl2';
-      h += '<div class="mc">';
-      h += '<div class="mc-l">'+m.label+'</div>';
-      h += '<div class="mc-v">'+(m.value||'—')+'</div>';
-      if (m.delta && m.delta!=='null') h += '<div class="mc-d '+dc+'">'+m.delta+'</div>';
-      h += '</div>';
-    });
-    h += '</div>';
-  }
-
-  // 月完成率卡
-  var compMs = d.metrics.filter(function(m){return m.completion;}).slice(0,3);
-  if (compMs.length) {
-    h += '<div class="mgrid mg'+Math.min(compMs.length,3)+'">';
-    compMs.forEach(function(m) {
-      var pct = parseFloat(m.completion);
-      var color = pct<20?'var(--R)':pct<50?'var(--A)':'var(--G)';
-      h += '<div class="mc">';
-      h += '<div class="mc-l">'+m.label+'·月完成率</div>';
-      h += '<div class="mc-v" style="color:'+color+'">'+m.completion+'</div>';
-      if (m.target) h += '<div class="mc-c">目标 '+m.target+'</div>';
-      h += '</div>';
-    });
-    h += '</div>';
-  }
-
-  // 子账号明细
-  if (d.subGroups.length) {
-    h += '<div class="sh">各账号 / 分组明细</div>';
-    h += '<div class="tscroll"><table class="stbl">';
-    h += '<thead><tr><th>账号</th><th>指标</th><th>本周</th><th>上周</th><th>完成率</th><th>目标</th></tr></thead>';
-    h += '<tbody>';
-    d.subGroups.slice(0,15).forEach(function(sg) {
-      var up = sg.deltaRate ? parseFloat(sg.deltaRate)>=0 : null;
-      h += '<tr>';
-      h += '<td class="td-b">'+(sg.account||'—')+'</td>';
-      h += '<td style="color:var(--ink3)">'+(sg.metric||'—')+'</td>';
-      h += '<td>'+(sg.curVal||'—')+'</td>';
-      h += '<td style="color:var(--ink3)">'+(sg.prevVal||'—')+'</td>';
-      h += '<td class="'+(up===true?'up':up===false?'dn':'')+'">'+(sg.completion||sg.deltaRate||'—')+'</td>';
-      h += '<td style="color:var(--ink3)">'+(sg.target||'—')+'</td>';
-      h += '</tr>';
-    });
-    h += '</tbody></table></div>';
-  }
-
-  // 排名
-  if (d.rankData.length) {
-    h += '<div class="sh">店铺 / 品牌排名</div><div class="rl">';
-    d.rankData.forEach(function(r) {
-      var dv = r.delta!==null ? parseFloat(r.delta) : null;
-      var dc = dv===null?'':dv>0?'up':dv<0?'dn':'fl2';
-      var arrow = dv===null?'':dv>0?'↑':dv<0?'↓':'→';
-      h += '<div class="ri">';
-      h += '<span class="ri-l" title="'+r.label+'">'+r.label+'</span>';
-      h += '<span class="ri-cur">'+(r.curVal!==null?'第'+r.curVal+'名':'—')+'</span>';
-      h += '<span class="ri-prev">'+(r.prevVal!==null?'上周 '+r.prevVal:'—')+'</span>';
-      if (dv!==null) h += '<span class="ri-d '+dc+'">'+arrow+' '+Math.abs(dv)+'</span>';
-      h += '</div>';
-    });
-    h += '</div>';
-  }
-
-  // 关键发现
-  if (ai.findings&&ai.findings.length) {
-    h += '<div class="sh">关键发现</div><div class="fds">';
-    ai.findings.forEach(function(f) {
-      h += '<div class="fd '+(f.type||'action')+'"><span class="fd-txt">'+f.text+'</span></div>';
-    });
-    h += '</div>';
-  }
-
-  // 优化建议
-  if (ai.suggestions&&ai.suggestions.length) {
-    h += '<div class="sh">优化建议 / 行动清单</div><div class="sgs">';
-    ai.suggestions.forEach(function(s,i) {
-      var pcolor = s.priority==='高'?'var(--R)':s.priority==='中'?'var(--A)':'var(--G)';
-      var parts = [];
-      if (s.priority) parts.push('<span style="color:'+pcolor+';font-weight:600">'+s.priority+'优先</span>');
-      if (s.owner)    parts.push('<span style="color:var(--ink3)">'+s.owner+'</span>');
-      if (s.deadline) parts.push('<span style="color:var(--ink3)">'+s.deadline+'</span>');
-      var meta = parts.join(' · ');
-      h += '<div class="sg"><span class="sg-n">'+(i+1)+'</span><div style="flex:1">';
-      if (meta) h += '<div style="font-size:11px;margin-bottom:3px">'+meta+'</div>';
-      h += '<span>'+s.text+'</span></div></div>';
-    });
-    h += '</div>';
-  }
-
-  h += '</div>';
-  return h;
-}
-
-function buildFallback(d) {
-  d._rag = 'a';
-  var h = '<div class="rcard">';
-  h += '<div class="rcard-head">';
-  h += '<div><div class="rcard-title">'+d.deptName+'</div>';
-  h += '<div class="rcard-wk">'+(d.curWeek||'')+'</div></div>';
-  h += '<span class="rpill rp-a">原始数据</span></div>';
-  if (d.metrics.length) {
-    var n = Math.min(d.metrics.length,4);
-    h += '<div class="mgrid mg'+n+'">';
-    d.metrics.slice(0,4).forEach(function(m) {
-      var dc = m.trend==='up'?'up':m.trend==='down'?'dn':'fl2';
-      h += '<div class="mc"><div class="mc-l">'+m.label+'</div>';
-      h += '<div class="mc-v">'+(m.curVal||'—')+'</div>';
-      if (m.deltaRate) h += '<div class="mc-d '+dc+'">'+m.deltaRate+'</div>';
-      h += '</div>';
-    });
-    h += '</div>';
-  }
-  h += '<div class="fd warn"><span class="fd-txt">AI 分析失败：'+(d._err||'请检查接口配置')+'。以上为原始数据。</span></div>';
-  h += '</div>';
-  return h;
-}
-
-// ══════════════════════════════════════════
-// 报告 Tab
-// ══════════════════════════════════════════
-function buildReportTabs() {
-  document.getElementById('rtabs').innerHTML=parsedDepts.map(d=>{const ragRaw=(d._rag||'g').toLowerCase().trim();const rag=['r','a','g'].includes(ragRaw)?ragRaw:'g';return `<button class="rt" id="rt-${d.dept}" onclick="showRpt('${d.dept}')"><span class="rt-dot" style="background:${RAG[rag].color}"></span>${d.deptName}</button>`;}).join('');
-  if (parsedDepts.length) showRpt(parsedDepts[0].dept);
-}
-// showRpt is defined in the ask section above
-
-
-// ══════════════════════════════════════════
-// 老板总览
-// ══════════════════════════════════════════
-function buildOverview() {
-  if (!parsedDepts.length) {
-    document.getElementById('ov-top').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink3)">请先上传数据</div>';
-    document.getElementById('dg').innerHTML=''; document.getElementById('decs').innerHTML=''; return;
-  }
-  const d=new Date(); document.getElementById('ov-sub').textContent=`${d.getFullYear()}年 · 第${wkNum()}周`;
-  const findM=(dept,kws)=>{const dd=parsedDepts.find(x=>x.dept===dept);if(!dd)return null;for(const kw of kws){const m=dd.metrics.find(x=>x.label.includes(kw));if(m)return m;}return null;};
-  const toN=m=>{if(!m)return 0;const v=parseFloat(m.rawCur||0);return isNaN(v)?0:v;};
-  const tmM=findM('tmall',['销售净额','销售额']),jdM=findM('jd',['部门销售净额','销售净额']),pddM=findM('pdd',['部门销售净额']),liveM=findM('live',['销售净额']),dyM=findM('douyin',['店铺销售净额','销售净额']);
-  const total=toN(tmM)+toN(jdM)+toN(pddM)+toN(liveM)+toN(dyM);
-  const mkO=(label,m,sub)=>{const tc=m?.trend==='up'?'var(--G)':m?.trend==='down'?'var(--R)':'var(--ink3)';return `<div class="ovm"><div class="ovm-l">${label}</div><div class="ovm-v">${m?.curVal||'—'}</div><div class="ovm-s" style="color:${tc}">${sub||m?.deltaRate||'—'}</div></div>`;};
-  document.getElementById('ov-top').innerHTML=`<div class="ovm"><div class="ovm-l">本周合计 GMV</div><div class="ovm-v">${fmtM(total)||'—'}</div><div class="ovm-s">货架 + 直播</div></div>`+mkO('天猫',tmM)+mkO('京东',jdM)+mkO('拼多多',pddM);
-  document.getElementById('dg').innerHTML=parsedDepts.map(d=>{const rag=d._rag||'g',top3=d.metrics.slice(0,3),rows=top3.map(m=>`<div class="dc-row"><span class="dc-rl">${m.label}</span><span class="dc-rv">${m.curVal||'—'}</span></div>`).join(''),warn=d.metrics.find(m=>m.completion&&parseFloat(m.completion)<30);return `<div class="dc"><div class="dc-top"><span class="dc-name">${d.deptName}</span><span class="rpill ${RAG[rag].cls}">${{r:'红灯',a:'黄灯',g:'绿灯'}[rag]}</span></div><div class="dc-rows">${rows||'<span style="font-size:12px;color:var(--ink3)">暂无指标</span>'}</div>${warn?`<div class="dc-risk">⚠ ${warn.label}月完成率仅 ${warn.completion}</div>`:''}</div>`;}).join('');
-  const mkD=(rag,d,color,tag)=>{const wM=d.metrics.find(m=>m.deltaRate&&m.deltaRate.startsWith('-')),lM=d.metrics.find(m=>m.completion&&parseFloat(m.completion)<25),txt=lM?`${lM.label}月完成率仅 ${lM.completion}，需立即关注`:wM?`${wM.label}环比 ${wM.deltaRate}，建议本周跟进`:'请查看详细报告';return `<div class="dei"><div class="dei-dot" style="background:${color}"></div><div style="flex:1"><div class="dei-tag" style="color:${color}">${tag} · ${d.deptName}</div><div class="dei-txt">${txt}</div><button class="dei-btn" onclick="getAdvice('${d.dept}')">获取决策建议 →</button></div></div>`;};
-  let decHtml='';
-  parsedDepts.filter(d=>d._rag==='r').forEach(d=>decHtml+=mkD('r',d,'var(--R)','紧急 · 需立即决策'));
-  parsedDepts.filter(d=>d._rag==='a').forEach(d=>decHtml+=mkD('a',d,'var(--A)','关注 · 本周跟进'));
-  if (!decHtml) decHtml='<div class="dei"><div class="dei-dot" style="background:var(--G)"></div><div><div class="dei-tag" style="color:var(--G)">本周无紧急决策事项</div><div class="dei-txt">各部门运行正常，按计划推进。</div></div></div>';
-  document.getElementById('decs').innerHTML=decHtml;
-  document.getElementById('opening-area').innerHTML='';
-  renderOvAsk();
-}
-async function getAdvice(dept) {
-  const d=parsedDepts.find(x=>x.dept===dept); if(!d)return;
-  const area=document.getElementById('opening-area');
-  area.innerHTML=`<div class="rcard" style="margin-top:14px"><div class="spin" style="margin:20px auto"></div></div>`;
-  try {
-    const text=await callAI('你是渔之源电商公司管理顾问，回答简洁有力，直接给出可执行建议，150字以内。',`${d.deptName}存在问题：${buildSummary(d).slice(0,300)}。请给出：①根因（1句话）②3个行动步骤（含时间节点）③需老板决策的1个关键点。`,400);
-    area.innerHTML=`<div class="rcard" style="margin-top:14px"><div class="sh">${d.deptName} · 决策建议</div><div style="font-size:13px;color:var(--ink2);line-height:1.8;white-space:pre-wrap">${text}</div></div>`;
-  } catch(e) { area.innerHTML=`<div class="rcard" style="margin-top:14px"><div class="fd risk"><span class="fd-txt">请求失败：${e.message}</span></div></div>`; }
-}
-async function genOpening() {
-  const area=document.getElementById('opening-area');
-  area.innerHTML=`<div class="rcard" style="margin-top:14px"><div class="spin" style="margin:20px auto"></div></div>`;
-  const summary=parsedDepts.slice(0,5).map(d=>{const m=d.metrics[0];return `${d.deptName}（${{r:'红灯',a:'黄灯',g:'绿灯'}[d._rag||'g']}）：${m?m.label+m.curVal:'—'}`;}).join('；');
-  try {
-    const text=await callAI('帮写电商公司周会开场白，风格简练有力，直接切主题，不用"大家好"开头，60字以内。',`本周经营：${summary}。写周会开场白。`,150);
-    area.innerHTML=`<div class="ob"><div class="ob-l">本周周会开场白</div><div class="ob-txt">"${text}"</div></div>`;
-  } catch(e) { area.innerHTML=`<div class="rcard" style="margin-top:14px"><div class="fd risk"><span class="fd-txt">生成失败：${e.message}</span></div></div>`; }
-}
-
-// ══════════════════════════════════════════
-// 追问功能
-// ══════════════════════════════════════════
-var askHistory = [];      // 报告页对话历史
-var askHistoryOv = [];    // 总览页对话历史
-
-function showRpt(dept) {
-  document.querySelectorAll('.rt').forEach(function(b){b.classList.remove('on');});
-  var btn = document.getElementById('rt-'+dept);
-  if (btn) btn.classList.add('on');
-  document.getElementById('rpt-body').innerHTML = aiReports[dept] || '<div style="padding:40px;text-align:center;color:var(--ink3)">暂无数据</div>';
-  // 显示追问框并更新上下文提示
-  var wrap = document.getElementById('ask-wrap');
-  if (wrap && parsedDepts.length) {
-    wrap.style.display = 'block';
-    var deptData = parsedDepts.find(function(d){return d.dept===dept;});
-    var deptName = deptData ? deptData.deptName : dept;
-    document.getElementById('ask-context').textContent = '💡 当前查看：' + deptName + ' · 可针对该部门数据和报告内容追问';
-    // 重置对话历史
-    askHistory = [];
-    document.getElementById('ask-history').innerHTML = '';
-    document.getElementById('ask-input').value = '';
-    // 更新快捷提问
-    document.getElementById('ask-tips').innerHTML = [
-      '帮我写一封给' + deptName + '负责人的跟进邮件',
-      deptName + '下周应该优先做什么',
-      deptName + '这个问题的根本原因是什么',
-      '这个问题在行业里通常怎么解决',
-      '帮我列一个改善行动清单'
-    ].map(function(tip){
-      return '<button class="ask-tip" onclick="sendTip(this)">'+tip+'</button>';
-    }).join('');
-  }
-}
-
-function sendTip(btn) {
-  document.getElementById('ask-input').value = btn.textContent;
-  sendAsk();
-}
-
-function sendTipOv(btn) {
-  document.getElementById('ask-input-ov').value = btn.textContent;
-  sendAskOv();
-}
-
-function buildAskContext() {
-  // 收集当前部门的完整数据作为上下文
-  var dept = document.querySelector('.rt.on');
-  var deptId = dept ? dept.id.replace('rt-','') : '';
-  var deptData = parsedDepts.find(function(d){return d.dept===deptId;});
-  if (!deptData) return '（无部门数据）';
-  return buildSummary(deptData) + ' AI分析：' + (document.getElementById('rpt-body').innerText||'').slice(0,600);
-}
-
-function buildOvContext() {
-  var parts = parsedDepts.slice(0,6).map(function(d){
-    var m = d.metrics[0];
-    return d.deptName + '（' + ({r:'红灯',a:'黄灯',g:'绿灯'}[d._rag||'g']) + '）：' + (m ? m.label+m.curVal : '无数据');
-  });
-  return '本周全公司经营数据：' + parts.join('；');
-}
-
-async function renderOvAsk() {
-  var area = document.getElementById('ov-ask-area');
-  if (!area) return;
-  area.innerHTML = '<div class="ask-wrap" style="display:block" id="ov-ask-wrap">' +
-    '<div class="ask-context" id="ov-ask-context">💡 基于本周全公司经营数据提问</div>' +
-    '<div class="ask-tips" id="ov-ask-tips">' +
-    ['把所有红黄灯问题汇总成200字老板汇报','本周哪个部门最需要关注，为什么','对比各部门，整体趋势如何','生成本周管理层会议议程'].map(function(t){
-      return '<button class="ask-tip" onclick="sendOvTip(this)">'+ t +'</button>';
-    }).join('') +
-    '</div>' +
-    '<div class="ask-history" id="ov-ask-history"></div>' +
-    '<div class="ask-input-row">' +
-    '<textarea class="ask-input" id="ov-ask-input" placeholder="针对全公司本周经营数据提问..." rows="1" oninput="autoResizeAsk(this)" onkeydown="if(event.key==String.fromCharCode(13)&&!event.shiftKey){event.preventDefault();sendOvAsk();}"></textarea>' +
-    '<button class="ask-send" id="ov-ask-btn" onclick="sendOvAsk()">发送</button>' +
-    '</div></div>';
-}
-
-function sendOvTip(btn) {
-  var input = document.getElementById('ov-ask-input');
-  if (input) { input.value = btn.textContent; sendOvAsk(); }
-}
-
-async function sendOvAsk() {
-  var input = document.getElementById('ov-ask-input');
-  var btn = document.getElementById('ov-ask-btn');
-  var histEl = document.getElementById('ov-ask-history');
-  if (!input||!btn||!histEl) return;
-  var q = input.value.trim(); if (!q) return;
-  input.value=''; input.style.height='auto'; btn.disabled=true;
-  var context = parsedDepts.slice(0,8).map(function(d){
-    return d.deptName+'（'+{r:'红灯',a:'黄灯',g:'绿灯'}[d._rag||'g']+'）：'+buildSummary(d).slice(0,200);
-  }).join('; ');
-  await sendAskOvWithContext(q, '全公司经营数据：' + context, histEl, btn);
-}
-
-async function sendAsk() {
-  var input = document.getElementById('ask-input');
-  var q = input.value.trim();
-  if (!q) return;
-  var sendBtn = document.getElementById('ask-send');
-  sendBtn.disabled = true;
-  input.value = '';
-  input.style.height = 'auto';
-
-  var history = document.getElementById('ask-history');
-  // 显示用户问题
-  history.innerHTML += '<div class="ask-bubble"><div class="ask-q"><span class="ask-q-label">你</span><span class="ask-q-text">'+q+'</span></div><div class="ask-a"><span class="ask-a-label">AI</span><span class="ask-a-text ask-a-loading" id="ask-loading">思考中...</span></div></div>';
-  history.scrollTop = history.scrollHeight;
-
-  // 构建消息历史
-  askHistory.push({role:'user', content: q});
-    var messages = [{role:'user', content: buildAskContext() + ' 用户问题：' + askHistory[0].content}];
-  if (askHistory.length > 1) {
-    for (var i = 1; i < askHistory.length; i++) {
-      messages.push(askHistory[i]);
-    }
-  }
-
-  try {
-    var text = await callAI(
-      '你是渔之源电商公司的AI助理，已经看过了本周的经营数据和分析报告。请根据数据内容回答用户的问题，回答要具体、有针对性，直接引用报告里的数据。如果要写邮件或文档，格式要专业实用。',
-      messages[messages.length-1].content,
-      600
-    );
-    askHistory.push({role:'assistant', content: text});
-    var loadingEl = document.getElementById('ask-loading');
-    if (loadingEl) {
-      loadingEl.className = 'ask-a-text';
-      loadingEl.textContent = text;
-    }
-  } catch(e) {
-    var loadingEl = document.getElementById('ask-loading');
-    if (loadingEl) {
-      loadingEl.className = 'ask-a-text';
-      loadingEl.style.color = 'var(--R)';
-      loadingEl.textContent = '请求失败：' + e.message;
-    }
-  }
-  history.scrollTop = history.scrollHeight;
-  sendBtn.disabled = false;
-  input.focus();
-}
-
-async function sendAskOv() {
-  var input = document.getElementById('ask-input-ov');
-  var q = input.value.trim();
-  if (!q) return;
-  input.value = '';
-  input.style.height = 'auto';
-
-  var history = document.getElementById('ask-history-ov');
-  history.innerHTML += '<div class="ask-bubble"><div class="ask-q"><span class="ask-q-label">你</span><span class="ask-q-text">'+q+'</span></div><div class="ask-a"><span class="ask-a-label">AI</span><span class="ask-a-text ask-a-loading" id="ask-loading-ov">思考中...</span></div></div>';
-  history.scrollTop = history.scrollHeight;
-
-  askHistoryOv.push({role:'user', content: q});
-
-  try {
-    var text = await callAI(
-      '你是渔之源电商公司老板的AI助理，已掌握本周全公司经营数据。请简洁有力地回答问题，如需生成文档则格式专业。',
-      buildOvContext() + ' 问题：' + q,
-      600
-    );
-    askHistoryOv.push({role:'assistant', content: text});
-    var el = document.getElementById('ask-loading-ov');
-    if (el) { el.className = 'ask-a-text'; el.textContent = text; }
-  } catch(e) {
-    var el = document.getElementById('ask-loading-ov');
-    if (el) { el.className = 'ask-a-text'; el.style.color='var(--R)'; el.textContent = '失败：'+e.message; }
-  }
-  history.scrollTop = history.scrollHeight;
-}
-
-async function sendAskOvWithContext(q, context, histEl, btn) {
-  // 创建临时元素显示问题
-  histEl.innerHTML += '<div class="ask-bubble"><div class="ask-q"><span class="ask-q-label">你</span><span class="ask-q-text">'+q+'</span></div><div class="ask-a"><span class="ask-a-label">AI</span><span class="ask-a-text ask-a-loading" id="ask-loading-temp">思考中...</span></div></div>';
-  histEl.scrollTop = histEl.scrollHeight;
-
-  try {
-    var text = await callAI(
-      '你是渔之源电商公司老板的AI助理，已掌握本周全公司经营数据。请简洁有力地回答问题，如需生成文档则格式专业。',
-      context + ' 问题：' + q,
-      600
-    );
-    var loadingEl = document.getElementById('ask-loading-temp');
-    if (loadingEl) {
-      loadingEl.className = 'ask-a-text';
-      loadingEl.textContent = text;
-    }
-  } catch(e) {
-    var loadingEl = document.getElementById('ask-loading-temp');
-    if (loadingEl) {
-      loadingEl.className = 'ask-a-text';
-      loadingEl.style.color='var(--R)';
-      loadingEl.textContent = '失败：'+e.message;
-    }
-  }
-  histEl.scrollTop = histEl.scrollHeight;
-  if (btn) btn.disabled = false;
-}
-
-// ══════════════════════════════════════════
-// 历史
-// ══════════════════════════════════════════
-function saveHist(data) { try{let h=JSON.parse(localStorage.getItem('yz_hist')||'[]');const idx=h.findIndex(x=>x.week===data.week&&x.year===data.year);if(idx>=0)h[idx]=data;else h.unshift(data);localStorage.setItem('yz_hist',JSON.stringify(h.slice(0,16)));}catch(e){} }
-function loadHist() { try{return JSON.parse(localStorage.getItem('yz_hist')||'[]');}catch(e){return[];} }
-function clearHist() { if(!confirm('确认清除全部历史记录？'))return;localStorage.removeItem('yz_hist');renderHist();toast('已清除'); }
-function renderHist() {
-  const hist=loadHist(),el=document.getElementById('hist-body');
-  if (!hist.length) { el.innerHTML='<div style="text-align:center;padding:50px;font-size:13px;color:var(--ink3)">暂无历史数据<br><span style="font-size:12px;display:block;margin-top:6px">上传并分析后自动保存，最多 16 周</span></div>'; return; }
-  const getV=(depts,dept,kws)=>{const d=depts?.find(x=>x.dept===dept);if(!d)return '—';for(const kw of kws){const m=d.metrics?.find(x=>x.label?.includes(kw));if(m)return m.curVal||'—';}return '—';};
-  let h=`<div class="htscroll"><table class="htbl"><thead><tr><th>周次</th><th>天猫</th><th>京东</th><th>拼多多</th><th>直播/抖音</th><th>部门</th><th>状态</th></tr></thead><tbody>`;
-  hist.forEach(w=>{
-    const depts=w.depts||[],live=getV(depts,'live',['销售净额']),dy=getV(depts,'douyin',['店铺销售净额','销售净额']);
-    const status=depts.map(d=>{const c={r:'var(--R)',a:'var(--A)',g:'var(--G)'}[d._rag||'g'];return `<span class="hdot" style="background:${c}"></span>${d.deptName}`;}).join(' ');
-    h+=`<tr><td><span class="hw">${w.year}·W${w.week}</span></td><td>${getV(depts,'tmall',['销售净额'])}</td><td>${getV(depts,'jd',['部门销售净额','销售净额'])}</td><td>${getV(depts,'pdd',['部门销售净额'])}</td><td>${live!=='—'?live:dy}</td><td style="font-size:11px;color:var(--ink3)">${depts.map(d=>d.deptName).join('、')}</td><td style="white-space:nowrap;font-size:11px">${status}</td></tr>`;
-  });
-  h+='</tbody></table></div>';
-  const weeks=hist.slice(0,8).reverse(),vals=weeks.map(w=>{const d=w.depts?.find(x=>x.dept==='tmall');return parseFloat(d?.metrics?.[0]?.rawCur||0)||0;}),mx=Math.max(...vals,1);
-  if (vals.some(v=>v>0)) { h+=`<div class="spark"><div class="sp-l">天猫销售额趋势（近 ${weeks.length} 周）</div><div class="sp-bars">`; weeks.forEach((w,i)=>{const ht=Math.max(Math.round(vals[i]/mx*48),4);h+=`<div class="sp-col"><div class="sp-bar${i===weeks.length-1?' cur':''}" style="height:${ht}px"></div><div class="sp-wk">W${w.week}</div></div>`;});h+='</div></div>'; }
-  el.innerHTML=h;
-}
-
-// ══════════════════════════════════════════
-// 初始化
-// ══════════════════════════════════════════
-(function(){
-  const d=new Date();
-  document.getElementById('wpill').textContent=`${d.getFullYear()} · 第${wkNum()}周`;
-  refreshCfgStatus();
-  // 自动展开配置面板（如未配置）
-  if (!loadCfg().key) toggleCfg(true);
-})();
 </script>
-</body>
-</html>
