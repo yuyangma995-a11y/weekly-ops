@@ -866,7 +866,9 @@ function loadPlanningFile(file, callback) {
             savePlanningData();
             
             // 显示成功消息
-            alert(`成功加载规划文件：${file.name}\n部门：${planningItem.deptName}\n摘要长度：${summary.length}字符`);
+            const escapedFileName = (file.name || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+            const escapedDeptName = (planningItem.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+            alert(`成功加载规划文件：${escapedFileName}\n部门：${escapedDeptName}\n摘要长度：${summary.length}字符`);
             
             if (callback) callback(planningItem);
         } catch (error) {
@@ -912,9 +914,9 @@ function showLoadedPlanning() {
     
     let msg = '已加载的规划文件：\n\n';
     Object.values(PLANNING_DATA).forEach(item => {
-        msg += `📋 ${item.deptName}\n`;
-        msg += `   文件：${item.filename}\n`;
-        msg += `   摘要：${item.summary.substring(0, 80)}...\n\n`;
+        msg += `📋 ${(item.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}\n`;
+        msg += `   文件：${(item.filename || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}\n`;
+        msg += `   摘要：${(item.summary.substring(0, 80) || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}...\n\n`;
     });
     
     alert(msg);
@@ -1430,6 +1432,14 @@ metrics最多4条，findings最多5条，suggestions最多4条。`,
         aiReports[d.dept]=buildFallback(d);
       }
     steps[i].status='done'; renderSteps();
+  } catch (e) {
+    console.error('AI分析失败:', e);
+    d._rag = 'a';
+    d._err = e.message;
+    aiReports[d.dept] = buildFallback(d);
+    steps[i].status = 'err';
+    renderSteps();
+  }
   }
   saveHist({week:wkNum(),year:new Date().getFullYear(),ts:Date.now(),depts:parsedDepts});
   document.getElementById('proc').classList.remove('on');
@@ -1456,9 +1466,10 @@ function buildSummary(d) {
   // 构建规划文本
   let planningText = '';
   if (hasPlanning) {
-    planningText = `
+            const escapedSummary = planningSummary ? planningSummary.replace(/`/g, '\\`').replace(/\\$/g, '\\\\$') : '';
+            planningText = `
 📋 年度规划摘要（来自文件：${planning.filename}）：
-${planningSummary}
+${escapedSummary}
 
 基于上述年度规划，请参考以下内容进行对照分析：`;
   } else if (hasMappedPlanning) {
@@ -1468,9 +1479,12 @@ ${planningSummary}
 
 `;
     mappedPlanning.forEach((item, index) => {
-      planningText += `【${item.deptName}】\\n${item.fullText || item.summary}\\n\\n`;
+      const escapedDeptName = (item.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+      const escapedText = (item.fullText || item.summary || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+      planningText += `【${escapedDeptName}】\n${escapedText}\n\n`;
     });
-    planningText += `基于上述关联部门的年度规划，请综合分析对${d.deptName}工作的指导意义：`;
+    const escapedDeptName2 = (d.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    planningText += `基于上述关联部门的年度规划，请综合分析对${escapedDeptName2}工作的指导意义：`;
   }
 
   // 找出异常指标（环比变化超过±20%）
@@ -1478,27 +1492,30 @@ ${planningSummary}
     if (!m.deltaRate) return false;
     const pct = parseFloat(m.deltaRate);
     return !isNaN(pct) && Math.abs(pct) >= 20;
-  }).map(m => `${m.label}环比${m.deltaRate}（本周${m.curVal}，上周${m.prevVal||'—'}）`);
+  }).map(m => `${(m.label || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}环比${(m.deltaRate || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}（本周${(m.curVal || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}，上周${(m.prevVal || '—').replace(/`/g, '\\`').replace(/\$/g, '\\$')}）`);
 
-  const m = d.metrics.slice(0,8).map(x =>
-    `${x.label}：本周${x.curVal||'—'}` +
-    (x.prevVal    ? `（上周${x.prevVal}）`       : '') +
-    (x.deltaRate  ? `（环比${x.deltaRate}）`     : '') +
-    (x.completion ? `（月完成率${x.completion}，目标${x.target||'未知'}）` : '')
-  ).join('；');
+  const m = d.metrics.slice(0,8).map(x => {
+    const escape = (s) => (s || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    return `${escape(x.label)}：本周${escape(x.curVal || '—')}` +
+      (x.prevVal    ? `（上周${escape(x.prevVal)}）`       : '') +
+      (x.deltaRate  ? `（环比${escape(x.deltaRate)}）`     : '') +
+      (x.completion ? `（月完成率${escape(x.completion)}，目标${escape(x.target || '未知')}）` : '');
+  }).join('；');
 
-  const sg = d.subGroups.slice(0,6).map(x =>
-    `${x.account||x.label}·${x.metric||''}：本周${x.curVal||'—'}` +
-    (x.prevVal    ? `上周${x.prevVal}` : '') +
-    (x.completion ? `完成率${x.completion}` : '') +
-    (x.target     ? `目标${x.target}` : '')
-  ).join('；');
+  const sg = d.subGroups.slice(0,6).map(x => {
+    const escape = (s) => (s || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    return `${escape(x.account || x.label)}·${escape(x.metric || '')}：本周${escape(x.curVal || '—')}` +
+      (x.prevVal    ? `上周${escape(x.prevVal)}` : '') +
+      (x.completion ? `完成率${escape(x.completion)}` : '') +
+      (x.target     ? `目标${escape(x.target)}` : '');
+  }).join('；');
 
-  const rk = d.rankData.slice(0,6).map(x =>
-    `${x.label}：第${x.curVal}名` +
-    (x.prevVal ? `（上周第${x.prevVal}名）` : '') +
-    (x.delta   ? `（变化${x.delta}）` : '')
-  ).join('；');
+  const rk = d.rankData.slice(0,6).map(x => {
+    const escape = (s) => (s || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    return `${escape(x.label)}：第${escape(x.curVal)}名` +
+      (x.prevVal ? `（上周第${escape(x.prevVal)}名）` : '') +
+      (x.delta   ? `（变化${escape(x.delta)}）` : '');
+  }).join('；');
 
   const anomalyText = anomalies.length
     ? `
@@ -1843,8 +1860,7 @@ function buildOvContext() {
   return '本周全公司经营数据：' + parts.join('；');
 }
 
-async 
-function renderOvAsk() {
+async function renderOvAsk() {
   var area = document.getElementById('ov-ask-area');
   if (!area) return;
   area.innerHTML = '<div class="ask-wrap" style="display:block" id="ov-ask-wrap">' +
