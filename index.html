@@ -752,8 +752,29 @@ function goPage(p) {
 // 存储已加载的规划数据
 let PLANNING_DATA = {};
 
+// 保存规划数据到本地存储
+function savePlanningData() {
+    try {
+        localStorage.setItem('yz_planning_data', JSON.stringify(PLANNING_DATA));
+    } catch (e) {
+        console.error('保存规划数据失败:', e);
+    }
+}
+
+// 从本地存储加载规划数据
+function loadPlanningData() {
+    try {
+        const saved = localStorage.getItem('yz_planning_data');
+        if (saved) {
+            PLANNING_DATA = JSON.parse(saved);
+        }
+    } catch (e) {
+        console.error('加载规划数据失败:', e);
+    }
+};
+
 // 智能摘要算法（简化版）
-function summarizePlanningText(text, maxChars = 800) {
+function summarizePlanningText(text, maxChars = 4000) {
     if (!text || text.length <= maxChars) return text;
     
     // 查找关键部分
@@ -817,7 +838,7 @@ function loadPlanningFile(file, callback) {
             });
             
             // 生成智能摘要
-            const summary = summarizePlanningText(allText, 800);
+            const summary = summarizePlanningText(allText, 4000);
             
             // 检测部门
             let deptCode = 'other';
@@ -836,11 +857,13 @@ function loadPlanningFile(file, callback) {
                 deptCode: deptCode,
                 deptName: DEPT_NAMES[deptCode] || fileName,
                 summary: summary,
+                fullText: allText.substring(0, 10000), // 存储最多10000字符的完整文本
                 timestamp: new Date().toLocaleString()
             };
             
             // 存储规划数据
             PLANNING_DATA[deptCode] = planningItem;
+            savePlanningData();
             
             // 显示成功消息
             alert(`成功加载规划文件：${file.name}\n部门：${planningItem.deptName}\n摘要长度：${summary.length}字符`);
@@ -901,6 +924,7 @@ function showLoadedPlanning() {
 function clearPlanningData() {
     if (confirm('确认清空所有已加载的规划文件？')) {
         PLANNING_DATA = {};
+        savePlanningData();
         alert('已清空所有规划数据');
     }
 }
@@ -1177,6 +1201,7 @@ function getMappedPlanningData(weekDept) {
 // 在页面加载时初始化关联配置
 window.addEventListener('DOMContentLoaded', () => {
     loadMapping();
+    loadPlanningData();
 });
 
 
@@ -1369,6 +1394,8 @@ async function runAll() {
   "suggestions": [{"priority":"高|中|低","owner":"执行人","deadline":"时间节点","text":"具体行动，不超过80字"}]
 }
 
+注意：JSON字符串中必须使用标准双引号（\"），不要使用中文引号（“”）。字符串中的换行符必须转义为\\n。
+
 红灯：核心指标环比下降>30%，或月完成率<15%，或Q2关键里程碑严重滞后需老板介入
 黄灯：环比下降20-30%，或完成率15-40%，或Q2有1-2个重点工作存在延期风险
 绿灯：整体正常，无数据部门默认黄灯（因为无法确认），除非有明确依据显示工作在正轨
@@ -1378,20 +1405,30 @@ metrics最多4条，findings最多5条，suggestions最多4条。`,
         1500
       );
       const cleaned = text.replace(/```json|```/g,'').trim();
-      const json = JSON.parse(cleaned);
-      // 兼容 DeepSeek 等模型可能返回不同格式
-      if (!json.metrics)    json.metrics    = [];
-      if (!json.findings)   json.findings   = [];
-      if (!json.suggestions)json.suggestions= [];
-      const ragRaw = (json.rag||'').toLowerCase().trim();
-      const hasAnyData = d.metrics.length > 0 || d.subGroups.length > 0 || d.rankData.length > 0;
-      d._rag = ['r','a','g'].includes(ragRaw) ? ragRaw : (hasAnyData ? 'g' : 'a');
-      json.rag = d._rag;
-      aiReports[d.dept]=renderReport(json,d);
-    } catch(e) {
-      d._rag='a'; d._err=e.message;
-      aiReports[d.dept]=buildFallback(d);
-    }
+      // 尝试修复常见的JSON格式问题：中文引号、未转义的控制字符
+      let fixed = cleaned;
+      // 将中文引号替换为英文引号
+      fixed = fixed.replace(/[“”]/g, '"');
+      // 将中文单引号替换为英文单引号
+      fixed = fixed.replace(/[‘’]/g, "'");
+      // 移除JSON字符串外的控制字符
+      fixed = fixed.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+      
+      try {
+        const json = JSON.parse(fixed);
+        // 兼容 DeepSeek 等模型可能返回不同格式
+        if (!json.metrics)    json.metrics    = [];
+        if (!json.findings)   json.findings   = [];
+        if (!json.suggestions)json.suggestions= [];
+        const ragRaw = (json.rag||'').toLowerCase().trim();
+        const hasAnyData = d.metrics.length > 0 || d.subGroups.length > 0 || d.rankData.length > 0;
+        d._rag = ['r','a','g'].includes(ragRaw) ? ragRaw : (hasAnyData ? 'g' : 'a');
+        json.rag = d._rag;
+        aiReports[d.dept]=renderReport(json,d);
+      } catch(e) {
+        d._rag='a'; d._err=e.message;
+        aiReports[d.dept]=buildFallback(d);
+      }
     steps[i].status='done'; renderSteps();
   }
   saveHist({week:wkNum(),year:new Date().getFullYear(),ts:Date.now(),depts:parsedDepts});
@@ -1410,7 +1447,7 @@ function buildSummary(d) {
   // 检查是否有年度规划数据可用（精确匹配）
   const planning = PLANNING_DATA[d.dept];
   const hasPlanning = !!planning;
-  const planningSummary = hasPlanning ? planning.summary : null;
+  const planningSummary = hasPlanning ? (planning.fullText || planning.summary) : null;
   
   // 检查是否有通过关联管理的规划数据
   const mappedPlanning = getMappedPlanningData(d.dept);
@@ -1431,7 +1468,7 @@ ${planningSummary}
 
 `;
     mappedPlanning.forEach((item, index) => {
-      planningText += `【${item.deptName}】\n${item.summary}\n\n`;
+      planningText += `【${item.deptName}】\\n${item.fullText || item.summary}\\n\\n`;
     });
     planningText += `基于上述关联部门的年度规划，请综合分析对${d.deptName}工作的指导意义：`;
   }
