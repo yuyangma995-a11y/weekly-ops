@@ -1,0 +1,31 @@
+name: 自动部署到腾讯云
+
+# 触发条件：当 main 分支有代码 push 时触发
+on:
+  push:
+    branches: [ "main", "master" ] # 兼容 main 和 master 分支
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. 抓取你的最新代码
+      - name: 检出代码
+        uses: actions/checkout@v3
+        
+      # 2. 安装 Node.js 环境
+      - name: 设置 Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      # 3. 安装腾讯云命令行工具并部署
+      - name: 部署到腾讯云静态托管
+        run: |
+          # 安装云开发 CLI
+          npm install -g @cloudbase/cli
+          # 登录腾讯云
+          tcb login --apiKeyId ${{ secrets.TENCENT_SECRET_ID }} --apiKey ${{ secrets.TENCENT_SECRET_KEY }}
+          # 部署当前目录下所有文件到静态托管
+          tcb hosting deploy ./ -e ${{ secrets.ENV_ID }}
