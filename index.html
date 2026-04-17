@@ -382,6 +382,16 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
   </div>
   <div class="rtabs" id="rtabs"></div>
   <div id="rpt-body"></div>
+  
+  <!-- 盯盘跟进表报告区域 -->
+  <div id="task-rpt-area" style="display:none;margin-top:24px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:600;color:var(--ink)">📋 盯盘跟进报告</div>
+      <div style="font-size:11px;color:var(--ink3);padding:2px 8px;background:var(--s2);border-radius:4px;border:.5px solid var(--bd)">各部门本周任务 × 年度规划对照</div>
+    </div>
+    <div class="rtabs" id="task-rtabs"></div>
+    <div id="task-rpt-body"></div>
+  </div>
 
   <!-- 追问区 -->
   <div class="ask-wrap" id="ask-wrap">
@@ -1417,22 +1427,34 @@ function buildTaskData(rows, filename) {
     }
   }
 
-  // 将部门数据聚合成一个结果，带 tasksByDept 字段供 buildSummary 使用
-  const deptNames = Object.keys(deptMap);
-  const result = {
-    dept: 'taskboard',
-    deptName: filename.replace(/\.xlsx?$|\.csv$/i,'').replace('_副本',''),
-    filename,
-    curWeek: '4.10-4.16',
-    prevWeek: null,
-    metrics: [],
-    subGroups: [],
-    rankData: [],
-    tasksByDept: deptMap,
-    isTaskBoard: true,
-    _taskSummary: buildTaskSummaryText(deptMap)
-  };
-  return result;
+  // 按部门拆分成多个独立对象，每个部门单独AI分析
+  const results = [];
+  for (const [deptName, tasks] of Object.entries(deptMap)) {
+    const total  = tasks.inprog.length + tasks.overdue.length + tasks.doneThisWeek.length;
+    if (total === 0) continue;
+    
+    // 生成该部门的任务摘要文本
+    const taskLines = [];
+    if (tasks.overdue.length)      taskLines.push('⚠延期任务（' + tasks.overdue.length + '项）：' + tasks.overdue.join('；'));
+    if (tasks.inprog.length)       taskLines.push('进行中（' + tasks.inprog.length + '项）：' + tasks.inprog.join('；'));
+    if (tasks.doneThisWeek.length) taskLines.push('本周完成：' + tasks.doneThisWeek.join('；'));
+    if (tasks.pending.length)      taskLines.push('待排期：' + tasks.pending.slice(0,3).join('；'));
+    
+    results.push({
+      dept:       'task_' + deptName.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g,''),
+      deptName:   deptName,
+      filename,
+      curWeek:    '4.10-4.16',
+      prevWeek:   null,
+      metrics:    [],
+      subGroups:  [],
+      rankData:   [],
+      isTaskDept: true,
+      taskData:   tasks,
+      _taskText:  taskLines.join('\n')
+    });
+  }
+  return results;  // 返回数组！
 }
 
 function buildTaskSummaryText(deptMap) {
@@ -1550,7 +1572,16 @@ async function runAll() {
   document.getElementById('proc-sub').textContent='读取 Excel 文件...';
   for (let i=0;i<pendingFiles.length;i++) {
     steps[i].status='doing'; renderSteps();
-    try { parsedDepts.push(await parseExcel(pendingFiles[i])); steps[i].status='done'; }
+    try {
+      const parsed = await parseExcel(pendingFiles[i]);
+      if (Array.isArray(parsed)) {
+        parsed.forEach(d => parsedDepts.push(d));
+        steps[i].label = (steps[i].label||'') + '（' + parsed.length + '个部门）';
+      } else {
+        parsedDepts.push(parsed);
+      }
+      steps[i].status='done';
+    }
     catch(e) { parsedDepts.push({dept:'other',deptName:pendingFiles[i].name,filename:pendingFiles[i].name,curWeek:null,prevWeek:null,metrics:[],subGroups:[],rankData:[],_err:e.message}); steps[i].status='err'; }
     renderSteps();
   }
@@ -1582,12 +1613,17 @@ async function runAll() {
 2. 识别哪些Q2关键里程碑可能存在延期或遗漏风险
 3. 给出下周最应该聚焦的2-3件具体工作
 
+【品牌视频部 2026年度规划】（独立部门，不与品牌部/视频中心混用）
+核心目标：IP账号年度播放3500万；官号视频播放2400万；IP账号年度涨粉18万；AI数据表格全面落地
+Q1重点：3种新形式脚本拍摄发布（综艺快节奏/VLOG/待定）；替身视频SOP 2.0+10条测试视频；多平台内容规划（快手/小红书/B站/视频号）；视觉封面包装升级；制定年度直播日历；选题库+爆款视频库搭建完成
+Q2重点（4-6月）：官号每月6条视频按节点输出；IP直播每月至少1场；多平台内容保持日更+累计播放200万；AI智能体（脚本/文案/爆款拆解）搭建完成；替身视频播放量环比提升20%；粉丝精细化运营（中奖粉丝标准化）；舆情管控SOP执行
+关键指标：IP视频5秒完播≥27%；新形式视频单条播放≥20万；替身素材每条至少复用2次；团队人均视频产出周期缩减15%
+
 【名称匹配说明】
-分析时不要拘泥于部门名称是否完全一致，根据职能性质匹配知识库：
-- "品牌视频部"→ 对照品牌部+视频中心规划
-- "6 抖音平台"→ 对照抖音平台规划  
-- "视觉中心"/"设计中心"→ 对照视觉中心规划
-- 文件叫什么名字不重要，看工作内容属于哪个职能
+- "品牌视频部"/"1 品牌视频部" → 对照品牌视频部规划（独立，不要关联其他部门）
+- "6 抖音平台" → 对照抖音平台规划
+- "视觉中心"/"品牌视觉部" → 对照视觉中心规划
+- 盯盘跟进表里的部门名如"12 达人部"/"3 品牌部"等，去掉数字前缀后匹配知识库
 
 【输出格式】
 只输出合法JSON，格式：
@@ -1648,10 +1684,13 @@ metrics最多4条，findings最多5条，suggestions最多4条。严格要求：
 }
 
 function buildSummary(d) {
-  // 任务清单（盯盘跟进表）特殊处理
-  if (d.isTaskBoard && d._taskSummary) {
-    return '【公司盯盘跟进表】本周各部门任务进展（2026年第16周）：\n' + d._taskSummary + 
-      '\n\n请基于以上各部门任务进展，结合公司年度规划知识库，逐部门分析：①进行中任务是否符合Q2规划方向 ②延期任务的风险影响 ③下周各部门优先事项建议。输出整体盯盘报告。';
+  // 任务清单（盯盘跟进表）- 单部门处理
+  if (d.isTaskDept && d._taskText) {
+    const deptClean = d.deptName.replace(/^\d+\s*/,''); // 去掉"12 "这样的前缀
+    return '【' + d.deptName + '】本周（4.10-4.16）任务进展：\n' + d._taskText +
+      '\n\n请对照公司年度规划知识库中"' + deptClean + '"相关规划，分析：' +
+      '①本周任务是否推进了Q2规划目标 ②延期任务的风险等级和处理建议 ③下周（4.17-4.23）该部门按规划应重点推进什么。' +
+      '\n注意：请给出实质性分析，不要只复述任务列表。';
   }
 
   const bizDepts = ['tmall','jd','pdd','douyin','live'];
@@ -1810,31 +1849,28 @@ function renderReport(ai,d) {
   var rag = ['r','a','g'].includes(ragRaw) ? ragRaw : 'g';
   var h = '<div class="rcard">';
   
-  // 任务清单额外渲染：在 AI 结论后插入各部门任务明细
+  // 任务部门额外渲染：显示本部门任务明细
   var taskDetailHtml = '';
-  if (d.isTaskBoard && d.tasksByDept) {
-    var depts = Object.keys(d.tasksByDept);
-    taskDetailHtml = '<div class="sh">各部门本周任务明细</div>';
-    depts.forEach(function(dept) {
-      var dd = d.tasksByDept[dept];
-      if (!dd.inprog.length && !dd.overdue.length && !dd.doneThisWeek.length) return;
-      var ragColor = dd.overdue.length > 2 ? 'var(--R)' : dd.overdue.length > 0 ? 'var(--A)' : 'var(--G)';
-      taskDetailHtml += '<div style="margin-bottom:12px;padding:12px 14px;background:var(--s2);border-radius:8px;border-left:3px solid '+ragColor+'">';
-      taskDetailHtml += '<div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:8px">'+dept+'</div>';
-      if (dd.overdue.length) {
-        taskDetailHtml += '<div style="font-size:11px;color:var(--R);margin-bottom:4px">⚠ 延期（'+dd.overdue.length+'项）：';
-        taskDetailHtml += dd.overdue.slice(0,3).join(' · ') + '</div>';
-      }
-      if (dd.inprog.length) {
-        taskDetailHtml += '<div style="font-size:11px;color:var(--ink2);margin-bottom:4px">进行中（'+dd.inprog.length+'项）：';
-        taskDetailHtml += dd.inprog.slice(0,3).join(' · ') + '</div>';
-      }
-      if (dd.doneThisWeek.length) {
-        taskDetailHtml += '<div style="font-size:11px;color:var(--G)">✓ 本周完成：';
-        taskDetailHtml += dd.doneThisWeek.slice(0,3).join(' · ') + '</div>';
-      }
+  if (d.isTaskDept && d.taskData) {
+    var td = d.taskData;
+    taskDetailHtml = '<div class="sh">本周任务明细</div>';
+    taskDetailHtml += '<div style="padding:12px 14px;background:var(--s2);border-radius:8px">';
+    if (td.overdue.length) {
+      taskDetailHtml += '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:600;color:var(--R);margin-bottom:5px">⚠ 延期任务（'+td.overdue.length+'项）</div>';
+      td.overdue.forEach(function(t){ taskDetailHtml += '<div style="font-size:12px;color:var(--ink2);padding:3px 0;border-bottom:.5px solid var(--bd)">'+t+'</div>'; });
       taskDetailHtml += '</div>';
-    });
+    }
+    if (td.inprog.length) {
+      taskDetailHtml += '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px">进行中（'+td.inprog.length+'项）</div>';
+      td.inprog.forEach(function(t){ taskDetailHtml += '<div style="font-size:12px;color:var(--ink2);padding:3px 0;border-bottom:.5px solid var(--bd)">'+t+'</div>'; });
+      taskDetailHtml += '</div>';
+    }
+    if (td.doneThisWeek.length) {
+      taskDetailHtml += '<div><div style="font-size:11px;font-weight:600;color:var(--G);margin-bottom:5px">✓ 本周完成（'+td.doneThisWeek.length+'项）</div>';
+      td.doneThisWeek.forEach(function(t){ taskDetailHtml += '<div style="font-size:12px;color:var(--ink2);padding:3px 0">'+t+'</div>'; });
+      taskDetailHtml += '</div>';
+    }
+    taskDetailHtml += '</div>';
   }
   h += '<div class="rcard-head">';
   h += '<div><div class="rcard-title">'+d.deptName+'</div>';
@@ -1980,8 +2016,44 @@ function buildFallback(d) {
 // 报告 Tab
 // ══════════════════════════════════════════
 function buildReportTabs() {
-  document.getElementById('rtabs').innerHTML=parsedDepts.map(d=>{const ragRaw=(d._rag||'g').toLowerCase().trim();const rag=['r','a','g'].includes(ragRaw)?ragRaw:'g';return `<button class="rt" id="rt-${d.dept}" onclick="showRpt('${d.dept}')"><span class="rt-dot" style="background:${RAG[rag].color}"></span>${d.deptName}</button>`;}).join('');
-  if (parsedDepts.length) showRpt(parsedDepts[0].dept);
+  const dataDepts = parsedDepts.filter(d => !d.isTaskDept);
+  const taskDepts = parsedDepts.filter(d => d.isTaskDept);
+  
+  // 数据报告 Tab
+  const tabsEl = document.getElementById('rtabs');
+  tabsEl.innerHTML = dataDepts.map(d => {
+    const ragRaw = (d._rag||'g').toLowerCase().trim();
+    const rag = ['r','a','g'].includes(ragRaw) ? ragRaw : 'g';
+    return '<button class="rt" id="rt-'+d.dept+'" onclick="showRpt(\"'+d.dept+'\")"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span>'+d.deptName+'</button>';
+  }).join('');
+  
+  // 盯盘报告区域（独立显示在数据报告下方）
+  const taskArea = document.getElementById('task-rpt-area');
+  if (taskArea) {
+    if (taskDepts.length > 0) {
+      taskArea.style.display = 'block';
+      const taskTabsHtml = taskDepts.map(d => {
+        const ragRaw = (d._rag||'g').toLowerCase().trim();
+        const rag = ['r','a','g'].includes(ragRaw) ? ragRaw : 'g';
+        return '<button class="rt" id="rt-'+d.dept+'" onclick="showTaskRpt(\"'+d.dept+'\")"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span>'+d.deptName+'</button>';
+      }).join('');
+      document.getElementById('task-rtabs').innerHTML = taskTabsHtml;
+    } else {
+      taskArea.style.display = 'none';
+    }
+  }
+  
+  // 默认选中第一个
+  if (dataDepts.length) showRpt(dataDepts[0].dept);
+  else if (taskDepts.length) showTaskRpt(taskDepts[0].dept);
+}
+
+function showTaskRpt(dept) {
+  document.querySelectorAll('#task-rtabs .rt').forEach(b => b.classList.remove('on'));
+  const btn = document.getElementById('rt-'+dept);
+  if (btn) btn.classList.add('on');
+  document.getElementById('task-rpt-body').innerHTML =
+    aiReports[dept] || '<div style="padding:40px;text-align:center;color:var(--ink3)">暂无数据</div>';
 }
 // showRpt is defined in the ask section above
 
