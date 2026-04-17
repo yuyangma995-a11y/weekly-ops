@@ -1547,7 +1547,7 @@ function buildTaskData(rows, filename) {
     if (tasks.pending.length)      taskLines.push('待排期：' + tasks.pending.slice(0,3).join('；'));
     
     results.push({
-      dept:       'task_' + deptName.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g,''),
+      dept:       'taskdept_' + results.length,
       deptName:   deptName,
       filename,
       curWeek:    '4.10-4.16',
@@ -1677,9 +1677,11 @@ async function runAll() {
         <span class="si-r">${s.status==='done'?'✓ 完成':s.status==='doing'?'解析中...':s.status==='ai'?'AI 分析...':s.status==='err'?'✗ 出错':'等待'}</span>
       </div>`).join('');
   };
-  // 只清除数据部门报告，保留已有的盯盘分析结果
-  parsedDepts = taskParsedDepts.slice(); // 从盯盘结果开始
-  Object.keys(aiReports).forEach(k => { if (!taskAiReports[k]) delete aiReports[k]; });
+  // 重建状态：盯盘结果完整保留，数据部门结果清除
+  parsedDepts = taskParsedDepts.slice(); // 从已有盯盘结果开始
+  // 先清空 aiReports，再把 taskAiReports 全部写回（确保盯盘报告不丢失）
+  aiReports = {};
+  Object.assign(aiReports, taskAiReports);
   // 解析数据文件
   document.getElementById('proc-sub').textContent='读取 Excel 文件...';
   let stepOffset = hasNewTaskFile ? 1 : 0;
@@ -1726,6 +1728,12 @@ async function runAll() {
   for (let i=0;i<parsedDepts.length;i++) {
     const d = parsedDepts[i];
     if (d._err) { d._rag='a'; aiReports[d.dept]=buildFallback(d); continue; }
+    
+    // 盯盘部门已有分析结果时直接复用，不重新调用 AI
+    if (d.isTaskDept && taskAiReports[d.dept]) {
+      aiReports[d.dept] = taskAiReports[d.dept];
+      continue;
+    }
 
     // 计算 steps 索引（盯盘部门只更新进度文字，不更新 steps）
     let stepIdx = -1;
@@ -2169,7 +2177,8 @@ function buildFallback(d) {
     });
     h += '</div>';
   }
-  h += '<div class="fd warn"><span class="fd-txt">AI 分析失败：'+(d._err||'请检查接口配置')+'。以上为原始数据。</span></div>';
+  var errMsg = (d._err||'请检查接口配置').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  h += '<div class="fd warn"><span class="fd-txt">AI 分析失败：'+errMsg+'。以上为原始数据。</span></div>';
   h += '</div>';
   return h;
 }
@@ -2211,12 +2220,19 @@ function buildReportTabs() {
 }
 
 function showTaskRpt(dept) {
-  // 只操作盯盘Tab区域，不影响数据报告Tab
   document.querySelectorAll('#task-rtabs .rt').forEach(b => b.classList.remove('on'));
   const btn = document.getElementById('taskrt-'+dept);
   if (btn) btn.classList.add('on');
-  document.getElementById('task-rpt-body').innerHTML =
-    aiReports[dept] || '<div style="padding:40px;text-align:center;color:var(--ink3)">暂无数据</div>';
+  const rptBody = document.getElementById('task-rpt-body');
+  if (!rptBody) return;
+  const report = aiReports[dept] || taskAiReports[dept]; // 同时检查 taskAiReports 兜底
+  if (report && typeof report === 'string' && report.trim().length > 0) {
+    rptBody.innerHTML = report;
+  } else {
+    const d = parsedDepts.find(x => x.dept === dept) || taskParsedDepts.find(x => x.dept === dept);
+    const name = d ? d.deptName : dept;
+    rptBody.innerHTML = '<div style="padding:40px;text-align:center;color:var(--ink3)">'+name+' · 暂无报告，请重新分析</div>';
+  }
 }
 // showRpt is defined in the ask section above
 
@@ -2272,7 +2288,7 @@ var askHistory = [];      // 报告页对话历史
 var askHistoryOv = [];    // 总览页对话历史
 
 function showRpt(dept) {
-  document.querySelectorAll('.rt').forEach(function(b){b.classList.remove('on');});
+  document.querySelectorAll('#rtabs .rt').forEach(function(b){b.classList.remove('on');});
   var btn = document.getElementById('rt-'+dept);
   if (btn) btn.classList.add('on');
   document.getElementById('rpt-body').innerHTML = aiReports[dept] || '<div style="padding:40px;text-align:center;color:var(--ink3)">暂无数据</div>';
