@@ -2195,7 +2195,7 @@ function buildReportTabs() {
   tabsEl.innerHTML = dataDepts.map(d => {
     const ragRaw = (d._rag||'g').toLowerCase().trim();
     const rag = ['r','a','g'].includes(ragRaw) ? ragRaw : 'g';
-    return '<button class="rt" id="rt-'+d.dept+'" onclick="showRpt(\"'+d.dept+'\")"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span>'+d.deptName+'</button>';
+    return '<button class="rt" id="rt-'+d.dept+'" onclick="showRpt(\'' + d.dept + '\')"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span>'+d.deptName+'</button>';
   }).join('');
   
   // 盯盘报告区域（独立显示在数据报告下方）
@@ -2494,4 +2494,4 @@ function renderHist() {
 })();
 </script>
 </body>
-</html>
+    return '<button class="rt" id="rt-'+d.dept+'" onclick="showRpt(\'' + d.dept + '\')"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span>'+d.deptName+'</button>';
