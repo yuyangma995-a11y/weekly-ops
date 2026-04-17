@@ -2206,7 +2206,7 @@ function buildReportTabs() {
       const taskTabsHtml = taskDepts.map(d => {
         const ragRaw = (d._rag||'g').toLowerCase().trim();
         const rag = ['r','a','g'].includes(ragRaw) ? ragRaw : 'g';
-        return '<button class="rt" id="taskrt-'+d.dept+'" onclick="showTaskRpt(\"'+d.dept+'\")"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span>'+d.deptName+'</button>';
+        return '<button class="rt" id="taskrt-'+d.dept+'" onclick="showTaskRpt(\'' + d.dept + '\')"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span>'+d.deptName+'</button>';
       }).join('');
       document.getElementById('task-rtabs').innerHTML = taskTabsHtml;
     } else {
