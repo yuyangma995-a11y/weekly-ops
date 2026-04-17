@@ -257,6 +257,17 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
   .cfg-fields{grid-template-columns:1fr}
 }
 
+/* ─ 分区上传 ─ */
+.upload-zone{background:var(--sf);border:.5px solid var(--bd);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.upload-zone-title{font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.upload-zone-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500}
+.uz-data .upload-zone-badge{background:var(--Bbg);color:var(--B)}
+.uz-task .upload-zone-badge{background:var(--Gbg);color:var(--G)}
+.uz-task.has-result{border-color:var(--Gbd)}
+.uz-data.has-result{border-color:var(--bd2)}
+.uz-status{font-size:11px;color:var(--ink3);margin-top:6px;display:flex;align-items:center;gap:5px}
+.uz-status-dot{width:6px;height:6px;border-radius:50%;background:var(--G);flex-shrink:0}
+
 /* ─ Chat 追问 ─ */
 .chat-box{margin-top:14px;background:var(--sf);border:.5px solid var(--bd);border-radius:12px;overflow:hidden}
 .chat-header{padding:11px 16px;border-bottom:.5px solid var(--bd);font-size:12px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:6px}
@@ -347,16 +358,48 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 
 <!-- ═══ UPLOAD PAGE ═══ -->
 <div id="pg-upload" class="pg on">
-  <div class="dz" id="dz"
-    ondragover="event.preventDefault();this.classList.add('drag')"
-    ondragleave="this.classList.remove('drag')"
-    ondrop="onDrop(event)">
-    <input type="file" id="file-input" multiple accept=".xlsx,.xls" onchange="onPick(this.files)">
-    <div class="dz-icon">📊</div>
-    <div class="dz-title">拖拽或点击选择各部门数据表</div>
-    <div class="dz-sub">支持同时上传多个 xlsx 文件，系统自动识别部门<br>天猫、京东、拼多多、抖音、直播部、财务... 文件名含部门名即可</div>
+
+  <!-- 盯盘跟进表区域 -->
+  <div class="upload-zone uz-task" id="uz-task">
+    <div class="upload-zone-title">
+      📋 盯盘跟进表
+      <span class="upload-zone-badge">分析一次后结果长期保留</span>
+    </div>
+    <div class="dz" id="dz-task"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="onDropTask(event)">
+      <input type="file" id="file-input-task" accept=".xlsx,.xls,.csv" onchange="onPickTask(this.files)">
+      <div class="dz-icon" style="font-size:24px;margin-bottom:8px">📌</div>
+      <div class="dz-title" style="font-size:13px">拖拽或点击上传盯盘跟进表</div>
+      <div class="dz-sub" style="font-size:11px">文件名含"盯盘"即可自动识别，上传后一次性分析30+部门</div>
+    </div>
+    <div class="fl" id="fl-task"></div>
+    <div class="uz-status" id="uz-task-status" style="display:none">
+      <div class="uz-status-dot"></div>
+      <span id="uz-task-status-text">盯盘报告已就绪</span>
+      <button class="btn bs" style="font-size:11px;padding:3px 10px;margin-left:auto" onclick="clearTaskResult()">重新分析</button>
+    </div>
   </div>
-  <div class="fl" id="fl"></div>
+
+  <!-- 销售数据表区域 -->
+  <div class="upload-zone uz-data" id="uz-data">
+    <div class="upload-zone-title">
+      📊 销售数据表
+      <span class="upload-zone-badge">天猫 / 京东 / 拼多多 / 抖音 / 直播部</span>
+    </div>
+    <div class="dz" id="dz"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="onDrop(event)">
+      <input type="file" id="file-input" multiple accept=".xlsx,.xls" onchange="onPick(this.files)">
+      <div class="dz-icon" style="font-size:24px;margin-bottom:8px">📈</div>
+      <div class="dz-title" style="font-size:13px">拖拽或点击上传各平台数据表</div>
+      <div class="dz-sub" style="font-size:11px">支持同时上传多个文件，不影响已有的盯盘分析结果</div>
+    </div>
+    <div class="fl" id="fl"></div>
+  </div>
+
   <div class="proc" id="proc">
     <div class="spin"></div>
     <div class="proc-title">正在处理数据</div>
@@ -1309,6 +1352,72 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 // ══════════════════════════════════════════
+// 盯盘表独立上传
+// ══════════════════════════════════════════
+var taskFile = null;           // 当前待处理的盯盘文件
+var taskParsedDepts = [];      // 盯盘分析结果（持久化）
+var taskAiReports = {};        // 盯盘AI报告（持久化）
+var taskAnalyzed = false;      // 是否已分析过
+
+function onDropTask(e) {
+  e.preventDefault();
+  document.getElementById('dz-task').classList.remove('drag');
+  const files = e.dataTransfer.files;
+  if (files.length) setTaskFile(files[0]);
+}
+function onPickTask(files) {
+  if (files.length) setTaskFile(files[0]);
+}
+function setTaskFile(file) {
+  if (!file.name.match(/\.xlsx?$|\.csv$/i)) { toast('请上传 xlsx 或 csv 文件'); return; }
+  taskFile = file;
+  taskAnalyzed = false;
+  // 显示文件名
+  const fl = document.getElementById('fl-task');
+  fl.innerHTML = '<div class="fi"><span class="fi-ico">📄</span><span class="fi-name">'+file.name+'</span><span class="fi-dept">盯盘跟进表</span><button class="fi-rm" onclick="clearTaskFile()">×</button></div>';
+  document.getElementById('uz-task-status').style.display = 'none';
+  // 触发分析按钮可用
+  checkRunBtn();
+  toast('盯盘文件已就绪，点击「解析 + AI 分析」开始');
+}
+function clearTaskFile() {
+  taskFile = null;
+  document.getElementById('fl-task').innerHTML = '';
+  document.getElementById('file-input-task').value = '';
+  checkRunBtn();
+}
+function clearTaskResult() {
+  // 清除盯盘分析结果，允许重新分析
+  taskParsedDepts = [];
+  taskAiReports = {};
+  taskAnalyzed = false;
+  document.getElementById('uz-task-status').style.display = 'none';
+  document.getElementById('uz-task').classList.remove('has-result');
+  // 如果有盯盘文件，允许重新分析
+  checkRunBtn();
+  // 刷新报告页
+  buildReportTabs();
+  toast('盯盘结果已清除，可重新上传分析');
+}
+function checkRunBtn() {
+  const cfg = loadCfg();
+  const hasData = pendingFiles.length > 0;
+  const hasTask = !!taskFile && !taskAnalyzed;
+  const hasAnything = hasData || hasTask;
+  const btnEl = document.getElementById('run-btn');
+  const abar = document.getElementById('abar');
+  if (hasAnything) {
+    abar.style.display = 'flex';
+    if (btnEl) btnEl.disabled = !(cfg.url && cfg.key && cfg.model);
+    const count = pendingFiles.length + (hasTask ? 1 : 0);
+    document.getElementById('ptxt').textContent = count + ' 个文件就绪';
+    document.getElementById('pf').style.width = '100%';
+  } else if (!taskAnalyzed) {
+    abar.style.display = 'none';
+  }
+}
+
+// ══════════════════════════════════════════
 // 文件操作
 // ══════════════════════════════════════════
 function onDrop(e) { e.preventDefault(); document.getElementById('dz').classList.remove('drag'); addFiles(e.dataTransfer.files); }
@@ -1322,23 +1431,19 @@ function addFiles(files) {
   renderFL();
 }
 function removeFile(i) { pendingFiles.splice(i,1); renderFL(); }
-function clearAll() { pendingFiles=[]; renderFL(); document.getElementById('file-input').value=''; }
+function clearAll() {
+  pendingFiles=[];
+  renderFL();
+  document.getElementById('file-input').value='';
+  checkRunBtn();
+}
 function renderFL() {
-  const fl   = document.getElementById('fl');
-  const abar = document.getElementById('abar');
-  if (!pendingFiles.length) { fl.innerHTML=''; abar.style.display='none'; return; }
-  abar.style.display='flex';
-  document.getElementById('pf').style.width='100%';
-  document.getElementById('ptxt').textContent=`${pendingFiles.length} 个文件就绪`;
-  const cfg = loadCfg();
-  document.getElementById('run-btn').disabled = !(cfg.url&&cfg.key&&cfg.model);
-  fl.innerHTML = pendingFiles.map((f,i)=>{
+  const fl = document.getElementById('fl');
+  fl.innerHTML = pendingFiles.length ? pendingFiles.map((f,i)=>{
     const dept=detectDept(f.name), dn=DEPT_NAMES[dept]||dept;
-    return `<div class="fi"><span class="fi-ico">📄</span>
-      <span class="fi-name" title="${f.name}">${f.name}</span>
-      <span class="fi-dept">${dn}</span>
-      <button class="fi-rm" onclick="removeFile(${i})">×</button></div>`;
-  }).join('');
+    return '<div class="fi"><span class="fi-ico">📄</span><span class="fi-name" title="'+f.name+'">'+f.name+'</span><span class="fi-dept">'+dn+'</span><button class="fi-rm" onclick="removeFile('+i+')">×</button></div>';
+  }).join('') : '';
+  checkRunBtn();
 }
 
 // ══════════════════════════════════════════
@@ -1554,13 +1659,17 @@ function buildDeptData(rows, dept, filename) {
 // 主流程
 // ══════════════════════════════════════════
 async function runAll() {
-  if (!pendingFiles.length) return;
+  const hasDataFiles = pendingFiles.length > 0;
+  const hasNewTaskFile = !!taskFile && !taskAnalyzed;
+  if (!hasDataFiles && !hasNewTaskFile) return;
   const cfg=loadCfg();
   if (!cfg.url||!cfg.key||!cfg.model) { toast('请先配置 AI 接口'); toggleCfg(true); return; }
   document.getElementById('fl').style.display='none';
   document.getElementById('abar').style.display='none';
   document.getElementById('proc').classList.add('on');
+  // steps 只包含数据文件（不含盯盘文件，盯盘有独立进度显示）
   const steps=pendingFiles.map(f=>({name:f.name,dept:detectDept(f.name),status:'wait'}));
+  if (hasNewTaskFile) steps.unshift({name:taskFile.name, dept:'taskboard', status:'wait'});
   const renderSteps=()=>{
     document.getElementById('slist').innerHTML=steps.map(s=>`
       <div class="si ${s.status}"><div class="si-dot"></div>
@@ -1568,22 +1677,48 @@ async function runAll() {
         <span class="si-r">${s.status==='done'?'✓ 完成':s.status==='doing'?'解析中...':s.status==='ai'?'AI 分析...':s.status==='err'?'✗ 出错':'等待'}</span>
       </div>`).join('');
   };
-  parsedDepts=[]; aiReports={};
-  // 解析
+  // 只清除数据部门报告，保留已有的盯盘分析结果
+  parsedDepts = taskParsedDepts.slice(); // 从盯盘结果开始
+  Object.keys(aiReports).forEach(k => { if (!taskAiReports[k]) delete aiReports[k]; });
+  // 解析数据文件
   document.getElementById('proc-sub').textContent='读取 Excel 文件...';
+  let stepOffset = hasNewTaskFile ? 1 : 0;
+
+  // 先处理盯盘文件（如果有新文件）
+  if (hasNewTaskFile) {
+    steps[0].status='doing'; renderSteps();
+    document.getElementById('proc-sub').textContent='解析盯盘跟进表...';
+    try {
+      const parsed = await parseExcel(taskFile);
+      if (Array.isArray(parsed)) {
+        taskParsedDepts = parsed;
+        parsed.forEach(d => parsedDepts.push(d));
+        steps[0].label = '（' + parsed.length + '个部门）';
+      }
+      steps[0].status='done'; renderSteps();
+    } catch(e) {
+      steps[0].status='err'; renderSteps();
+      toast('盯盘文件解析失败：' + e.message);
+    }
+  }
+
+  // 再处理数据文件
   for (let i=0;i<pendingFiles.length;i++) {
-    steps[i].status='doing'; renderSteps();
+    const si = i + stepOffset;
+    steps[si].status='doing'; renderSteps();
     try {
       const parsed = await parseExcel(pendingFiles[i]);
       if (Array.isArray(parsed)) {
         parsed.forEach(d => parsedDepts.push(d));
-        steps[i].label = (steps[i].label||'') + '（' + parsed.length + '个部门）';
       } else {
-        parsedDepts.push(parsed);
+        // 如果已有同部门的数据，替换它
+        const existing = parsedDepts.findIndex(d => d.dept === parsed.dept && !d.isTaskDept);
+        if (existing >= 0) parsedDepts[existing] = parsed;
+        else parsedDepts.push(parsed);
       }
-      steps[i].status='done';
+      steps[si].status='done';
     }
-    catch(e) { parsedDepts.push({dept:'other',deptName:pendingFiles[i].name,filename:pendingFiles[i].name,curWeek:null,prevWeek:null,metrics:[],subGroups:[],rankData:[],_err:e.message}); steps[i].status='err'; }
+    catch(e) { parsedDepts.push({dept:'other',deptName:pendingFiles[i].name,filename:pendingFiles[i].name,curWeek:null,prevWeek:null,metrics:[],subGroups:[],rankData:[],_err:e.message}); steps[si].status='err'; }
     renderSteps();
   }
   // AI 分析
@@ -1593,10 +1728,13 @@ async function runAll() {
     if (d._err) { d._rag='a'; aiReports[d.dept]=buildFallback(d); continue; }
     // steps 长度是文件数，parsedDepts 长度可能更多（盯盘表展开后）
     // 更新进度时用安全的索引
-    const stepIdx = Math.min(i, steps.length-1);
+    // 盯盘部门：只更新进度文字；数据部门：更新步骤状态
     if (d.isTaskDept) {
-      document.getElementById('proc-sub').textContent = 'AI 分析 ' + d.deptName + '...';
+      document.getElementById('proc-sub').textContent = 'AI 分析盯盘：' + d.deptName + '（' + (i+1) + '/' + parsedDepts.filter(x=>x.isTaskDept).length + '）';
     } else {
+      // 找对应的数据步骤（跳过盯盘步骤）
+      const dataIdx = parsedDepts.filter((x,xi) => !x.isTaskDept && xi <= i).length - 1;
+      const stepIdx = Math.min(dataIdx + (hasNewTaskFile ? 1 : 0), steps.length-1);
       steps[stepIdx].status='ai'; renderSteps();
     }
     try {
@@ -1682,12 +1820,32 @@ metrics最多4条，findings最多5条，suggestions最多4条。严格要求：
   }
   }
   saveHist({week:wkNum(),year:new Date().getFullYear(),ts:Date.now(),depts:parsedDepts});
+
+  // 如果分析了盯盘文件，标记为已完成并持久化结果
+  if (hasNewTaskFile) {
+    taskAnalyzed = true;
+    taskParsedDepts = parsedDepts.filter(d => d.isTaskDept);
+    taskParsedDepts.forEach(d => { taskAiReports[d.dept] = aiReports[d.dept]; });
+    // 更新盯盘区域状态
+    const uzTask = document.getElementById('uz-task');
+    const uzStatus = document.getElementById('uz-task-status');
+    if (uzTask) uzTask.classList.add('has-result');
+    if (uzStatus) {
+      uzStatus.style.display = 'flex';
+      const statusText = document.getElementById('uz-task-status-text');
+      if (statusText) statusText.textContent = '盯盘报告已就绪（' + taskParsedDepts.length + '个部门）';
+    }
+    // 清除盯盘文件（已分析完，不再显示）
+    document.getElementById('fl-task').innerHTML = '';
+    taskFile = null;
+  }
+
   document.getElementById('proc').classList.remove('on');
   document.getElementById('fl').style.display='';
-  document.getElementById('abar').style.display='flex';
+  checkRunBtn();
   buildReportTabs();
   goPage('report');
-  toast(`✓ 分析完成，共 ${parsedDepts.length} 个部门`);
+  toast('✓ 分析完成，共 ' + parsedDepts.length + ' 个部门');
 }
 
 function buildSummary(d) {
@@ -2042,7 +2200,7 @@ function buildReportTabs() {
       const taskTabsHtml = taskDepts.map(d => {
         const ragRaw = (d._rag||'g').toLowerCase().trim();
         const rag = ['r','a','g'].includes(ragRaw) ? ragRaw : 'g';
-        return '<button class="rt" id="rt-'+d.dept+'" onclick="showTaskRpt(\"'+d.dept+'\")"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span>'+d.deptName+'</button>';
+        return '<button class="rt" id="taskrt-'+d.dept+'" onclick="showTaskRpt(\"'+d.dept+'\")"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span>'+d.deptName+'</button>';
       }).join('');
       document.getElementById('task-rtabs').innerHTML = taskTabsHtml;
     } else {
@@ -2056,8 +2214,9 @@ function buildReportTabs() {
 }
 
 function showTaskRpt(dept) {
+  // 只操作盯盘Tab区域，不影响数据报告Tab
   document.querySelectorAll('#task-rtabs .rt').forEach(b => b.classList.remove('on'));
-  const btn = document.getElementById('rt-'+dept);
+  const btn = document.getElementById('taskrt-'+dept);
   if (btn) btn.classList.add('on');
   document.getElementById('task-rpt-body').innerHTML =
     aiReports[dept] || '<div style="padding:40px;text-align:center;color:var(--ink3)">暂无数据</div>';
