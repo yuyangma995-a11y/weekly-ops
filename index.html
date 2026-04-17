@@ -1365,14 +1365,15 @@ function buildTaskData(rows, filename) {
   header.forEach((h, i) => {
     if (!h) return;
     const s = String(h).trim();
-    if (s.includes('待办') || s.includes('事件') || s.includes('任务')) colIdx.task = i;
-    else if (s.includes('部门')) colIdx.dept = i;
-    else if (s.includes('负责人') || s.includes('责任人')) colIdx.owner = i;
-    else if (s.includes('进度') || s.includes('状态')) colIdx.status = i;
-    else if (s.includes('截止')) colIdx.due = i;
-    else if (s.includes('完成时间')) colIdx.doneAt = i;
-    else if (s.includes('剩余') || s.includes('剩余时间')) colIdx.remain = i;
-    else if (s.includes('说明') || s.includes('完成情况')) colIdx.note = i;
+    // 精确匹配，避免"部门年度策略"覆盖"部门"等问题
+    if (s === '待办事件' || s === '任务名称' || s === '事项') { colIdx.task = i; }
+    else if (s === '部门') { colIdx.dept = i; }  // 精确等于"部门"
+    else if (s === '负责人' || s === '责任人') { colIdx.owner = i; }
+    else if (s === '进度') { colIdx.status = i; }
+    else if (s.includes('截止') && !s.includes('前')) { colIdx.due = i; }
+    else if (s === '完成时间') { colIdx.doneAt = i; }
+    else if (s === '剩余时间' || s === '剩余') { colIdx.remain = i; }
+    else if (s === '该项完成情况说明' || s === '完成说明' || s === '备注') { colIdx.note = i; }
   });
   // 默认列序
   if (colIdx.task === undefined)   colIdx.task = 0;
@@ -1590,7 +1591,14 @@ async function runAll() {
   for (let i=0;i<parsedDepts.length;i++) {
     const d=parsedDepts[i];
     if (d._err) { d._rag='a'; aiReports[d.dept]=buildFallback(d); continue; }
-    steps[i].status='ai'; renderSteps();
+    // steps 长度是文件数，parsedDepts 长度可能更多（盯盘表展开后）
+    // 更新进度时用安全的索引
+    const stepIdx = Math.min(i, steps.length-1);
+    if (d.isTaskDept) {
+      document.getElementById('proc-sub').textContent = 'AI 分析 ' + d.deptName + '...';
+    } else {
+      steps[stepIdx].status='ai'; renderSteps();
+    }
     try {
       const text=await callAI(
         `你是渔之源（钓鱼/户外用品电商公司）的首席经营分析师，风格直接、专业、有判断力。
@@ -1664,14 +1672,13 @@ metrics最多4条，findings最多5条，suggestions最多4条。严格要求：
         d._rag='a'; d._err=e.message;
         aiReports[d.dept]=buildFallback(d);
       }
-    steps[i].status='done'; renderSteps();
+    if (!d.isTaskDept) { steps[stepIdx].status='done'; renderSteps(); }
   } catch (e) {
     console.error('AI分析失败:', e);
     d._rag = 'a';
     d._err = e.message;
     aiReports[d.dept] = buildFallback(d);
-    steps[i].status = 'err';
-    renderSteps();
+    if (!d.isTaskDept) { steps[stepIdx].status = 'err'; renderSteps(); }
   }
   }
   saveHist({week:wkNum(),year:new Date().getFullYear(),ts:Date.now(),depts:parsedDepts});
