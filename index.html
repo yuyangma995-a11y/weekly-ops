@@ -1724,21 +1724,22 @@ async function runAll() {
   // AI 分析
   document.getElementById('proc-sub').textContent='AI 分析数据中...';
   for (let i=0;i<parsedDepts.length;i++) {
-    const d=parsedDepts[i];
+    const d = parsedDepts[i];
     if (d._err) { d._rag='a'; aiReports[d.dept]=buildFallback(d); continue; }
-    // steps 长度是文件数，parsedDepts 长度可能更多（盯盘表展开后）
-    // 更新进度时用安全的索引
-    // 盯盘部门：只更新进度文字；数据部门：更新步骤状态
+
+    // 计算 steps 索引（盯盘部门只更新进度文字，不更新 steps）
+    let stepIdx = -1;
     if (d.isTaskDept) {
-      document.getElementById('proc-sub').textContent = 'AI 分析盯盘：' + d.deptName + '（' + (i+1) + '/' + parsedDepts.filter(x=>x.isTaskDept).length + '）';
+      document.getElementById('proc-sub').textContent =
+        'AI 分析盯盘：' + d.deptName + '（' + (parsedDepts.filter((x,xi)=>x.isTaskDept&&xi<=i).length) + '/' + parsedDepts.filter(x=>x.isTaskDept).length + '）';
     } else {
-      // 找对应的数据步骤（跳过盯盘步骤）
       const dataIdx = parsedDepts.filter((x,xi) => !x.isTaskDept && xi <= i).length - 1;
-      const stepIdx = Math.min(dataIdx + (hasNewTaskFile ? 1 : 0), steps.length-1);
-      steps[stepIdx].status='ai'; renderSteps();
+      stepIdx = Math.min(dataIdx + (hasNewTaskFile ? 1 : 0), steps.length - 1);
+      if (stepIdx >= 0) { steps[stepIdx].status = 'ai'; renderSteps(); }
     }
+
     try {
-      const text=await callAI(
+      const text = await callAI(
         `你是渔之源（钓鱼/户外用品电商公司）的首席经营分析师，风格直接、专业、有判断力。
 
 【重要：无数据部门的分析规则】
@@ -1781,7 +1782,7 @@ Q2重点（4-6月）：官号每月6条视频按节点输出；IP直播每月至
   "suggestions": [{"priority":"高|中|低","owner":"执行人","deadline":"时间节点","text":"具体行动，不超过80字"}]
 }
 
-注意：JSON字符串中必须使用标准双引号（\"），不要使用中文引号（“”）。字符串中的换行符必须转义为\\n。
+注意：JSON字符串中必须使用标准双引号（\"），不要使用中文引号（""）。字符串中的换行符必须转义为\\n。
 
 红灯：核心指标环比下降>30%，或月完成率<15%，或Q2关键里程碑严重滞后需老板介入
 黄灯：环比下降20-30%，或完成率15-40%，或Q2有1-2个重点工作存在延期风险
@@ -1792,32 +1793,28 @@ metrics最多4条，findings最多5条，suggestions最多4条。严格要求：
         1500
       );
       const cleaned = text.replace(/```json|```/g,'').trim();
-      // 使用增强的 JSON 修复函数
       const fixed = repairJSON(cleaned);
-      
       try {
         const json = JSON.parse(fixed);
-        // 兼容 DeepSeek 等模型可能返回不同格式
-        if (!json.metrics)    json.metrics    = [];
-        if (!json.findings)   json.findings   = [];
-        if (!json.suggestions)json.suggestions= [];
+        if (!json.metrics)     json.metrics     = [];
+        if (!json.findings)    json.findings    = [];
+        if (!json.suggestions) json.suggestions = [];
         const ragRaw = (json.rag||'').toLowerCase().trim();
         const hasAnyData = d.metrics.length > 0 || d.subGroups.length > 0 || d.rankData.length > 0;
         d._rag = ['r','a','g'].includes(ragRaw) ? ragRaw : (hasAnyData ? 'g' : 'a');
         json.rag = d._rag;
-        aiReports[d.dept]=renderReport(json,d);
+        aiReports[d.dept] = renderReport(json, d);
       } catch(e) {
-        d._rag='a'; d._err=e.message;
-        aiReports[d.dept]=buildFallback(d);
+        d._rag = 'a'; d._err = e.message;
+        aiReports[d.dept] = buildFallback(d);
       }
-    if (!d.isTaskDept) { steps[stepIdx].status='done'; renderSteps(); }
-  } catch (e) {
-    console.error('AI分析失败:', e);
-    d._rag = 'a';
-    d._err = e.message;
-    aiReports[d.dept] = buildFallback(d);
-    if (!d.isTaskDept) { steps[stepIdx].status = 'err'; renderSteps(); }
-  }
+      if (!d.isTaskDept && stepIdx >= 0) { steps[stepIdx].status = 'done'; renderSteps(); }
+    } catch(e) {
+      console.error('AI分析失败:', d.deptName, e.message);
+      d._rag = 'a'; d._err = e.message;
+      aiReports[d.dept] = buildFallback(d);
+      if (!d.isTaskDept && stepIdx >= 0) { steps[stepIdx].status = 'err'; renderSteps(); }
+    }
   }
   saveHist({week:wkNum(),year:new Date().getFullYear(),ts:Date.now(),depts:parsedDepts});
 
