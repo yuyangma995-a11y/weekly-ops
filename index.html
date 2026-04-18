@@ -8,13 +8,15 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --ink:#1a1a1a;--ink2:#4a4a4a;--ink3:#999;
-  --bg:#f5f4f0;--sf:#fff;--s2:#f7f6f3;--s3:#f0efe9;
-  --bd:#e5e4de;--bd2:#d0cfc8;
-  --G:#2d7a3a;--Gbg:#edf7ee;--Gbd:#c3e6c9;
-  --A:#9a5f00;--Abg:#fff8ec;--Abd:#f5d78e;
-  --R:#c0392b;--Rbg:#fdf0ee;--Rbd:#f5c0ba;
-  --B:#1a5faa;--Bbg:#eef4fc;
+  --ink:#1A1A1A;--ink2:#555;--ink3:#AAAAAA;
+  --bg:#F8F6F1;--sf:#fff;--s2:#F9F8F5;--s3:#F0EDE6;
+  --bd:#EAE7E0;--bd2:#D5D2CB;
+  --brand:#0066CC;--brand2:#338FE0;--brand-bg:#EFF6FF;--brand-bd:#BFDBFE;
+  --G:#16A34A;--Gbg:#F0FDF4;--Gbd:#BBF7D0;
+  --A:#D97706;--Abg:#FFFBEB;--Abd:#FDE68A;
+  --R:#DC2626;--Rbg:#FEF2F2;--Rbd:#FECACA;
+  --B:#1E40AF;--Bbg:#EFF6FF;
+  --nav-h:60px;
 }
 @media(prefers-color-scheme:dark){:root{
   --ink:#e8e6df;--ink2:#aaa8a0;--ink3:#666;
@@ -289,6 +291,272 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 .chat-suggestions{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px 0}
 .chat-sug{font-size:11px;padding:4px 10px;border-radius:20px;border:.5px solid var(--bd2);background:transparent;color:var(--ink2);cursor:pointer;font-family:inherit;transition:all .15s}
 .chat-sug:hover{background:var(--s2);color:var(--ink);border-color:var(--ink3)}
+
+/* ══ 品牌UI升级 · 渔之源 ══ */
+html,body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+/* ── 导航栏升级 ── */
+.hdr{
+  height:60px;padding:0 28px;
+  background:rgba(255,255,255,0.94);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:0.5px solid rgba(0,0,0,0.07);
+  position:relative;overflow:hidden;
+  box-shadow:0 1px 0 rgba(0,102,204,0.06);
+}
+.hdr::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1.5px;
+  background:linear-gradient(90deg,transparent 0%,rgba(0,102,204,0.25) 40%,rgba(0,102,204,0.25) 60%,transparent 100%);
+}
+.hdr-wm{
+  position:absolute;right:-18px;top:50%;transform:translateY(-50%);
+  opacity:0.035;pointer-events:none;
+}
+/* Logo 悬停微动效 */
+.logo{cursor:pointer;display:flex;align-items:center;gap:13px;transition:opacity 0.2s}
+.logo:hover{opacity:0.85}
+.logo-icon{
+  width:38px;height:38px;border-radius:10px;
+  background:var(--brand);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform 0.35s cubic-bezier(.34,1.56,.64,1), box-shadow 0.3s ease;
+  flex-shrink:0;
+}
+.logo:hover .logo-icon{transform:rotate(8deg) scale(1.06);box-shadow:0 4px 18px rgba(0,102,204,0.35)}
+.logo-icon svg{width:22px;height:22px}
+.logo-name{font-size:14px;font-weight:500;color:var(--ink);letter-spacing:0.2px}
+.logo-slogan{font-size:10px;color:var(--ink3);margin-top:2px;letter-spacing:0.3px}
+
+/* ── 导航按钮升级 ── */
+.nav{display:flex;gap:2px;background:var(--s3);border-radius:10px;padding:3px}
+.nb{
+  font-size:12px;padding:5px 15px;
+  border-radius:7px;border:none;background:transparent;
+  color:var(--ink2);cursor:pointer;font-family:inherit;
+  transition:all 0.2s;letter-spacing:0.1px;position:relative;
+}
+.nb:hover:not(.on){color:var(--ink);background:rgba(255,255,255,0.55)}
+.nb.on{
+  background:var(--sf);color:var(--ink);font-weight:500;
+  box-shadow:0 1px 4px rgba(0,0,0,0.08);
+}
+.nb.on::after{
+  content:'';position:absolute;bottom:-3px;left:50%;
+  transform:translateX(-50%);
+  width:18px;height:1.5px;
+  background:var(--brand);border-radius:2px;
+}
+
+/* ── 页面背景 ── */
+.w{background:var(--bg)}
+.pg{background:var(--bg)}
+
+/* ── 卡片升级 ── */
+.rcard{
+  background:var(--sf);
+  border-radius:14px;
+  border:0.5px solid var(--bd);
+  overflow:hidden;
+  transition:transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.rcard:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.07);
+  border-color:rgba(0,102,204,0.15);
+}
+.rcard-head{
+  height:3px;
+  background:linear-gradient(90deg,var(--brand),var(--brand2));
+}
+.rcard-wm{position:absolute;right:14px;top:14px;opacity:0.035;pointer-events:none}
+
+/* ── 指标卡升级 ── */
+.mc{
+  background:var(--s2);border-radius:10px;padding:12px 14px;
+  transition:all 0.2s ease;cursor:pointer;
+  border:0.5px solid transparent;
+}
+.mc:hover{
+  background:var(--brand-bg);
+  border-color:rgba(0,102,204,0.18);
+}
+.mc-v{font-size:20px;font-weight:500;color:var(--ink)}
+.mc-l{font-size:10px;color:var(--ink3);letter-spacing:0.3px;margin-bottom:5px}
+
+/* ── Tab按钮升级 ── */
+.rt{
+  display:flex;align-items:center;gap:7px;
+  padding:7px 14px;font-size:12px;
+  border-radius:22px;cursor:pointer;
+  background:var(--sf);border:0.5px solid var(--bd);
+  color:var(--ink2);transition:all 0.2s;letter-spacing:0.1px;
+  font-family:inherit;
+}
+.rt:hover:not(.on){border-color:rgba(0,102,204,0.3);color:var(--ink);transform:translateY(-1px)}
+.rt.on{
+  background:var(--brand);color:var(--sf);
+  border-color:var(--brand);font-weight:500;
+  box-shadow:0 2px 8px rgba(0,102,204,0.35);
+}
+.rt-dot{width:6px;height:6px;border-radius:50%}
+.rt.on .rt-dot{background:rgba(255,255,255,0.55)}
+
+/* ── 关键发现升级 ── */
+.fd{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 14px;border-radius:10px;
+  font-size:12px;line-height:1.72;
+  transition:all 0.18s ease;cursor:pointer;
+}
+.fd:hover{transform:translateX(3px);filter:brightness(0.96)}
+.fd.good{background:var(--Gbg);color:#166534}
+.fd.warn{background:var(--Abg);color:#92400E}
+.fd.risk{background:var(--Rbg);color:#991B1B}
+.fd.action{background:var(--Bbg);color:var(--B)}
+.fd-txt::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:10px;margin-bottom:1px;vertical-align:middle;flex-shrink:0}
+.fd.good .fd-txt::before{background:var(--G)}
+.fd.warn .fd-txt::before{background:var(--A)}
+.fd.risk .fd-txt::before{background:var(--R)}
+.fd.action .fd-txt::before{background:var(--B)}
+
+/* ── 行动建议升级 ── */
+.sg{
+  display:flex;gap:12px;padding:12px 14px;
+  background:var(--s2);border-radius:10px;
+  transition:all 0.2s;cursor:pointer;
+  border:0.5px solid transparent;
+}
+.sg:hover{
+  background:var(--brand-bg);
+  border-color:rgba(0,102,204,0.18);
+  transform:translateX(3px);
+}
+.sg-n{
+  width:22px;height:22px;border-radius:7px;
+  background:var(--brand);color:var(--sf);
+  font-size:10px;font-weight:500;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+}
+.sg .priority.high{color:var(--R);font-size:10px;font-weight:500;margin-bottom:3px}
+.sg .priority.mid{color:var(--A);font-size:10px;font-weight:500;margin-bottom:3px}
+.sg .priority.low{color:var(--G);font-size:10px;font-weight:500;margin-bottom:3px}
+
+/* ── 状态灯升级 ── */
+.rpill{font-size:11px;padding:4px 11px;border-radius:22px;font-weight:500;border:0.5px solid;display:inline-flex;align-items:center;gap:5px}
+.rpill::before{content:'';width:5px;height:5px;border-radius:50%}
+.rp-g{background:var(--Gbg);color:#166534;border-color:var(--Gbd)}.rp-g::before{background:var(--G)}
+.rp-a{background:var(--Abg);color:#92400E;border-color:var(--Abd)}.rp-a::before{background:var(--A)}
+.rp-r{background:var(--Rbg);color:#991B1B;border-color:var(--Rbd)}.rp-r::before{background:var(--R)}
+
+/* ── 追问框升级 ── */
+.ask-wrap{
+  background:var(--s2);border-radius:12px;
+  border:0.5px solid var(--bd);
+  overflow:hidden;
+  transition:border-color 0.3s;
+  margin-top:16px;
+}
+.ask-wrap:focus-within{border-color:rgba(0,102,204,0.4)}
+.ask-context{
+  padding:10px 16px;font-size:11px;color:var(--ink3);
+  border-bottom:0.5px solid var(--bd);
+  display:flex;align-items:center;gap:6px;
+}
+.ask-context::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--G);flex-shrink:0}
+.ask-tips{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px 0}
+.ask-tip{
+  font-size:11px;padding:4px 11px;
+  border-radius:20px;border:0.5px solid var(--bd2);
+  background:var(--sf);color:var(--ink2);cursor:pointer;
+  font-family:inherit;transition:all 0.18s;
+}
+.ask-tip:hover{border-color:rgba(0,102,204,0.4);color:var(--brand);background:var(--brand-bg)}
+.ask-history{padding:0 16px;max-height:300px;overflow-y:auto}
+.ask-input-row{display:flex;gap:0;align-items:flex-end;padding:8px 12px}
+.ask-input{
+  flex:1;border:none;background:transparent;
+  padding:8px 10px;font-size:13px;color:var(--ink);
+  font-family:inherit;outline:none;resize:none;
+  line-height:1.5;min-height:38px;max-height:100px;
+}
+.ask-input::placeholder{color:var(--ink3)}
+.ask-send{
+  padding:8px 18px;margin-left:4px;
+  background:var(--brand);color:var(--sf);
+  border:none;border-radius:8px;
+  font-size:12px;font-weight:500;cursor:pointer;
+  font-family:inherit;
+  transition:all 0.2s;letter-spacing:0.2px;
+  align-self:flex-end;
+}
+.ask-send:hover{background:#0055AA;transform:scale(0.97)}
+.ask-send:disabled{opacity:0.35;cursor:not-allowed;transform:none}
+
+/* ── 按钮升级 ── */
+.btn{
+  font-size:12px;padding:7px 16px;border-radius:8px;
+  cursor:pointer;font-family:inherit;
+  transition:all 0.18s;letter-spacing:0.1px;
+}
+.bp{background:var(--brand);color:var(--sf);border:none;font-weight:500}
+.bp:hover{background:#0055AA;transform:scale(0.97)}
+.bs{background:var(--sf);color:var(--ink2);border:0.5px solid var(--bd2)}
+.bs:hover{border-color:var(--brand);color:var(--brand)}
+
+/* ── 上传区升级 ── */
+.dz{
+  border:1.5px dashed var(--bd2);border-radius:12px;
+  padding:44px 24px;text-align:center;cursor:pointer;
+  transition:all 0.25s;background:var(--sf);position:relative;
+}
+.dz:hover,.dz.drag{border-color:var(--brand);background:var(--brand-bg)}
+.dz:hover .dz-icon{transform:scale(1.1) translateY(-2px)}
+.dz-icon{font-size:32px;margin-bottom:12px;transition:transform 0.3s ease;display:block}
+.dz-title{font-size:13px;font-weight:500;color:var(--ink2);margin-bottom:4px}
+.dz-sub{font-size:12px;color:var(--ink3);line-height:1.6}
+
+/* ── 上传区分区卡片 ── */
+.upload-zone{
+  background:var(--sf);border:0.5px solid var(--bd);
+  border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;
+  transition:border-color 0.3s;
+}
+.upload-zone.has-result{border-color:rgba(22,163,74,0.35)}
+
+/* ── 老板总览卡片 ── */
+.ovm{
+  background:var(--sf);border-radius:12px;border:0.5px solid var(--bd);
+  padding:16px 18px;transition:all 0.2s;
+}
+.ovm:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.06)}
+.dc{
+  background:var(--sf);border-radius:12px;border:0.5px solid var(--bd);
+  padding:14px 16px;transition:all 0.2s;
+}
+.dc:hover{border-color:rgba(0,102,204,0.2);box-shadow:0 4px 14px rgba(0,0,0,0.05)}
+
+/* ── 文件列表升级 ── */
+.fi{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;background:var(--sf);
+  border-radius:9px;border:0.5px solid var(--bd);
+  margin-bottom:6px;transition:all 0.18s;
+}
+.fi:hover{border-color:rgba(0,102,204,0.25);transform:translateX(2px)}
+
+/* ── 进度条升级 ── */
+.pt{background:var(--bd);border-radius:4px;overflow:hidden}
+.pf{height:3px;background:linear-gradient(90deg,var(--brand),var(--brand2));border-radius:4px;transition:width 0.4s ease}
+
+/* ── 结论摘要框 ── */
+.rcard-summary{
+  background:var(--brand-bg);border-radius:10px;
+  padding:11px 15px;font-size:13px;color:#1E40AF;
+  line-height:1.75;margin-bottom:14px;
+  border-left:3px solid var(--brand);
+}
+.rcard-summary b{font-weight:500}
 </style>
 </head>
 <body>
@@ -296,9 +564,24 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
 
 <!-- Header -->
 <div class="hdr">
-  <div style="display:flex;align-items:center">
-    <span class="logo">渔之源 · 周度经营中心</span>
-    <span class="wpill" id="wpill">—</span>
+  <div class="hdr-wm">
+    <svg width="110" height="110" viewBox="0 0 100 100" fill="none">
+      <circle cx="50" cy="50" r="46" stroke="#0066CC" stroke-width="1.5"/>
+      <path d="M50 8C57 17 68 27 68 50C68 73 57 83 50 92C43 83 32 73 32 50C32 27 43 17 50 8Z" fill="#0066CC"/>
+      <path d="M8 50C17 43 27 32 50 32C73 32 83 43 92 50C83 57 73 68 50 68C27 68 17 57 8 50Z" fill="#0066CC" opacity=".4"/>
+    </svg>
+  </div>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3C14.5 5.5 19 8 19 12C19 17 15 19.5 12 21C9 19.5 5 17 5 12C5 8 9.5 5.5 12 3Z" fill="rgba(255,255,255,.92)"/>
+        <path d="M3 12C5.5 9.5 8 5 12 5C16 5 18.5 9.5 21 12C18.5 14.5 16 19 12 19C8 19 5.5 14.5 3 12Z" fill="rgba(255,255,255,.32)"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-name">渔之源 · 周度经营中心</div>
+      <div class="logo-slogan">轻量化垂钓 · 就选渔之源</div>
+    </div>
   </div>
   <div class="nav">
     <button class="nb on" id="nb-upload" onclick="goPage('upload')">上传数据</button>
@@ -308,6 +591,7 @@ html,body{min-height:100vh;background:var(--bg);font-family:'PingFang SC','Hirag
     <button class="nb" id="nb-overview" onclick="goPage('overview')">老板总览</button>
     <button class="nb" id="nb-history" onclick="goPage('history')">历史对比</button>
   </div>
+  <span class="wpill" id="wpill" style="font-size:11px;color:var(--ink3);background:var(--s3);padding:4px 12px;border-radius:20px;border:0.5px solid var(--bd);letter-spacing:0.3px;flex-shrink:0"></span>
 </div>
 
 <!-- AI 接口配置面板 -->
@@ -2017,7 +2301,9 @@ ${noDataNote}`;
 function renderReport(ai,d) {
   var ragRaw = (ai.rag||'g').toLowerCase().trim();
   var rag = ['r','a','g'].includes(ragRaw) ? ragRaw : 'g';
-  var h = '<div class="rcard">';
+  var h = '<div class="rcard" style="position:relative">' +
+    '<div class="rcard-head"></div>' +
+    '<div class="rcard-wm"><svg width="70" height="70" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="46" stroke="#0066CC" stroke-width="1.5"/><path d="M50 8C57 17 68 27 68 50C68 73 57 83 50 92C43 83 32 73 32 50C32 27 43 17 50 8Z" fill="#0066CC"/><path d="M8 50C17 43 27 32 50 32C73 32 83 43 92 50C83 57 73 68 50 68C27 68 17 57 8 50Z" fill="#0066CC" opacity=".35"/></svg></div>';
   
   // 任务部门额外渲染：显示本部门任务明细
   var taskDetailHtml = '';
@@ -2042,7 +2328,7 @@ function renderReport(ai,d) {
     }
     taskDetailHtml += '</div>';
   }
-  h += '<div class="rcard-head">';
+  h += '<div style="padding:18px 20px">';
   h += '<div><div class="rcard-title">'+d.deptName+'</div>';
   h += '<div class="rcard-wk">'+(d.curWeek||'')+'</div></div>';
   h += '<span class="rpill '+RAG[rag].cls+'">'+RAG[rag].label+'</span>';
@@ -2050,7 +2336,7 @@ function renderReport(ai,d) {
 
   // 核心结论
   if (ai.summary) {
-    h += '<div style="padding:12px 14px;background:var(--s3);border-radius:8px;margin-bottom:16px;font-size:13px;color:var(--ink);line-height:1.6">';
+    h += '<div style="padding:11px 15px;background:var(--brand-bg);border-radius:10px;margin-bottom:14px;font-size:13px;color:#1E40AF;line-height:1.75;border-left:3px solid var(--brand)">';
     h += '<span style="font-weight:600;margin-right:6px">本周结论</span>';
     h += ai.summary+'</div>';
   }
@@ -2160,7 +2446,9 @@ function renderReport(ai,d) {
 
 function buildFallback(d) {
   d._rag = 'a';
-  var h = '<div class="rcard">';
+  var h = '<div class="rcard" style="position:relative">' +
+    '<div class="rcard-head"></div>' +
+    '<div class="rcard-wm"><svg width="70" height="70" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="46" stroke="#0066CC" stroke-width="1.5"/><path d="M50 8C57 17 68 27 68 50C68 73 57 83 50 92C43 83 32 73 32 50C32 27 43 17 50 8Z" fill="#0066CC"/><path d="M8 50C17 43 27 32 50 32C73 32 83 43 92 50C83 57 73 68 50 68C27 68 17 57 8 50Z" fill="#0066CC" opacity=".35"/></svg></div>';
   h += '<div class="rcard-head">';
   h += '<div><div class="rcard-title">'+d.deptName+'</div>';
   h += '<div class="rcard-wk">'+(d.curWeek||'')+'</div></div>';
