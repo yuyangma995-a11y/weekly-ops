@@ -4,7 +4,198 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>渔之源 · 周度经营中心</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+// ══════════════════════════════════════════
+// 导出全部报告到 Excel
+// ══════════════════════════════════════════
+function exportAllReports() {
+  if (!parsedDepts || parsedDepts.length === 0) {
+    toast('暂无报告数据，请先上传文件并完成AI分析');
+    return;
+  }
+
+  const btn = document.getElementById('export-btn');
+  if (btn) { btn.textContent = '⏳ 生成中...'; btn.disabled = true; }
+
+  try {
+    const wb = XLSX.utils.book_new();
+    const weekLabel = document.getElementById('wpill') ? document.getElementById('wpill').textContent : '本周';
+
+    // 遍历所有部门（数据部门 + 盯盘部门）
+    const allDepts = parsedDepts.slice();
+
+    allDepts.forEach(function(d) {
+      const deptName = d.deptName || d.dept;
+      // Sheet 名最多31个字符（Excel限制）
+      const sheetName = deptName.slice(0, 28).replace(/[\[\]\*\?\/\\:]/g, '');
+
+      const rows = [];
+
+      // ── 标题行 ──
+      rows.push(['渔之源·周度经营中心 ' + weekLabel + ' · ' + deptName]);
+      rows.push([]);
+
+      // ── AI 分析结论 ──
+      const reportHtml = aiReports[d.dept] || '';
+      const parsed = parseReportHtml(reportHtml, d);
+
+      rows.push(['【本周结论】']);
+      rows.push([parsed.summary || '（暂无AI分析）']);
+      rows.push([]);
+
+      // ── 核心指标 ──
+      if (d.metrics && d.metrics.length > 0) {
+        rows.push(['【核心指标】']);
+        rows.push(['指标名称', '本周值', '环比变化', '完成率']);
+        d.metrics.forEach(function(m) {
+          rows.push([
+            m.label || '',
+            m.curVal || '',
+            m.deltaRate || '',
+            m.completion || ''
+          ]);
+        });
+        rows.push([]);
+      }
+
+      // ── 盯盘任务（盯盘部门）──
+      if (d.isTaskDept && d.taskData) {
+        const td = d.taskData;
+        if (td.overdue && td.overdue.length > 0) {
+          rows.push(['【延期任务】']);
+          td.overdue.forEach(function(t) { rows.push(['⚠ ' + t]); });
+          rows.push([]);
+        }
+        if (td.inprog && td.inprog.length > 0) {
+          rows.push(['【进行中任务】']);
+          td.inprog.forEach(function(t) { rows.push(['→ ' + t]); });
+          rows.push([]);
+        }
+        if (td.doneThisWeek && td.doneThisWeek.length > 0) {
+          rows.push(['【本周完成】']);
+          td.doneThisWeek.forEach(function(t) { rows.push(['✓ ' + t]); });
+          rows.push([]);
+        }
+      }
+
+      // ── 关键发现 ──
+      if (parsed.findings && parsed.findings.length > 0) {
+        rows.push(['【关键发现】']);
+        parsed.findings.forEach(function(f, i) {
+          rows.push([(i+1) + '. ' + f]);
+        });
+        rows.push([]);
+      }
+
+      // ── 行动建议 ──
+      if (parsed.suggestions && parsed.suggestions.length > 0) {
+        rows.push(['【行动建议】']);
+        rows.push(['优先级', '负责人', '截止时间', '具体行动']);
+        parsed.suggestions.forEach(function(s) {
+          rows.push([s.priority || '', s.owner || '', s.deadline || '', s.text || '']);
+        });
+        rows.push([]);
+      }
+
+      // ── 页脚 ──
+      rows.push(['—— 渔之源周度经营中心 自动生成']);
+
+      // 创建 Sheet
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+
+      // 设置列宽
+      ws['!cols'] = [
+        {wch: 60}, {wch: 15}, {wch: 15}, {wch: 40}
+      ];
+
+      // 标题行合并
+      ws['!merges'] = [{s:{r:0,c:0}, e:{r:0,c:3}}];
+
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    });
+
+    // 加一个汇总 Sheet 放在第一位
+    const summaryRows = [];
+    summaryRows.push(['渔之源·周度经营中心 ' + weekLabel + ' 各部门状态汇总']);
+    summaryRows.push([]);
+    summaryRows.push(['部门', '状态', '本周结论']);
+    allDepts.forEach(function(d) {
+      const rag = d._rag || 'a';
+      const ragLabel = rag === 'r' ? '🔴 红灯' : rag === 'a' ? '🟡 黄灯' : '🟢 绿灯';
+      const reportHtml = aiReports[d.dept] || '';
+      const parsed = parseReportHtml(reportHtml, d);
+      summaryRows.push([d.deptName || d.dept, ragLabel, parsed.summary || '暂无分析']);
+    });
+    const summaryWs = XLSX.utils.aoa_to_sheet(summaryRows);
+    summaryWs['!cols'] = [{wch:20},{wch:10},{wch:60}];
+    summaryWs['!merges'] = [{s:{r:0,c:0}, e:{r:0,c:2}}];
+    // 插入到第一个 Sheet
+    wb.SheetNames.unshift('📋 本周汇总');
+    wb.Sheets['📋 本周汇总'] = summaryWs;
+
+    // 生成文件名
+    const filename = '渔之源经营报告_' + weekLabel.replace(/[·\s]/g,'_') + '.xlsx';
+    XLSX.writeFile(wb, filename);
+    toast('✓ 导出成功：' + filename);
+
+  } catch(e) {
+    console.error('导出失败:', e);
+    toast('导出失败：' + e.message);
+  } finally {
+    if (btn) { btn.textContent = '📊 导出全部报告'; btn.disabled = false; }
+  }
+}
+
+// 从报告 HTML 中提取文字内容（用于 Excel 导出）
+function parseReportHtml(html, d) {
+  const result = { summary: '', findings: [], suggestions: [] };
+  if (!html) return result;
+
+  // 用临时 DOM 解析 HTML
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+
+  // 提取本周结论
+  const summaryEl = tmp.querySelector('.rcard-summary, .sh + div, [class*="summary"]');
+  if (summaryEl) {
+    result.summary = summaryEl.textContent.replace('本周结论', '').trim();
+  }
+  // 备用：找含"本周结论"的元素
+  if (!result.summary) {
+    tmp.querySelectorAll('*').forEach(function(el) {
+      if (el.textContent.includes('本周结论') && el.children.length <= 2) {
+        const text = el.textContent.replace('本周结论', '').trim();
+        if (text.length > 5 && text.length < 200) result.summary = text;
+      }
+    });
+  }
+
+  // 提取关键发现
+  tmp.querySelectorAll('.fd, [class*="finding"]').forEach(function(el) {
+    const text = el.textContent.trim();
+    if (text.length > 5) result.findings.push(text);
+  });
+
+  // 提取行动建议
+  tmp.querySelectorAll('.sg, [class*="suggestion"]').forEach(function(el) {
+    const priority = (el.querySelector('.sg-ph, .priority') || {}).textContent || '';
+    const text = (el.querySelector('.sg-txt') || el).textContent.replace(priority, '').trim();
+    if (text.length > 5) {
+      // 从 priority 里解析负责人和截止时间
+      const parts = priority.split('·');
+      result.suggestions.push({
+        priority: parts[0] ? parts[0].replace(/高优先|中优先|低优先/,'').trim() || parts[0].trim() : '',
+        owner: parts[1] ? parts[1].trim() : '',
+        deadline: parts[2] ? parts[2].trim() : '',
+        text: text
+      });
+    }
+  });
+
+  return result;
+}
+
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -699,8 +890,9 @@ html,body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 <div id="pg-report" class="pg">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap">
     <div style="font-size:15px;font-weight:700">AI 分析报告</div>
-    <div style="display:flex;gap:8px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn bs" style="padding:7px 13px;font-size:12px" onclick="goPage('upload')">← 重新上传</button>
+      <button class="btn bs" style="padding:7px 13px;font-size:12px" onclick="exportAllReports()" id="export-btn">📊 导出全部报告</button>
       <button class="btn bp" style="padding:7px 13px;font-size:12px" onclick="goPage('overview')">老板总览 →</button>
     </div>
   </div>
