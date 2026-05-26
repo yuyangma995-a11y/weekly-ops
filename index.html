@@ -999,17 +999,21 @@ html,body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 // 常量
 // ══════════════════════════════════════════
 const DEPT_MAP = [
-  ['天猫','tmall'],['京东','jd'],['拼多多','pdd'],
+  ['天猫平台','tmall'],['天猫','tmall'],['京东平台','jd'],['京东','jd'],['拼多多平台','pdd'],['拼多多','pdd'],
   ['抖音平台','douyin'],['直播部','live'],['直播间','live'],['直播','live'],
-  ['达人','kol'],['品牌视频','brand'],['品牌','brand'],['视频中心','brand'],
+  ['达人/内容部','kol'],['达人部','kol'],['达人','kol'],
+  ['品牌视频部','brandVideo'],['品牌视频','brandVideo'],['视频中心','video'],
+  ['品牌部','brand'],['品牌','brand'],
   ['客服','cs'],['仓储','warehouse'],['供应链','warehouse'],
-  ['大客户','key'],['跨境','cross'],['财务','finance'],
-  ['人力','hr'],['HR','hr'],['IT','it'],['数据','it'],
+  ['大客户部','key'],['大客户','key'],['跨境事业部','cross'],['跨境','cross'],
+  ['财务中心','finance'],['财务部','finance'],['财务','finance'],
+  ['人力中心','hr'],['人力','hr'],['HR','hr'],['IT/数据部','it'],['IT','it'],['数据','it'],
   // 新增部门映射（基于2026年各部门规划文件）
   ['渔之源事','biz4'],['渔之源事业四部','biz4'],
   ['彩麦','purchase'],['采购','purchase'],
   ['视觉中心','visual'],['视觉','visual'],
   ['PAA事业部','paa'],['PAA事','paa'],['PAA','paa'],['PAA事业','paa'],
+  ['产品事业二部','productBiz2'],['产品事业二','productBiz2'],
   ['电商一部','ec1'],['电商一','ec1'],['电商一部（钓竿）','ec1'],
   ['电商二部','ec2'],['电商二','ec2'],['电商二部（钓椅&配件&鱼钩)','ec2'],
   ['电商三部','ec3'],['电商三','ec3'],['电商三部（钓伞&线&台钓装备）','ec3'],
@@ -1028,12 +1032,13 @@ const DEPT_MAP = [
 const DEPT_NAMES = {
   tmall:'天猫平台',jd:'京东平台',pdd:'拼多多平台',
   douyin:'抖音平台',live:'直播部',kol:'达人/内容部',
-  brand:'品牌/视频部',cs:'客服部',warehouse:'仓储/供应链',
+  brand:'品牌部',brandVideo:'品牌视频部',video:'视频中心',
+  cs:'客服部',warehouse:'仓储/供应链',
   key:'大客户部',cross:'跨境部',finance:'财务部',
   hr:'HR/行政',it:'IT/数据部',other:'其他部门',
   // 新增部门显示名称
   biz4:'渔之源事业四部',purchase:'采购中心',
-  visual:'视觉中心',paa:'PAA事业部',
+  visual:'视觉中心',paa:'PAA事业部',productBiz2:'产品事业二部',
   ec1:'电商一部（钓竿）',ec2:'电商二部（钓椅&配件&鱼钩)',
   ec3:'电商三部（钓伞&线&台钓装备）',ec4:'电商四部（渔具包&盒类&漂）',
   ec5:'电商五部（鱼护&水桶&钓箱&服装防护）',ec6:'电商六部（支架及&路亚竿&路亚装备)',
@@ -1128,9 +1133,21 @@ function fmtVal(v) {
   if (Math.abs(n)>=1e4) return (n/1e4).toFixed(1)+'万';
   return Math.round(n).toLocaleString();
 }
+function normalizeDeptText(text) {
+  return String(text || '')
+    .replace(/\.(xlsx?|csv)$/i, '')
+    .replace(/[（]/g, '(')
+    .replace(/[）]/g, ')')
+    .replace(/[—–－]/g, '-')
+    .replace(/\s+/g, '')
+    .replace(/\(\d+\)$/g, '');
+}
+const DEPT_MATCHERS = DEPT_MAP
+  .map(([kw, dept]) => ({ kw, key: normalizeDeptText(kw), dept }))
+  .sort((a, b) => b.key.length - a.key.length);
 function detectDept(fn) {
-  const f = fn.replace(/\.xlsx?$/i,'');
-  for (const [kw,dept] of DEPT_MAP) if (f.includes(kw)) return dept;
+  const f = normalizeDeptText(fn);
+  for (const m of DEPT_MATCHERS) if (f.includes(m.key)) return m.dept;
   return 'other';
 }
 
@@ -1376,8 +1393,61 @@ function goPage(p) {
 // 年度规划管理器（最小可行性版本）
 // ============================================================================
 
-// 存储已加载的规划数据
-let PLANNING_DATA = {};
+// 存储已加载的规划数据：v2 = { version, items, activeByDept }
+let PLANNING_DATA = { version: 2, items: {}, activeByDept: {} };
+
+function createPlanningStore() {
+    return { version: 2, items: {}, activeByDept: {} };
+}
+
+function normalizePlanningFileKey(filename) {
+    return normalizeDeptText(filename)
+        .replace(/\(\d+\)$/g, '')
+        .replace(/副本$/g, '');
+}
+
+function getPlanningItems() {
+    if (!PLANNING_DATA || !PLANNING_DATA.items) return [];
+    return Object.values(PLANNING_DATA.items);
+}
+
+function getActivePlanning(deptCode) {
+    if (!deptCode || !PLANNING_DATA || !PLANNING_DATA.activeByDept) return null;
+    const activeId = PLANNING_DATA.activeByDept[deptCode];
+    const item = activeId && PLANNING_DATA.items ? PLANNING_DATA.items[activeId] : null;
+    if (item && !item.needsManualDept) return item;
+    return null;
+}
+
+function migratePlanningData(raw) {
+    const store = createPlanningStore();
+    if (!raw) return store;
+    if (raw.version === 2 && raw.items && raw.activeByDept) {
+        return {
+            version: 2,
+            items: raw.items || {},
+            activeByDept: raw.activeByDept || {}
+        };
+    }
+
+    Object.values(raw).forEach(oldItem => {
+        if (!oldItem || typeof oldItem !== 'object') return;
+        const detectedDept = detectDept(oldItem.filename || oldItem.deptName || '');
+        const deptCode = detectedDept !== 'other' ? detectedDept : 'other';
+        const id = oldItem.id || (Date.now() + '-' + Math.random().toString(36).slice(2, 9));
+        const item = {
+            ...oldItem,
+            id,
+            deptCode,
+            deptName: deptCode === 'other' ? (oldItem.deptName || oldItem.filename || '未识别规划') : (DEPT_NAMES[deptCode] || oldItem.deptName),
+            duplicateKey: normalizePlanningFileKey(oldItem.filename || oldItem.deptName || id),
+            needsManualDept: deptCode === 'other'
+        };
+        store.items[id] = item;
+        if (!item.needsManualDept) store.activeByDept[deptCode] = id;
+    });
+    return store;
+}
 
 // 保存规划数据到本地存储
 function savePlanningData() {
@@ -1393,10 +1463,13 @@ function loadPlanningData() {
     try {
         const saved = localStorage.getItem('yz_planning_data');
         if (saved) {
-            PLANNING_DATA = JSON.parse(saved);
+            PLANNING_DATA = migratePlanningData(JSON.parse(saved));
+        } else {
+            PLANNING_DATA = createPlanningStore();
         }
     } catch (e) {
         console.error('加载规划数据失败:', e);
+        PLANNING_DATA = createPlanningStore();
     }
 };
 
@@ -1467,35 +1540,45 @@ function loadPlanningFile(file, callback) {
             // 生成智能摘要
             const summary = summarizePlanningText(allText, 4000);
             
-            // 检测部门
-            let deptCode = 'other';
+            // 检测部门：严格按规范化文件名和最长关键词匹配
             const fileName = file.name;
-            
-            for (const [keyword, code] of DEPT_MAP) {
-                if (fileName.includes(keyword)) {
-                    deptCode = code;
-                    break;
-                }
-            }
+            const deptCode = detectDept(fileName);
+            const needsManualDept = deptCode === 'other';
+            const duplicateKey = normalizePlanningFileKey(fileName);
             
             const planningItem = {
                 id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
                 filename: file.name,
                 deptCode: deptCode,
-                deptName: DEPT_NAMES[deptCode] || fileName,
+                deptName: needsManualDept ? '未识别规划' : (DEPT_NAMES[deptCode] || fileName),
                 summary: summary,
                 fullText: allText.substring(0, 10000), // 存储最多10000字符的完整文本
+                duplicateKey: duplicateKey,
+                needsManualDept: needsManualDept,
                 timestamp: new Date().toLocaleString()
             };
             
             // 存储规划数据
-            PLANNING_DATA[deptCode] = planningItem;
+            if (!PLANNING_DATA || !PLANNING_DATA.items) PLANNING_DATA = createPlanningStore();
+            Object.values(PLANNING_DATA.items).forEach(item => {
+                if (item.duplicateKey === duplicateKey) {
+                    delete PLANNING_DATA.items[item.id];
+                    if (PLANNING_DATA.activeByDept[item.deptCode] === item.id) {
+                        delete PLANNING_DATA.activeByDept[item.deptCode];
+                    }
+                }
+            });
+            PLANNING_DATA.items[planningItem.id] = planningItem;
+            if (!needsManualDept) {
+                PLANNING_DATA.activeByDept[deptCode] = planningItem.id;
+            }
             savePlanningData();
             
             // 显示成功消息
             const escapedFileName = (file.name || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
             const escapedDeptName = (planningItem.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-            alert(`成功加载规划文件：${escapedFileName}\n部门：${escapedDeptName}\n摘要长度：${summary.length}字符`);
+            const deptHint = needsManualDept ? '未识别部门，请在关联管理中手动处理' : escapedDeptName;
+            alert(`成功加载规划文件：${escapedFileName}\n部门：${deptHint}\n摘要长度：${summary.length}字符`);
             
             if (callback) callback(planningItem);
         } catch (error) {
@@ -1534,14 +1617,16 @@ function triggerPlanningUpload() {
 
 // 查看已加载的规划
 function showLoadedPlanning() {
-    if (Object.keys(PLANNING_DATA).length === 0) {
+    const items = getPlanningItems();
+    if (items.length === 0) {
         alert('尚未加载任何规划文件');
         return;
     }
     
     let msg = '已加载的规划文件：\n\n';
-    Object.values(PLANNING_DATA).forEach(item => {
-        msg += `📋 ${(item.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}\n`;
+    items.forEach(item => {
+        const status = item.needsManualDept ? '（未识别，未参与分析）' : '';
+        msg += `📋 ${(item.deptName || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}${status}\n`;
         msg += `   文件：${(item.filename || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}\n`;
         msg += `   摘要：${(item.summary.substring(0, 80) || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}...\n\n`;
     });
@@ -1552,7 +1637,7 @@ function showLoadedPlanning() {
 // 清空规划数据
 function clearPlanningData() {
     if (confirm('确认清空所有已加载的规划文件？')) {
-        PLANNING_DATA = {};
+        PLANNING_DATA = createPlanningStore();
         savePlanningData();
         alert('已清空所有规划数据');
     }
@@ -1704,15 +1789,32 @@ function saveMapping() {
     }
 }
 
+function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+}
+
+function assignPlanningDept(itemId) {
+    const item = PLANNING_DATA.items && PLANNING_DATA.items[itemId];
+    const select = document.getElementById('planning-assign-' + itemId);
+    if (!item || !select || !select.value) return;
+    item.deptCode = select.value;
+    item.deptName = DEPT_NAMES[select.value] || select.value;
+    item.needsManualDept = false;
+    PLANNING_DATA.activeByDept[select.value] = itemId;
+    savePlanningData();
+    renderMapping();
+    toast('✓ 已指定规划部门：' + item.deptName);
+}
+
 // 渲染关联管理界面
 function renderMapping() {
     const container = document.getElementById('mapping-container');
     if (!container) return;
     
     // 确保已加载关联配置
-    if (Object.keys(DEPT_MAPPING).length === 0) {
-        loadMapping();
-    }
+    loadMapping();
     
     // 获取所有可能的周数据部门
     const weekDepts = Object.keys(DEPT_NAMES).filter(dept => 
@@ -1720,10 +1822,28 @@ function renderMapping() {
     );
     
     // 获取所有已加载的规划部门
-    const planningDepts = Object.values(PLANNING_DATA).map(item => item.deptCode);
-    const allPlanningDepts = [...new Set([...planningDepts, ...Object.keys(DEPT_NAMES)])];
+    const planningDepts = Object.keys((PLANNING_DATA && PLANNING_DATA.activeByDept) || {})
+        .filter(dept => !!getActivePlanning(dept));
+    const allPlanningDepts = [...new Set([...planningDepts, ...Object.keys(DEPT_NAMES)])]
+        .filter(dept => dept !== 'other');
     
     let html = '';
+    const unresolvedPlans = getPlanningItems().filter(item => item.needsManualDept);
+    if (unresolvedPlans.length) {
+        html += '<div style="padding:12px 14px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;margin-bottom:16px">';
+        html += '<div style="font-size:14px;font-weight:700;color:#9a3412;margin-bottom:8px">未识别年度规划</div>';
+        html += '<div style="font-size:12px;color:#9a3412;margin-bottom:10px">这些文件不会参与 AI 分析，请先手动指定部门。</div>';
+        unresolvedPlans.forEach(item => {
+            html += '<div style="display:grid;grid-template-columns:1fr 220px 80px;gap:8px;align-items:center;margin-top:8px">';
+            html += '<div style="font-size:12px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(item.filename) + '</div>';
+            html += '<select id="planning-assign-' + item.id + '" style="padding:8px;border:1px solid var(--bd2);border-radius:6px;background:white">';
+            html += '<option value="">选择部门</option>' + allPlanningDepts.map(dept => '<option value="' + dept + '">' + escapeHtml(DEPT_NAMES[dept] || dept) + '</option>').join('');
+            html += '</select>';
+            html += '<button class="btn bs" onclick="assignPlanningDept(&quot;' + item.id + '&quot;)" style="padding:8px">指定</button>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
     
     // 周数据部门列表
     weekDepts.forEach(weekDept => {
@@ -1819,8 +1939,9 @@ function getMappedPlanningData(weekDept) {
     
     const relatedPlans = [];
     mapping.forEach(planDept => {
-        if (PLANNING_DATA[planDept]) {
-            relatedPlans.push(PLANNING_DATA[planDept]);
+        const planning = getActivePlanning(planDept);
+        if (planning) {
+            relatedPlans.push(planning);
         }
     });
     
@@ -2059,7 +2180,157 @@ function buildTaskSummaryText(deptMap) {
   }
   return lines.join('\n');
 }
+
+function parseMetricNumber(v) {
+  if (v===null||v===undefined||v==='') return null;
+  if (typeof v === 'number') return isNaN(v) ? null : v;
+  const s = String(v).trim().replace(/,/g,'');
+  if (!s || ['#DIV/0!','#VALUE!','#REF!','#N/A','/','—','-'].includes(s.toUpperCase())) return null;
+  const n = parseFloat(s.replace(/[^\d.\-]/g,''));
+  if (isNaN(n)) return null;
+  if (s.includes('亿')) return n * 1e8;
+  if (s.includes('万')) return n * 1e4;
+  if (s.includes('%')) return n / 100;
+  return n;
+}
+function isRateMetricName(label) {
+  return /率|占比|完成率|ROI|roi/.test(String(label || ''));
+}
+function fmtMetricCell(metric, v) {
+  const n = parseMetricNumber(v);
+  if (n===null) return null;
+  if (isRateMetricName(metric)) {
+    const pct = Math.abs(n) <= 1 ? n * 100 : n;
+    return pct.toFixed(1) + '%';
+  }
+  return fmtM(n);
+}
+function fmtMetricDelta(metric, v) {
+  const n = parseMetricNumber(v);
+  if (n===null) return null;
+  if (isRateMetricName(metric)) {
+    const pct = Math.abs(n) <= 1 ? n * 100 : n;
+    return (pct > 0 ? '+' : '') + pct.toFixed(1) + 'pct';
+  }
+  const prefix = n > 0 ? '+' : '';
+  return prefix + fmtM(n);
+}
+function fmtRateCell(v) {
+  const n = parseMetricNumber(v);
+  if (n===null) return null;
+  const pct = Math.abs(n) <= 1 ? n * 100 : n;
+  return pct.toFixed(1) + '%';
+}
+function rowText(row) {
+  return (row || []).map(v => v===null||v===undefined ? '' : String(v)).join(' ');
+}
+function findBusinessSummaryHeader(rows) {
+  for (let i=0;i<Math.min(rows.length,8);i++) {
+    const text = rowText(rows[i]);
+    if (text.includes('周数据汇总') && text.includes('类目组') && text.includes('本周数据') && text.includes('环比')) return i;
+  }
+  return -1;
+}
+function headerCol(header, patterns) {
+  for (let i=0;i<header.length;i++) {
+    const s = String(header[i] || '').replace(/\n/g,'').trim();
+    if (patterns.some(p => p.test(s))) return i;
+  }
+  return -1;
+}
+function buildBusinessSummaryData(rows, dept, filename) {
+  const hIdx = findBusinessSummaryHeader(rows);
+  if (hIdx < 0) return null;
+  const header = rows[hIdx] || [];
+  const metricCol = headerCol(header, [/周数据汇总/]);
+  const groupCol = headerCol(header, [/类目组/]);
+  const platformCol = headerCol(header, [/平台/]);
+  const prevCol = headerCol(header, [/上周数据/]);
+  const curCol = headerCol(header, [/本周数据/]);
+  const deltaValCol = headerCol(header, [/周差异值/, /环比.*值/]);
+  const deltaRateCol = headerCol(header, [/周差异率/, /环比.*率/]);
+  const accCol = headerCol(header, [/累计/]);
+  const targetCol = headerCol(header, [/月目标/, /目标/]);
+  const compCol = headerCol(header, [/完成率/]);
+  if (metricCol < 0 || curCol < 0 || (groupCol < 0 && platformCol < 0)) return null;
+
+  const result = {
+    dept,
+    deptName: DEPT_NAMES[dept] || filename,
+    filename,
+    curWeek: String(header[curCol] || '').replace(/\n/g,' ').trim() || null,
+    prevWeek: prevCol >= 0 ? String(header[prevCol] || '').replace(/\n/g,' ').trim() : null,
+    metrics: [],
+    subGroups: [],
+    rankData: []
+  };
+  let currentMetric = '';
+  for (let ri=hIdx+1;ri<rows.length;ri++) {
+    const row = rows[ri] || [];
+    const metricCell = row[metricCol] ? String(row[metricCol]).replace(/\n/g,'').trim() : '';
+    if (metricCell) currentMetric = metricCell;
+    if (!currentMetric) continue;
+
+    const group = groupCol >= 0 && row[groupCol] ? String(row[groupCol]).replace(/\n/g,'').trim() : '';
+    const platform = platformCol >= 0 && row[platformCol] ? String(row[platformCol]).replace(/\n/g,'').trim() : '';
+    const name = platform || group;
+    if (!name) continue;
+
+    const curRaw = curCol >= 0 ? parseMetricNumber(row[curCol]) : null;
+    const prevRaw = prevCol >= 0 ? parseMetricNumber(row[prevCol]) : null;
+    const accRaw = accCol >= 0 ? parseMetricNumber(row[accCol]) : null;
+    const targetRaw = targetCol >= 0 ? parseMetricNumber(row[targetCol]) : null;
+    const compRaw = compCol >= 0 ? parseMetricNumber(row[compCol]) : null;
+    if (curRaw===null && prevRaw===null && accRaw===null && targetRaw===null && compRaw===null) continue;
+
+    const deltaRate = deltaRateCol >= 0
+      ? fmtRateCell(row[deltaRateCol])
+      : (prevRaw!==null && curRaw!==null && prevRaw!==0 ? ((curRaw-prevRaw)/Math.abs(prevRaw)*100).toFixed(1)+'%' : null);
+    const deltaValue = deltaValCol >= 0 ? fmtMetricDelta(currentMetric, row[deltaValCol]) : null;
+    const curVal = curRaw!==null ? fmtMetricCell(currentMetric, curRaw) : null;
+    const prevVal = prevRaw!==null ? fmtMetricCell(currentMetric, prevRaw) : null;
+    const completion = compRaw!==null ? fmtRateCell(compRaw) : null;
+    const target = targetRaw!==null ? fmtMetricCell(currentMetric, targetRaw) : null;
+    const trend = (prevRaw!==null && curRaw!==null) ? (curRaw >= prevRaw ? 'up' : 'down') : 'flat';
+
+    if (name === '合计') {
+      if (curRaw===null) continue;
+      result.metrics.push({
+        label: currentMetric,
+        trend,
+        curVal,
+        prevVal,
+        rawCur: curRaw,
+        rawPrev: prevRaw,
+        deltaRate: deltaRate || deltaValue,
+        completion,
+        target,
+        accum: accRaw!==null ? fmtMetricCell(currentMetric, accRaw) : null
+      });
+    } else {
+      result.subGroups.push({
+        metric: currentMetric,
+        account: name,
+        group: group || null,
+        platform: platform || null,
+        curVal,
+        prevVal,
+        rawCur: curRaw,
+        rawPrev: prevRaw,
+        completion,
+        target,
+        deltaRate,
+        deltaValue
+      });
+    }
+  }
+  return result.metrics.length || result.subGroups.length ? result : null;
+}
+
 function buildDeptData(rows, dept, filename) {
+  const businessSummary = buildBusinessSummaryData(rows, dept, filename);
+  if (businessSummary) return businessSummary;
+
   const r = { dept, deptName:DEPT_NAMES[dept]||filename, filename, curWeek:null, prevWeek:null, metrics:[], subGroups:[], rankData:[] };
   if (rows.length<2) return r;
   let hIdx=-1;
@@ -2253,7 +2524,7 @@ async function runAll() {
 4. 风险预警：识别延期或未推进的关键任务，给出具体改善建议
 输出必须包含4条以上关键发现，2条以上行动建议，不允许只有1条发现
 
-【职能支持部门（品牌/视频/视觉/达人/财务/人力/仓储/跨境/PAA等）】
+【职能支持部门（品牌/品牌视频/视频中心/视觉/达人/财务/人力/仓储/跨境/PAA/产品事业二部等）】
 无论有无数据，都必须结合知识库中该部门的年度规划进行分析：
 1. 当前是Q2（4-6月），对照知识库里该部门Q2重点工作，评估本周工作是否在正确轨道
 2. 识别哪些Q2关键里程碑可能存在延期或遗漏风险
@@ -2364,11 +2635,11 @@ function buildSummary(d) {
       '\n注意：请给出实质性分析，不要只复述任务列表。';
   }
 
-  const bizDepts = ['tmall','jd','pdd','douyin','live'];
+  const bizDepts = ['tmall','jd','pdd','douyin','live','ec1','ec2','ec3','ec4','ec5','ec6','ec7'];
   const isBiz = bizDepts.includes(d.dept);
 
   // 检查是否有年度规划数据可用（精确匹配）
-  const planning = PLANNING_DATA[d.dept];
+  const planning = getActivePlanning(d.dept);
   const hasPlanning = !!planning;
   const planningSummary = hasPlanning ? (planning.fullText || planning.summary) : null;
   
@@ -2436,11 +2707,12 @@ ${escapedSummary}
     : '';
 
   const deptTypeMap = {
-    brand: '品牌部',  kol: '达人部', cs: '客服部',
+    brand: '品牌部', brandVideo: '品牌视频部', video: '视频中心',
+    kol: '达人部', cs: '客服部',
     warehouse: '仓储/供应链部', finance: '财务中心',
     hr: '人力中心', it: 'IT/数据部', cross: '跨境事业部',
     key: '大客户部', paa: 'PAA事业部',
-    visual: '视觉中心', video: '视频中心',
+    visual: '视觉中心', productBiz2: '产品事业二部',
   };
   const deptType = isBiz ? '电商业务部门' : (deptTypeMap[d.dept] || '职能支持部门');
 
@@ -2754,7 +3026,11 @@ function buildOverview() {
   const findM=(dept,kws)=>{const dd=parsedDepts.find(x=>x.dept===dept);if(!dd)return null;for(const kw of kws){const m=dd.metrics.find(x=>x.label.includes(kw));if(m)return m;}return null;};
   const toN=m=>{if(!m)return 0;const v=parseFloat(m.rawCur||0);return isNaN(v)?0:v;};
   const tmM=findM('tmall',['销售净额','销售额']),jdM=findM('jd',['部门销售净额','销售净额']),pddM=findM('pdd',['部门销售净额']),liveM=findM('live',['销售净额']),dyM=findM('douyin',['店铺销售净额','销售净额']);
-  const total=toN(tmM)+toN(jdM)+toN(pddM)+toN(liveM)+toN(dyM);
+  const salesMetrics = parsedDepts
+    .filter(d=>!d.isTaskDept)
+    .map(d=>d.metrics.find(m=>['销售净额','部门销售净额','店铺销售净额','销售额'].some(kw=>m.label.includes(kw))))
+    .filter(Boolean);
+  const total=salesMetrics.reduce((sum,m)=>sum+toN(m),0);
   const mkO=(label,m,sub)=>{const tc=m?.trend==='up'?'var(--G)':m?.trend==='down'?'var(--R)':'var(--ink3)';return `<div class="ovm"><div class="ovm-l">${label}</div><div class="ovm-v">${m?.curVal||'—'}</div><div class="ovm-s" style="color:${tc}">${sub||m?.deltaRate||'—'}</div></div>`;};
   document.getElementById('ov-top').innerHTML=`<div class="ovm"><div class="ovm-l">本周合计 GMV</div><div class="ovm-v">${fmtM(total)||'—'}</div><div class="ovm-s">货架 + 直播</div></div>`+mkO('天猫',tmM)+mkO('京东',jdM)+mkO('拼多多',pddM);
   document.getElementById('dg').innerHTML=parsedDepts.map(d=>{const rag=d._rag||'g',top3=d.metrics.slice(0,3),rows=top3.map(m=>`<div class="dc-row"><span class="dc-rl">${m.label}</span><span class="dc-rv">${m.curVal||'—'}</span></div>`).join(''),warn=d.metrics.find(m=>m.completion&&parseFloat(m.completion)<30);return `<div class="dc"><div class="dc-top"><span class="dc-name">${d.deptName}</span><span class="rpill ${RAG[rag].cls}">${{r:'红灯',a:'黄灯',g:'绿灯'}[rag]}</span></div><div class="dc-rows">${rows||'<span style="font-size:12px;color:var(--ink3)">暂无指标</span>'}</div>${warn?`<div class="dc-risk">⚠ ${warn.label}月完成率仅 ${warn.completion}</div>`:''}</div>`;}).join('');
