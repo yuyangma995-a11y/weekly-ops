@@ -999,16 +999,30 @@ html,body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 // 常量
 // ══════════════════════════════════════════
 const DEPT_MAP = [
+  // ═══ 精确匹配（放在最前面，优先于模糊匹配）═══
+  ['品牌中心-视频部','brandVideo'],['品牌中心-品牌部','brand'],
+  ['1品牌中心-视频部','brandVideo'],['1品牌中心-品牌部','brand'],
+  ['2视频中心','video'],
+  ['3品牌中心-品牌部','brand'],
+  ['4抖音平台','douyin'],['5天猫平台','tmall'],
+  ['6拼多多平台','pdd'],['7京东平台','jd'],
+  ['8大客户部','key'],['9直播部','live'],
+  ['10达人部','kol'],['11事业二群电商事业部','biz_g2'],
+  ['12跨境事业部','cross'],['13电商事业三群','biz_g3'],
+  ['14KEVE','keve'],['KEVE','keve'],['keve','keve'],
+  // ═══ 模糊匹配 ═══
   ['天猫平台','tmall'],['天猫','tmall'],['京东平台','jd'],['京东','jd'],['拼多多平台','pdd'],['拼多多','pdd'],
   ['抖音平台','douyin'],['直播部','live'],['直播间','live'],['直播','live'],
   ['达人/内容部','kol'],['达人部','kol'],['达人','kol'],
-  ['品牌视频部','brandVideo'],['品牌视频','brandVideo'],['视频中心','video'],
+  ['品牌视频部','brandVideo'],['品牌视频','brandVideo'],
+  ['品牌中心-视频部','brandVideo'],['品牌中心-品牌部','brand'],
+  ['视频中心','video'],
   ['品牌部','brand'],['品牌','brand'],
   ['客服','cs'],['仓储','warehouse'],['供应链','warehouse'],
   ['大客户部','key'],['大客户','key'],['跨境事业部','cross'],['跨境','cross'],
   ['财务中心','finance'],['财务部','finance'],['财务','finance'],
   ['人力中心','hr'],['人力','hr'],['HR','hr'],['IT/数据部','it'],['IT','it'],['数据','it'],
-  // 新增部门映射（基于2026年各部门规划文件）
+  // 新增部门映射
   ['渔之源事','biz4'],['渔之源事业四部','biz4'],
   ['彩麦','purchase'],['采购','purchase'],
   ['视觉中心','visual'],['视觉','visual'],
@@ -1026,7 +1040,7 @@ const DEPT_MAP = [
   ['事业一群','biz_g1'],['事业二群','biz_g2'],['事业三群','biz_g3'],
   ['渔之源事业一群','biz_g1'],['渔之源事业二群','biz_g2'],['渔之源事业三群','biz_g3'],
   ['渔之源事业四群','biz_g4'],['事业四群','biz_g4'],
-  // 兜底：任何含"群"字的部门
+  // 兜底
   ['事业群','biz_g'],
 ];
 const DEPT_NAMES = {
@@ -1043,6 +1057,7 @@ const DEPT_NAMES = {
   ec3:'电商三部（钓伞&线&台钓装备）',ec4:'电商四部（渔具包&盒类&漂）',
   ec5:'电商五部（鱼护&水桶&钓箱&服装防护）',ec6:'电商六部（支架及&路亚竿&路亚装备)',
   ec7:'电商七部（抄网&渔轮）',
+  keve:'KEVE',
   biz_g1:'电商事业一群', biz_g2:'电商事业二群',
   biz_g3:'电商事业三群', biz_g4:'电商事业四群',
   biz_g:'事业群'
@@ -1119,10 +1134,13 @@ function fmtM(n) {
   if (Math.abs(x)>=1e4) return (x/1e4).toFixed(1)+'万';
   return Math.round(x).toLocaleString();
 }
-function cleanVal(v) {
+function cleanVal(v, trackErrors) {
   if (v===null||v===undefined||v==='') return null;
   const s = String(v).trim().toLowerCase();
-  if (['#div/0!','#value!','#ref!','#n/a','#name?','/','无数据','小二暂未回复'].includes(s)) return null;
+  if (['#div/0!','#value!','#ref!','#n/a','#name?','/','无数据','小二暂未回复'].includes(s)) {
+    if (trackErrors) trackErrors.push('#DIV/0!');
+    return null;
+  }
   return v;
 }
 function fmtVal(v) {
@@ -1140,7 +1158,8 @@ function normalizeDeptText(text) {
     .replace(/[）]/g, ')')
     .replace(/[—–－]/g, '-')
     .replace(/\s+/g, '')
-    .replace(/\(\d+\)$/g, '');
+    .replace(/^[\d]+/, '')  // 去掉前导数字，如"1品牌中心"→"品牌中心"
+    .replace(/\((\d+)\)$/g, '');
 }
 const DEPT_MATCHERS = DEPT_MAP
   .map(([kw, dept]) => ({ kw, key: normalizeDeptText(kw), dept }))
@@ -2056,14 +2075,38 @@ function renderFL() {
 async function parseExcel(file) {
   const buf  = await file.arrayBuffer();
   const wb   = XLSX.read(buf, {type:'array',cellFormula:false,cellDates:false});
-  const ws   = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(ws, {header:1,defval:null,raw:true});
-  // 识别任务清单格式（第1行包含"待办事件"/"任务名"/"事项"字样）
-  const header0 = rows[0] ? String(rows[0][0]||'') : '';
-  if (/待办|任务|事项|盯盘/.test(header0) || /待办|任务|盯盘/.test(file.name)) {
-    return buildTaskData(rows, file.name);
+  const allResults = [];
+  const dept = detectDept(file.name);
+  const hasMultiSheet = wb.SheetNames.length > 1;
+
+  // 遍历所有 Sheet
+  for (let si = 0; si < wb.SheetNames.length; si++) {
+    const ws       = wb.Sheets[wb.SheetNames[si]];
+    const rows     = XLSX.utils.sheet_to_json(ws, {header:1,defval:null,raw:true});
+    if (rows.length < 2) continue;
+    const sheetName = wb.SheetNames[si];
+
+    // 识别任务清单格式
+    const header0 = rows[0] ? String(rows[0][0]||'') : '';
+    if (/待办|任务|事项|盯盘/.test(header0) || /待办|任务|盯盘/.test(file.name)) {
+      const taskResults = buildTaskData(rows, file.name);
+      if (taskResults) allResults.push(...(Array.isArray(taskResults) ? taskResults : [taskResults]));
+      continue;
+    }
+
+    // 多Sheet时，各自独立检测部门
+    let sheetDept = dept;
+    if (hasMultiSheet) {
+      // 用Sheet名尝试检测独立部门（如"PAA事业部"→paa）
+      const sheetDeptDetected = detectDept(sheetName);
+      if (sheetDeptDetected !== 'other') sheetDept = sheetDeptDetected;
+    }
+
+    // 用buildDeptData解析（传入完整wb，用于跨Sheet分析）
+    const parsed = buildDeptData(rows, sheetDept, file.name, sheetName, si, wb);
+    if (parsed) allResults.push(parsed);
   }
-  return buildDeptData(rows, detectDept(file.name), file.name);
+  return allResults;
 }
 
 // ── 任务清单解析器（盯盘跟进表格式）──
@@ -2327,12 +2370,109 @@ function buildBusinessSummaryData(rows, dept, filename) {
   return result.metrics.length || result.subGroups.length ? result : null;
 }
 
-function buildDeptData(rows, dept, filename) {
-  const businessSummary = buildBusinessSummaryData(rows, dept, filename);
-  if (businessSummary) return businessSummary;
+function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
+  const r = { dept, deptName:DEPT_NAMES[dept]||sheetName||filename, filename, curWeek:null, prevWeek:null, metrics:[], subGroups:[], rankData:[], _sourceErrors:[] };
 
-  const r = { dept, deptName:DEPT_NAMES[dept]||filename, filename, curWeek:null, prevWeek:null, metrics:[], subGroups:[], rankData:[] };
-  if (rows.length<2) return r;
+  // ═══ 源表错误检测 ═══
+  r._sourceErrors = [];
+  let errorCount = 0;
+  for (let ri=0; ri<rows.length && ri<20; ri++) {
+    const row = rows[ri] || [];
+    for (let ci=0; ci<row.length; ci++) {
+      const v = row[ci];
+      if (v !== null && v !== undefined) {
+        const s = String(v).toLowerCase();
+        if (['#div/0!','#value!','#ref!'].includes(s)) {
+          errorCount++;
+          if (errorCount <= 3) {
+            const label = rows[ri][0] ? String(rows[ri][0]).slice(0,20) : `第${ri+1}行`;
+            r._sourceErrors.push(`${label}:${ci+1}列=${s}`);
+          }
+        }
+      }
+    }
+  }
+  if (errorCount > 5) {
+    r._sourceErrors = [`⚠ 源表数据异常：检测到 ${errorCount} 处公式错误(#DIV/0!/#VALUE!/#REF!)，该数据表可能存在公式引用问题，部分指标无法计算`];
+  } else if (errorCount > 0) {
+    // 将具体错误行合并到提示中
+    r._sourceErrors = [`⚠ 源表存在 ${errorCount} 处公式错误：${r._sourceErrors.join('; ')}`];
+  }
+
+  // ═══ 先尝试 F3 业务汇总表格式（R1-R5找头）═══
+  const businessSummary = buildBusinessSummaryData(rows, dept, filename);
+  if (businessSummary) {
+    businessSummary._sourceErrors = r._sourceErrors;
+    return businessSummary;
+  }
+
+  // ═══ F6: 品牌部·单周数据格式检测（组别+指标名称）═══
+  const isSingleWeek = (() => {
+    for (let i=0;i<Math.min(rows.length,4);i++) {
+      const rowText = (rows[i]||[]).map(v=>String(v||'')).join('');
+      if (rowText.includes('单周数据') || rowText.includes('统计日期')) return true;
+    }
+    return false;
+  })();
+  if (isSingleWeek && rows.length>=3) {
+    const hrow = rows[2] || [];  // R3 是表头: 组别, 指标名称, 统计日期, 上周数据, 本周数据, 本周-上周, 月度实际累计, 月度目标, 目标完成率, 差异项说明
+    const grpCol = 0, nameCol = 1, prevCol = 3, curCol = 4;
+    const monthCol = 6, targetCol = 7, compCol = 8;
+    if (nameCol >=0 && curCol >=0) {
+      r.curWeek = '本周';
+      for (let ri=3; ri<rows.length; ri++) {
+        const row = rows[ri] || [];
+        const grp = row[grpCol] ? String(row[grpCol]).trim() : '';
+        const name = row[nameCol] ? String(row[nameCol]).trim() : '';
+        if (!grp && !name) continue;
+        const cv = cleanVal(row[curCol], r._sourceErrors);
+        const pv = cleanVal(row[prevCol], r._sourceErrors);
+        if (cv===null && pv===null) continue;
+        const comp = compCol>=0 ? cleanVal(row[compCol], r._sourceErrors) : null;
+        const tgt  = targetCol>=0 ? cleanVal(row[targetCol], r._sourceErrors) : null;
+        monthCol;
+        const label = (grp ? grp+'·' : '') + name;
+        const dr = pv&&cv ? ((parseFloat(cv)-parseFloat(pv))/Math.abs(parseFloat(pv))*100).toFixed(1)+'%' : null;
+        r.subGroups.push({
+          metric: grp || '指标',
+          account: name,
+          curVal: fmtVal(cv), prevVal: fmtVal(pv),
+          rawCur: cv, rawPrev: pv,
+          completion: comp ? fmtVal(comp) : null,
+          target: tgt ? fmtM(tgt) : null,
+          deltaRate: dr
+        });
+      }
+      if (r.subGroups.length) return r;
+    }
+  }
+
+  // ═══ F2: 视频中心·父记录型检测 ═══
+  if (rows.length >= 3) {
+    const hasParentCol = (() => {
+      const hrow = rows[2] || [];
+      for (let i=0; i<hrow.length; i++) {
+        if (String(hrow[i]||'').includes('父记录')) return true;
+      }
+      return false;
+    })();
+    if (hasParentCol) {
+      return buildF2ParentRecord(rows, dept, filename, r);
+    }
+  }
+
+  // ═══ F4: 双主键型检测（Col2=指标名，如跨境/达人）═══
+  if (detectF4DualKey(rows)) {
+    return buildF4DualKey(rows, dept, filename, r);
+  }
+
+  // ═══ F5: PAA混排型检测（右侧有行动计划表）═══
+  if (detectF5PAAMixed(rows)) {
+    return buildF5PAAMixed(rows, dept, filename, r, sheetIndex, wb);
+  }
+
+  // ═══ F1/F3: 标准通用解析器（原有逻辑优化版）═══
+  if (rows.length < 2) return r;
   let hIdx=-1;
   for (let i=0;i<Math.min(rows.length,6);i++) {
     if (rows[i].some(v=>v&&/\d+\.\d+/.test(String(v)))) { hIdx=i; break; }
@@ -2356,34 +2496,50 @@ function buildDeptData(rows, dept, filename) {
   r.curWeek=curCol.label; r.prevWeek=prevCol?.label||null;
   const SKIP=new Set(['双周数据','店铺排名','店铺流量','店铺转化率','类目销售额','类目成本率','类目推广率','渔之源旗舰店排名']);
   let curMetric='';
+  let prevLabelWasGroupHeader = false;
   for (let ri=hIdx+1;ri<rows.length;ri++) {
     const row=rows[ri];
     const label=row[0]?String(row[0]).replace(/\n/g,'').trim():'';
     if (label) curMetric=label;
+    // ═══ F3: 分组标题识别（Col1有名 + 后续各数据列全为空 = 分组标题）═══
+    if (label && ri+1 < rows.length) {
+      const hasNonEmptyData = (() => {
+        for (let ci=1; ci<Math.min(20, (row||[]).length); ci++) {
+          if (row[ci] !== null && row[ci] !== undefined && String(row[ci]).trim() !== '') return true;
+        }
+        return false;
+      })();
+      if (!hasNonEmptyData && !SKIP.has(label)) {
+        prevLabelWasGroupHeader = true;
+        SKIP.add(label);
+      }
+    }
     if (SKIP.has(label)) continue;
+    const isGroupTitle = prevLabelWasGroupHeader && !label;
+    prevLabelWasGroupHeader = false;
+
     if (sp.acct!==undefined) {
       const acct=row[sp.acct]?String(row[sp.acct]).trim():'';
       if (!acct) continue;
-      const cv=cleanVal(row[curCol.ci]), pv=cleanVal(prevCol?row[prevCol.ci]:null);
+      const cv=cleanVal(row[curCol.ci], r._sourceErrors), pv=cleanVal(prevCol?row[prevCol.ci]:null, r._sourceErrors);
       if (cv===null&&pv===null) continue;
-      const comp=sp.comp!==undefined?cleanVal(row[sp.comp]):null;
-      const tgt=sp.tgt!==undefined?cleanVal(row[sp.tgt]):null;
+      const comp=sp.comp!==undefined?cleanVal(row[sp.comp], r._sourceErrors):null;
+      const tgt=sp.tgt!==undefined?cleanVal(row[sp.tgt], r._sourceErrors):null;
       const dr=pv&&cv?((parseFloat(cv)-parseFloat(pv))/Math.abs(parseFloat(pv))*100).toFixed(1)+'%':null;
       r.subGroups.push({metric:curMetric,account:acct,curVal:fmtVal(cv),prevVal:fmtVal(pv),rawCur:cv,rawPrev:pv,completion:comp?fmtVal(comp):null,target:tgt?fmtM(tgt):null,deltaRate:dr});
     } else {
       if (!label) continue;
-      const cv=cleanVal(row[curCol.ci]), pv=cleanVal(prevCol?row[prevCol.ci]:null);
+      const cv=cleanVal(row[curCol.ci], r._sourceErrors), pv=cleanVal(prevCol?row[prevCol.ci]:null, r._sourceErrors);
       if (cv===null&&pv===null) continue;
-      const drRaw=sp.dr!==undefined?cleanVal(row[sp.dr]):null;
-      const comp=sp.comp!==undefined?cleanVal(row[sp.comp]):null;
-      const tgt=sp.tgt!==undefined?cleanVal(row[sp.tgt]):null;
+      const drRaw=sp.dr!==undefined?cleanVal(row[sp.dr], r._sourceErrors):null;
+      const comp=sp.comp!==undefined?cleanVal(row[sp.comp], r._sourceErrors):null;
+      const tgt=sp.tgt!==undefined?cleanVal(row[sp.tgt], r._sourceErrors):null;
       const isRank = isRankData(label);
       if (isRank) {
-        r.rankData.push({label,curVal:cv!==null?String(cv):null,prevVal:pv!==null?String(pv):null,delta:sp.dv!==undefined?String(cleanVal(row[sp.dv])||''):null});
+        r.rankData.push({label,curVal:cv!==null?String(cv):null,prevVal:pv!==null?String(pv):null,delta:sp.dv!==undefined?String(cleanVal(row[sp.dv], r._sourceErrors)||''):null});
         continue;
       }
       const trend=(pv!==null&&cv!==null)?(parseFloat(cv)>=parseFloat(pv)?'up':'down'):'flat';
-      // 过滤排名误入指标卡：标签含【】且值是小整数（<200），应该是排名数据
       if (/【.*】/.test(label) && cv!==null && Math.abs(parseFloat(cv))<200 && parseFloat(cv)===Math.floor(parseFloat(cv))) {
         r.rankData.push({label, curVal:String(cv), prevVal:pv!==null?String(pv):null, delta:null});
         continue;
@@ -2407,6 +2563,169 @@ function buildDeptData(rows, dept, filename) {
     }
   }
   return r;
+}
+
+// ── F2: 父记录型解析器（视频中心）──
+function buildF2ParentRecord(rows, dept, filename, base) {
+  const hrow = rows[2] || []; // R3 表头: 数据维度, 上周, 本周, 周差异值, 周差异率, 当月, 父记录, 当月目标, 目标完成率
+  const prevCol=1, curCol=2, deltaValCol=3, deltaRateCol=4, monthCol=5, parentCol=6, targetCol=7, compCol=8;
+  base.curWeek = '本周'; base.prevWeek = '上周';
+  for (let ri=3; ri<rows.length; ri++) {
+    const row = rows[ri] || [];
+    const label = row[0] ? String(row[0]).trim() : '';
+    const parent = parentCol>=0 && row[parentCol] ? String(row[parentCol]).trim() : '';
+    if (!label && !parent) continue;
+    if (label === '' && parent) continue; // 跳过无标签但有父记录的行（子行）
+    const cv = cleanVal(row[curCol], base._sourceErrors);
+    if (cv===null) continue;
+    const pv = cleanVal(row[prevCol], base._sourceErrors);
+    const dv = cleanVal(row[deltaValCol], base._sourceErrors);
+    base.metrics.push({
+      label: (parent ? parent+'→' : '') + label,
+      curVal: fmtVal(cv), prevVal: pv ? fmtVal(pv) : null,
+      rawCur: cv, rawPrev: pv,
+      trend: (pv!==null && cv!==null) ? (parseFloat(cv)>=parseFloat(pv)?'up':'down') : 'flat',
+      deltaRate: dv ? String(dv) : null,
+      completion: null, target: null, accum: null
+    });
+  }
+  return base;
+}
+
+// ── F4: 双主键型检测（Col2=指标名）──
+function detectF4DualKey(rows) {
+  if (rows.length < 3) return false;
+  const hrow = rows[2] || [];
+  const cell0 = String(hrow[0]||'').trim();
+  const cell1 = String(hrow[1]||'').trim();
+  return (cell0.includes('店铺') || cell0.includes('名称')) && (cell1.includes('指标') || cell1.includes('名称'));
+}
+
+// ── F4: 双主键型解析器（达人部/跨境）──
+function buildF4DualKey(rows, dept, filename, base) {
+  const hrow = rows[2] || [];
+  const acctCol=0, nameCol=1;
+  let prevCol=-1, curCol=-1, targetCol=-1, compCol=-1, dvCol=-1;
+  hrow.forEach((h,ci)=>{
+    const s = String(h||'').trim();
+    if (s.includes('上周')) prevCol = ci;
+    else if (s.includes('本周')) curCol = ci;
+    else if (s.includes('目标') && !s.includes('完成')) targetCol = ci;
+    else if (s.includes('完成率')) compCol = ci;
+    else if (s.includes('本周-上周') || s.includes('周差异')) dvCol = ci;
+  });
+  if (curCol < 0) { curCol=4; prevCol=3; } // fallback 列序
+  base.curWeek = hrow[curCol] ? String(hrow[curCol]).trim() : '本周';
+  base.prevWeek = prevCol>=0 && hrow[prevCol] ? String(hrow[prevCol]).trim() : null;
+
+  // 先读所有行，找到"合计"行
+  let totalRow = null, totalIdx = -1;
+  for (let ri=3; ri<rows.length; ri++) {
+    const row = rows[ri] || [];
+    const acct = row[acctCol] ? String(row[acctCol]).trim() : '';
+    if (acct.includes('合计')) { totalRow = row; totalIdx = ri; break; }
+  }
+  // 读取所有明细行（不含合计行）
+  let hasDetail = false;
+  for (let ri=3; ri<rows.length; ri++) {
+    const row = rows[ri] || [];
+    const acct = row[acctCol] ? String(row[acctCol]).trim() : '';
+    const name = nameCol>=0 && row[nameCol] ? String(row[nameCol]).trim() : '';
+    if (!acct && !name) continue;
+    if (acct.includes('合计')) continue;
+    hasDetail = true;
+    const cv = cleanVal(row[curCol], base._sourceErrors);
+    const pv = prevCol>=0 ? cleanVal(row[prevCol], base._sourceErrors) : null;
+    const comp = compCol>=0 ? cleanVal(row[compCol], base._sourceErrors) : null;
+    const tgt  = targetCol>=0 ? cleanVal(row[targetCol], base._sourceErrors) : null;
+    // 跳过: 成本费用率、推广费用率 这类非核心指标
+    if (['成本费用率','推广费用率','经营净利润'].some(kw=>name.includes(kw))) continue;
+    if (cv===null && pv===null) continue;
+    const label = (name ? name : acct);
+    base.subGroups.push({
+      metric: name ? (acct?acct+'·':'')+name : acct,
+      account: acct,
+      curVal: cv!==null ? fmtVal(cv) : null,
+      prevVal: pv!==null ? fmtVal(pv) : null,
+      rawCur: cv, rawPrev: pv,
+      completion: comp ? fmtVal(comp) : null,
+      target: tgt ? fmtM(tgt) : null,
+      deltaRate: pv&&cv ? ((parseFloat(cv)-parseFloat(pv))/Math.abs(parseFloat(pv))*100).toFixed(1)+'%' : null
+    });
+  }
+
+  // 读取合计行（优先于明细汇总）
+  if (totalRow) {
+    const cv = cleanVal(totalRow[curCol], base._sourceErrors);
+    const comp = compCol>=0 ? cleanVal(totalRow[compCol], base._sourceErrors) : null;
+    const tgt  = targetCol>=0 ? cleanVal(totalRow[targetCol], base._sourceErrors) : null;
+    if (cv !== null) {
+      base.metrics.push({
+        label: '销售净额',
+        curVal: fmtVal(cv), prevVal: null,
+        rawCur: cv, rawPrev: null,
+        trend: 'flat', deltaRate: null,
+        completion: comp ? fmtVal(comp) : null,
+        target: tgt ? fmtM(tgt) : null,
+        accum: null
+      });
+    }
+  } else if (hasDetail) {
+    // 无合计行时，手动汇总
+    let totalCur = 0, totalPrev = 0, hasCur = false, hasPrev = false;
+    for (const sg of base.subGroups) {
+      if (sg.rawCur !== null) { totalCur += parseFloat(sg.rawCur)||0; hasCur = true; }
+      if (sg.rawPrev !== null) { totalPrev += parseFloat(sg.rawPrev)||0; hasPrev = true; }
+    }
+    if (hasCur) {
+      base.metrics.push({
+        label: '销售净额（合计）',
+        curVal: fmtM(totalCur),
+        prevVal: hasPrev ? fmtM(totalPrev) : null,
+        rawCur: totalCur, rawPrev: hasPrev ? totalPrev : null,
+        trend: hasPrev && totalCur >= totalPrev ? 'up' : (hasPrev ? 'down' : 'flat'),
+        deltaRate: hasPrev ? ((totalCur-totalPrev)/Math.abs(totalPrev)*100).toFixed(1)+'%' : null,
+        completion: null, target: null, accum: null
+      });
+    }
+  }
+  return base;
+}
+
+// ── F5: PAA混排型检测 ──
+function detectF5PAAMixed(rows) {
+  for (let ri=0; ri<Math.min(rows.length, 5); ri++) {
+    const rowText = (rows[ri]||[]).map(v=>String(v||'')).join('');
+    if (rowText.includes('未来经营动作') || rowText.includes('动作表') || (rowText.includes('优先级') && rowText.includes('问题') && rowText.includes('负责人') && rowText.includes('动作')))
+      return true;
+  }
+  return false;
+}
+
+// ── F5: PAA混排型解析器 ──
+function buildF5PAAMixed(rows, dept, filename, base, sheetIndex, wb) {
+  // 左边数据块（标准双周数据）
+  let dataRows = [];
+  for (let ri=0; ri<rows.length; ri++) {
+    const row = rows[ri] || [];
+    const rowText = (row||[]).map(v=>String(v||'')).join('');
+    // 找到动作表开始的位置就停
+    if (rowText.includes('优先级') && rowText.includes('问题') && rowText.includes('负责人')) break;
+    dataRows.push(row);
+  }
+  if (dataRows.length > 3) {
+    const stdParser = buildBusinessSummaryData(dataRows, dept, filename);
+    if (stdParser) {
+      // 左边数据块的指标
+      base.metrics = stdParser.metrics;
+      base.subGroups = stdParser.subGroups;
+      base.curWeek = stdParser.curWeek;
+      base.prevWeek = stdParser.prevWeek;
+    }
+  }
+  // 添加PAA质保说明
+  base._isPAA = true;
+  return base;
 }
 
 // ══════════════════════════════════════════
@@ -2551,6 +2870,18 @@ Q2重点（4-6月）：官号每月6条视频按节点输出；IP直播每月至
 - "6 抖音平台" → 对照抖音平台规划
 - "视觉中心"/"品牌视觉部" → 对照视觉中心规划
 - 盯盘跟进表里的部门名如"12 达人部"/"3 品牌部"等，去掉数字前缀后匹配知识库
+
+【源表数据异常处理规则】
+当你从实际数据中发现大量#DIV/0!、#VALUE!、#REF!等公式错误时：
+1. 必须首先在findings中输出一条type="warn"的提示，明确说明"该部门源表存在数据质量问题"
+2. 基于可解析的真实数据进行分析，不要为出错的数据编造分析
+3. 在summary中说明"部分数据受源表公式错误影响"
+
+【空字段处理规则 - 重要】
+当部门存在利润/经营净利润/净利润率等字段，但值为空或"/"或"未填写"时：
+1. 直接说"该部门未填写利润数据"
+2. 不要编造利润分析或猜测数值
+3. 基于其他有数据的指标进行分析
 
 【输出格式】
 只输出合法JSON，格式：
@@ -2781,6 +3112,13 @@ ${noDataNote}`;
 📌 关联说明：当前分析基于部门关联配置。${d.deptName}关联到${mappedPlanning.length}个规划部门，请综合参考这些部门的规划目标进行分析。`;
   }
 
+  // ═══ 源表错误提示 ═══
+  if (d._sourceErrors && d._sourceErrors.length) {
+    prompt += `
+
+⚠ 数据质量警告：该部门源表检测到公式错误。请在分析结论中明确说明"检测到源表数据异常，以下分析基于可解析数据"，不要忽视或掩盖数据问题。`;
+  }
+
   return prompt;
 }
 
@@ -2822,6 +3160,15 @@ function renderReport(ai,d) {
   h += '<div class="rcard-wk">'+(d.curWeek||'')+'</div></div>';
   h += '<span class="rpill '+RAG[rag].cls+'">'+RAG[rag].label+'</span>';
   h += '</div>';
+
+  // ═══ 源表错误提示 ═══
+  if (d._sourceErrors && d._sourceErrors.length) {
+    h += '<div style="padding:0 20px 10px">';
+    d._sourceErrors.forEach(function(err){
+      h += '<div style="font-size:12px;color:var(--A);background:var(--Abg);padding:8px 12px;border-radius:6px;margin-bottom:4px;line-height:1.5">'+escapeHtml(err)+'</div>';
+    });
+    h += '</div>';
+  }
 
   // 核心结论
   if (ai.summary) {
@@ -2967,6 +3314,18 @@ function buildReportTabs() {
   const dataDepts = parsedDepts.filter(d => !d.isTaskDept);
   const taskDepts = parsedDepts.filter(d => d.isTaskDept);
   
+  // ═══ 部门固定排序 ═══
+  const DEPT_ORDER = ['tmall','jd','pdd','douyin','live','kol','biz_g2','biz_g3','brand','brandVideo','video','key','cross','paa','keve','ec1','ec2','ec3','ec4','ec5','ec6','ec7','biz_g1','biz_g4','purchase','visual','productBiz2','hr','it','finance','warehouse','cs','other'];
+  const sortDepts = (depts) => {
+    return depts.sort((a, b) => {
+      const ai = DEPT_ORDER.indexOf(a.dept);
+      const bi = DEPT_ORDER.indexOf(b.dept);
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    });
+  };
+  sortDepts(dataDepts);
+  sortDepts(taskDepts);
+  
   // 数据报告 Tab
   const tabsEl = document.getElementById('rtabs');
   tabsEl.innerHTML = dataDepts.map(d => {
@@ -2975,7 +3334,7 @@ function buildReportTabs() {
     return '<button class="rt" id="rt-'+d.dept+'" onclick="showRpt(\'' + d.dept + '\')"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span>'+d.deptName+'</button>';
   }).join('');
   
-  // 盯盘报告区域（独立显示在数据报告下方）
+  // 盯盘报告区域
   const taskArea = document.getElementById('task-rpt-area');
   if (taskArea) {
     if (taskDepts.length > 0) {
@@ -2991,7 +3350,7 @@ function buildReportTabs() {
     }
   }
   
-  // 默认选中第一个
+  // 默认选中第一个（排序后的第一个）
   if (dataDepts.length) showRpt(dataDepts[0].dept);
   else if (taskDepts.length) showTaskRpt(taskDepts[0].dept);
 }
@@ -3275,4 +3634,3 @@ function renderHist() {
 })();
 </script>
 </body>
-    return '<button class="rt" id="rt-'+d.dept+'" onclick="showRpt(\'' + d.dept + '\')"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span>'+d.deptName+'</button>';
