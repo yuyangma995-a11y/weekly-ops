@@ -2399,17 +2399,53 @@ function buildBusinessSummaryData(rows, dept, filename) {
   const hIdx = findBusinessSummaryHeader(rows);
   if (hIdx < 0) return null;
   const header = rows[hIdx] || [];
+  
+  // 列检测：有标准F3关键词就用精确匹配，否则fallback到按模式识别
   const metricCol = headerCol(header, [/周数据汇总/]);
   const groupCol = headerCol(header, [/类目组/]);
   const platformCol = headerCol(header, [/平台/]);
-  const prevCol = headerCol(header, [/上周数据/]);
-  const curCol = headerCol(header, [/本周数据/]);
+  let prevCol = headerCol(header, [/上周数据/]);
+  let curCol = headerCol(header, [/本周数据/]);
   const deltaValCol = headerCol(header, [/周差异值/, /环比.*值/]);
   const deltaRateCol = headerCol(header, [/周差异率/, /环比.*率/]);
   const accCol = headerCol(header, [/累计/]);
   const targetCol = headerCol(header, [/月目标/, /目标/]);
   const compCol = headerCol(header, [/完成率/]);
-  if (metricCol < 0 || curCol < 0 || (groupCol < 0 && platformCol < 0)) return null;
+
+  // ═══ fallback: 当关键词找不到时，按模式识别 ═══
+  const useMetricCol = metricCol >= 0 ? metricCol : 0;  // 没标明指标列就用Col A
+  
+  // fallback 日期列：找所有匹配日期模式的列，排除已知功能列
+  if (curCol < 0) {
+    const dateCols = [];
+    for (let ci = 1; ci < header.length; ci++) {
+      const s = String(header[ci] || '').replace(/\n/g,'').trim();
+      const isDate = /\d+\.\d+/.test(s) || /\d+月\d+日/.test(s);
+      if (!isDate) continue;
+      // 排除含"环比""累计""目标""完成率"的列
+      if (s.includes('环比') || s.includes('累计') || s.includes('目标') || s.includes('完成率')) continue;
+      dateCols.push({ci, label: s});
+    }
+    dateCols.sort((a,b) => a.ci - b.ci);
+    if (dateCols.length >= 1) {
+      curCol = dateCols[dateCols.length - 1].ci;  // 最右边的日期列=本周
+      prevCol = dateCols.length >= 2 ? dateCols[dateCols.length - 2].ci : -1;
+    }
+  }
+
+  // 没有groupCol/platformCol时自动用分组标题检测
+  const hasGrouping = groupCol >= 0 || platformCol >= 0;
+
+  // ═══ fallback 排除：这些格式不是F3，跳过到对应的专用解析器 ═══
+  if (!hasGrouping) {
+    const headerText = header.map(v => String(v||'')).join(' ');
+    // 排除1: 有"直播间"或"账号"列 → 直播部/事业二群等F1格式
+    if (/直播间账号|账号/.test(headerText)) return null;
+    // 排除2: Col0="店铺"且Col1="指标名称" → 达人部/品牌视频部等F4双主键格式
+    if (String(header[0]||'').includes('店铺') && String(header[1]||'').includes('指标')) return null;
+  }
+
+  if (useMetricCol < 0 || curCol < 0) return null;
 
   const result = {
     dept,
@@ -2421,67 +2457,230 @@ function buildBusinessSummaryData(rows, dept, filename) {
     subGroups: [],
     rankData: []
   };
+
+  // ═══ 检测并跳过分组标题行 ═══
+  const GROUP_HEADER_KEYS = new Set();
   let currentMetric = '';
-  for (let ri=hIdx+1;ri<rows.length;ri++) {
+  let isAfterGroupHeader = false;  // 当前是否在分组标题下方
+  let groupHeaderLabel = '';       // 当前分组标题名
+
+  for (let ri=hIdx+1; ri<rows.length; ri++) {
     const row = rows[ri] || [];
-    const metricCell = row[metricCol] ? String(row[metricCol]).replace(/\n/g,'').trim() : '';
+    const metricCell = row[useMetricCol] ? String(row[useMetricCol]).replace(/\n/g,'').trim() : '';
     if (metricCell) currentMetric = metricCell;
     if (!currentMetric) continue;
 
-    const group = groupCol >= 0 && row[groupCol] ? String(row[groupCol]).replace(/\n/g,'').trim() : '';
-    const platform = platformCol >= 0 && row[platformCol] ? String(row[platformCol]).replace(/\n/g,'').trim() : '';
-    const name = platform || group;
-    if (!name) continue;
+    if (hasGrouping) {
+      // 标准F3：用类目组/平台列分组
+      const group = groupCol >= 0 && row[groupCol] ? String(row[groupCol]).replace(/\n/g,'').trim() : '';
+      const platform = platformCol >= 0 && row[platformCol] ? String(row[platformCol]).replace(/\n/g,'').trim() : '';
+      const name = platform || group;
+      if (!name) continue;
 
-    const curRaw = curCol >= 0 ? parseMetricNumber(row[curCol]) : null;
-    const prevRaw = prevCol >= 0 ? parseMetricNumber(row[prevCol]) : null;
-    const accRaw = accCol >= 0 ? parseMetricNumber(row[accCol]) : null;
-    const targetRaw = targetCol >= 0 ? parseMetricNumber(row[targetCol]) : null;
-    const compRaw = compCol >= 0 ? parseMetricNumber(row[compCol]) : null;
-    if (curRaw===null && prevRaw===null && accRaw===null && targetRaw===null && compRaw===null) continue;
+      const curRaw = curCol >= 0 ? parseMetricNumber(row[curCol]) : null;
+      const prevRaw = prevCol >= 0 ? parseMetricNumber(row[prevCol]) : null;
+      const accRaw = accCol >= 0 ? parseMetricNumber(row[accCol]) : null;
+      const targetRaw = targetCol >= 0 ? parseMetricNumber(row[targetCol]) : null;
+      const compRaw = compCol >= 0 ? parseMetricNumber(row[compCol]) : null;
+      if (curRaw===null && prevRaw===null && accRaw===null && targetRaw===null && compRaw===null) continue;
 
-    const deltaRate = deltaRateCol >= 0
-      ? fmtRateCell(row[deltaRateCol])
-      : (prevRaw!==null && curRaw!==null && prevRaw!==0 ? ((curRaw-prevRaw)/Math.abs(prevRaw)*100).toFixed(1)+'%' : null);
-    const deltaValue = deltaValCol >= 0 ? fmtMetricDelta(currentMetric, row[deltaValCol]) : null;
-    const curVal = curRaw!==null ? fmtMetricCell(currentMetric, curRaw) : null;
-    const prevVal = prevRaw!==null ? fmtMetricCell(currentMetric, prevRaw) : null;
-    const completion = compRaw!==null ? fmtRateCell(compRaw) : null;
-    const target = targetRaw!==null ? fmtMetricCell(currentMetric, targetRaw) : null;
-    const trend = (prevRaw!==null && curRaw!==null) ? (curRaw >= prevRaw ? 'up' : 'down') : 'flat';
+      const deltaRate = deltaRateCol >= 0
+        ? fmtRateCell(row[deltaRateCol])
+        : (prevRaw!==null && curRaw!==null && prevRaw!==0 ? ((curRaw-prevRaw)/Math.abs(prevRaw)*100).toFixed(1)+'%' : null);
+      const curVal = curRaw!==null ? fmtMetricCell(currentMetric, curRaw) : null;
+      const prevVal = prevRaw!==null ? fmtMetricCell(currentMetric, prevRaw) : null;
+      const completion = compRaw!==null ? fmtRateCell(compRaw) : null;
+      const target = targetRaw!==null ? fmtMetricCell(currentMetric, targetRaw) : null;
+      const trend = (prevRaw!==null && curRaw!==null) ? (curRaw >= prevRaw ? 'up' : 'down') : 'flat';
 
-    if (name === '合计') {
-      if (curRaw===null) continue;
-      result.metrics.push({
-        label: currentMetric,
-        trend,
-        curVal,
-        prevVal,
-        rawCur: curRaw,
-        rawPrev: prevRaw,
-        deltaRate: deltaRate || deltaValue,
-        completion,
-        target,
-        accum: accRaw!==null ? fmtMetricCell(currentMetric, accRaw) : null
-      });
+      if (name === '合计') {
+        if (curRaw===null) continue;
+        result.metrics.push({ label: currentMetric, trend, curVal, prevVal, rawCur: curRaw, rawPrev: prevRaw, deltaRate: deltaRate || '', completion, target, accum: accRaw!==null ? fmtMetricCell(currentMetric, accRaw) : null });
+      } else {
+        result.subGroups.push({ metric: currentMetric, account: name, group: group || null, platform: platform || null, curVal, prevVal, rawCur: curRaw, rawPrev: prevRaw, completion, target, deltaRate, deltaValue: null });
+      }
     } else {
-      result.subGroups.push({
-        metric: currentMetric,
-        account: name,
-        group: group || null,
-        platform: platform || null,
-        curVal,
-        prevVal,
-        rawCur: curRaw,
-        rawPrev: prevRaw,
-        completion,
-        target,
-        deltaRate,
-        deltaValue
-      });
+      // ═══ 无类目组/平台列 → 用分组标题行检测 ═══
+      // 检查当前行是否是分组标题（Col1有值但所有数据列为空）
+      const isGroupHeader = (() => {
+        if (!metricCell) return false;
+        for (let ci = 1; ci < Math.min(20, row.length); ci++) {
+          if (row[ci] !== null && row[ci] !== undefined && String(row[ci]).trim() !== '') return false;
+        }
+        return true;
+      })();
+
+      if (isGroupHeader) {
+        GROUP_HEADER_KEYS.add(metricCell);
+        isAfterGroupHeader = true;
+        groupHeaderLabel = metricCell;
+        continue;
+      }
+
+      // 跳过已被标记为分组标题的行
+      if (GROUP_HEADER_KEYS.has(metricCell)) continue;
+
+      const curRaw = curCol >= 0 ? parseMetricNumber(row[curCol]) : null;
+      const prevRaw = prevCol >= 0 ? parseMetricNumber(row[prevCol]) : null;
+      if (curRaw===null && prevRaw===null) continue;
+
+      const curVal = curRaw!==null ? fmtMetricCell(currentMetric, curRaw) : null;
+      const prevVal = prevRaw!==null ? fmtMetricCell(currentMetric, prevRaw) : null;
+      const deltaRate = prevRaw && curRaw ? ((curRaw-prevRaw)/Math.abs(prevRaw)*100).toFixed(1)+'%' : null;
+      const comp = compCol >= 0 ? fmtRateCell(row[compCol]) : null;
+      const tgt = targetCol >= 0 ? fmtMetricCell(currentMetric, row[targetCol]) : null;
+      const trend = (prevRaw!==null && curRaw!==null) ? (curRaw >= prevRaw ? 'up' : 'down') : 'flat';
+
+      if (isAfterGroupHeader) {
+        // 在分组标题下方 → 进 subGroups
+        result.subGroups.push({ metric: groupHeaderLabel, account: currentMetric, group: null, platform: null, curVal, prevVal, rawCur: curRaw, rawPrev: prevRaw, completion: comp, target: tgt, deltaRate, deltaValue: null });
+      } else {
+        // 未进入分组 → 进 metrics
+        result.metrics.push({ label: currentMetric, trend, curVal, prevVal, rawCur: curRaw, rawPrev: prevRaw, deltaRate: deltaRate || '', completion: comp, target: tgt, accum: accCol >= 0 ? fmtMetricCell(currentMetric, row[accCol]) : null });
+      }
     }
   }
+
+  // ★ Patch 10: 在 return 之前调用 ★
+  reconcileShopLevelRates(result);
   return result.metrics.length || result.subGroups.length ? result : null;
+}
+
+// ══════════════════════════════════════════
+// Patch 10: 店铺级率指标分部数据加权重算
+// 解决 cached value 与公式真实结果不一致问题
+// ══════════════════════════════════════════
+
+const PATCH10_RATE_KEYWORDS = [
+  /经营净利润率/, /净利润率/, /利润率/,
+  /成本率/,
+  /推广费率/, /推广费用率/, /推广率/, /推广占比/,
+  /付费占比/, /付费率/,
+  /费比/, /费用率/,
+  /ROI/i,
+  /占比/, /率/
+];
+
+const PATCH10_RATE_EXCLUDE = [
+  /金额/, /销售净额/, /净销售额/, /销售额/, /利润额/, /目标额/
+];
+
+const PATCH10_SALES_KEYWORDS = [/销售净额/, /净销售额/];
+
+const PATCH10_DIFF_THRESHOLD = 0.001;  // 0.1pct 绝对差（只要略微偏离就重算）
+
+function patch10_isRateMetric(label) {
+  if (!label) return false;
+  const s = String(label);
+  if (PATCH10_RATE_EXCLUDE.some(re => re.test(s))) return false;
+  return /率|占比|ROI/i.test(s);
+}
+
+function patch10_extractRateKeyword(label) {
+  if (!label) return null;
+  const s = String(label);
+  for (const re of PATCH10_RATE_KEYWORDS) {
+    const m = s.match(re);
+    if (m) return m[0];
+  }
+  return null;
+}
+
+function patch10_weightedAverage(weights, rates) {
+  if (!weights || !rates || weights.length !== rates.length || weights.length === 0) return null;
+  let weightSum = 0, weightedRateSum = 0;
+  for (let i = 0; i < weights.length; i++) {
+    const w = parseFloat(weights[i]);
+    const rt = parseFloat(rates[i]);
+    if (isNaN(w) || isNaN(rt) || w <= 0) continue;
+    weightSum += w;
+    weightedRateSum += w * rt;
+  }
+  if (weightSum === 0) return null;
+  return weightedRateSum / weightSum;
+}
+
+function patch10_fmtRate(n) {
+  if (n === null || isNaN(n)) return null;
+  const pct = Math.abs(n) <= 1 ? n * 100 : n;
+  return pct.toFixed(1) + '%';
+}
+
+function reconcileShopLevelRates(r) {
+  if (!r || !Array.isArray(r.metrics) || !Array.isArray(r.subGroups)) return;
+  if (r.subGroups.length === 0) return;
+
+  // 按 subGroup.account 分组（同一分组标题下的数据）
+  // 注意：subGroups[i].metric 是分组标题（如"星宇部门销售数据"），
+  // subGroups[i].account 才是具体指标名（如"星宇部销售净额"）
+  const groups = {};
+  for (const sg of r.subGroups) {
+    const key = sg.metric || '__nogroup__';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(sg);
+  }
+
+  for (const m of r.metrics) {
+    if (!patch10_isRateMetric(m.label)) continue;
+    const keyword = patch10_extractRateKeyword(m.label);
+    if (!keyword) continue;
+
+    // 在每个分组里找"销售净额子项"和"率子项"
+    const weights = [];
+    const rates = [];
+    const components = [];
+    for (const gkey in groups) {
+      const items = groups[gkey];
+      // 找销售净额（权重）
+      const salesItem = items.find(it =>
+        PATCH10_SALES_KEYWORDS.some(re => re.test(String(it.account || '')))
+      );
+      // 找率（值），关键词必须出现在 account 里
+      const rateItem = items.find(it => {
+        const acc = String(it.account || '');
+        return acc.includes(keyword) &&
+               !PATCH10_RATE_EXCLUDE.some(re => re.test(acc));
+      });
+      if (!salesItem || !rateItem) continue;
+      const w = parseFloat(salesItem.rawCur);
+      const rt = parseFloat(rateItem.rawCur);
+      if (isNaN(w) || isNaN(rt) || w <= 0) continue;
+      weights.push(w);
+      rates.push(rt);
+      components.push({ account: salesItem.account, weight: w, rate: rt, rateAccount: rateItem.account });
+    }
+
+    if (weights.length === 0) continue;
+
+    const recomputed = patch10_weightedAverage(weights, rates);
+    if (recomputed === null) continue;
+
+    const original = parseFloat(m.rawCur);
+    if (isNaN(original)) continue;
+
+    const diff = Math.abs(original - recomputed);
+    if (diff < PATCH10_DIFF_THRESHOLD) continue;
+
+    // 执行替换
+    m._reconciled = {
+      original: original,
+      recomputed: recomputed,
+      reason: '源表 cached value 与分部数据加权计算偏差 > 3pct，已用分部数据重算',
+      components: components
+    };
+    m.rawCur = recomputed;
+    m.curVal = patch10_fmtRate(recomputed);
+
+    // 异常列表
+    if (!r._dataQualityIssues) r._dataQualityIssues = [];
+    r._dataQualityIssues.push({
+      metricLabel: m.label,
+      original: original,
+      recomputed: recomputed,
+      diffPct: +(diff * 100).toFixed(2),
+      reason: '源表 cached value 与分部数据加权偏差 ' + (diff * 100).toFixed(2) + 'pct，已用分部数据重算。建议联系部门同学打开文件后按 Ctrl+Shift+F9 强制重算并保存。'
+    });
+  }
 }
 
 function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
@@ -2517,6 +2716,8 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
   const businessSummary = buildBusinessSummaryData(rows, dept, filename);
   if (businessSummary) {
     businessSummary._sourceErrors = r._sourceErrors;
+    // ═══ 主动重算过期的公式缓存值 ═══
+    reconcileShopLevelRates(businessSummary);
     return businessSummary;
   }
 
@@ -2703,6 +2904,8 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
       r.metrics.push({label:metric,curVal:fmtM(agg.cur),prevVal:fmtM(agg.prev),rawCur:agg.cur,rawPrev:agg.prev,deltaRate:dr,completion:agg.comp,target:null,accum:null,trend:agg.prev?(agg.cur>=agg.prev?'up':'down'):'flat'});
     }
   }
+  // ★ Patch 10: 在 return r 之前调用 ★
+  reconcileShopLevelRates(r);
   return r;
 }
 
@@ -2960,7 +3163,12 @@ async function runAll() {
     try {
       const parsed = await parseExcel(pendingFiles[i]);
       if (Array.isArray(parsed)) {
-        parsed.forEach(d => parsedDepts.push(d));
+        parsed.forEach(d => {
+          // 去重：同部门代码且非盯盘时替换
+          const existing = parsedDepts.findIndex(x => x.dept === d.dept && !x.isTaskDept);
+          if (existing >= 0) parsedDepts[existing] = d;
+          else parsedDepts.push(d);
+        });
       } else {
         // 如果已有同部门的数据，替换它
         const existing = parsedDepts.findIndex(d => d.dept === parsed.dept && !d.isTaskDept);
@@ -3346,6 +3554,23 @@ function renderReport(ai,d) {
     h += '</div>';
   }
 
+  // ═══ 数据质量异常（Patch 10 缓存值重算）═══
+  if (d._dataQualityIssues && d._dataQualityIssues.length) {
+    h += '<details style="margin:0 20px 12px;padding:8px 12px;background:#fff7e6;border-left:3px solid #faad14;font-size:13px;border-radius:4px">';
+    h += '<summary style="cursor:pointer;font-weight:600;color:#d46b08;font-size:12px">';
+    h += '⚠️ 数据质量异常 (' + d._dataQualityIssues.length + ' 项)，已自动修正</summary>';
+    h += '<ul style="margin:8px 0 0;padding-left:20px">';
+    d._dataQualityIssues.forEach(function(issue){
+      var origPct = (Math.abs(issue.original) <= 1 ? (issue.original * 100) : issue.original).toFixed(1) + '%';
+      var recPct = (Math.abs(issue.recomputed) <= 1 ? (issue.recomputed * 100) : issue.recomputed).toFixed(1) + '%';
+      h += '<li style="margin-bottom:6px;font-size:12px;color:var(--ink2);line-height:1.5">';
+      h += '<strong>' + escapeHtml(issue.metricLabel) + '</strong>：源表缓存值 ' + origPct + ' → 重算值 ' + recPct + '（偏差 ' + issue.diffPct + 'pct）';
+      h += '<br><span style="color:#666;font-size:11px">' + escapeHtml(issue.reason) + '</span>';
+      h += '</li>';
+    });
+    h += '</ul></details>';
+  }
+
   // 核心结论
   if (ai.summary) {
     h += '<div style="padding:11px 15px;background:var(--brand-bg);border-radius:10px;margin-bottom:14px;font-size:13px;color:#1E40AF;line-height:1.75;border-left:3px solid var(--brand)">';
@@ -3487,27 +3712,33 @@ function buildFallback(d) {
 // 报告 Tab
 // ══════════════════════════════════════════
 function buildReportTabs() {
-  const dataDepts = parsedDepts.filter(d => !d.isTaskDept);
+  // ═══ 去重：同部门代码只保留最新一个 ═══
+  const deptMap = {};
+  parsedDepts.filter(d => !d.isTaskDept).forEach(d => { deptMap[d.dept] = d; });
+  let dataDepts = Object.values(deptMap);
   const taskDepts = parsedDepts.filter(d => d.isTaskDept);
   
   // ═══ 部门固定排序 ═══
   const DEPT_ORDER = ['tmall','jd','pdd','douyin','live','kol','biz_g2','biz_g3','brand','brandVideo','video','key','cross','paa','keve','ec1','ec2','ec3','ec4','ec5','ec6','ec7','biz_g1','biz_g4','purchase','visual','productBiz2','hr','it','finance','warehouse','cs','other'];
-  const sortDepts = (depts) => {
-    return depts.sort((a, b) => {
-      const ai = DEPT_ORDER.indexOf(a.dept);
-      const bi = DEPT_ORDER.indexOf(b.dept);
-      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-    });
-  };
-  sortDepts(dataDepts);
-  sortDepts(taskDepts);
+  dataDepts.sort((a, b) => {
+    const ai = DEPT_ORDER.indexOf(a.dept);
+    const bi = DEPT_ORDER.indexOf(b.dept);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+  taskDepts.sort((a, b) => {
+    const ai = DEPT_ORDER.indexOf(a.dept);
+    const bi = DEPT_ORDER.indexOf(b.dept);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
   
-  // 数据报告 Tab
+  // 数据报告 Tab — 带序号
   const tabsEl = document.getElementById('rtabs');
-  tabsEl.innerHTML = dataDepts.map(d => {
+  tabsEl.innerHTML = dataDepts.map((d, i) => {
     const ragRaw = (d._rag||'g').toLowerCase().trim();
     const rag = ['r','a','g'].includes(ragRaw) ? ragRaw : 'g';
-    return '<button class="rt" id="rt-'+d.dept+'" onclick="showRpt(\'' + d.dept + '\')"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span>'+d.deptName+'</button>';
+    return '<button class="rt" id="rt-'+d.dept+'" onclick="showRpt(\'' + d.dept + '\')">' +
+      '<span class="rt-dot" style="background:'+RAG[rag].color+'"></span>' +
+      '<span style="font-size:10px;color:var(--ink3);margin-right:2px">'+(i+1)+'.</span>'+d.deptName+'</button>';
   }).join('');
   
   // 盯盘报告区域
@@ -3515,10 +3746,10 @@ function buildReportTabs() {
   if (taskArea) {
     if (taskDepts.length > 0) {
       taskArea.style.display = 'block';
-      const taskTabsHtml = taskDepts.map(d => {
+      const taskTabsHtml = taskDepts.map((d, j) => {
         const ragRaw = (d._rag||'g').toLowerCase().trim();
         const rag = ['r','a','g'].includes(ragRaw) ? ragRaw : 'g';
-        return '<button class="rt" id="taskrt-'+d.dept+'" onclick="showTaskRpt(\'' + d.dept + '\')"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span>'+d.deptName+'</button>';
+        return '<button class="rt" id="taskrt-'+d.dept+'" onclick="showTaskRpt(\'' + d.dept + '\')"><span class="rt-dot" style="background:'+RAG[rag].color+'"></span><span style="font-size:10px;color:var(--ink3);margin-right:2px">'+(j+1)+'.</span>'+d.deptName+'</button>';
       }).join('');
       document.getElementById('task-rtabs').innerHTML = taskTabsHtml;
     } else {
