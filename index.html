@@ -2672,6 +2672,19 @@ function buildBusinessSummaryData(rows, dept, filename) {
   for (let ri=hIdx+1; ri<rows.length; ri++) {
     const row = rows[ri] || [];
     const metricCell = row[useMetricCol] ? String(row[useMetricCol]).replace(/\n/g,'').trim() : '';
+    const fullRowLabel = rowText(row).replace(/\s/g, '');
+    const rowHasDataValue = [prevCol, curCol, accCol, targetCol, compCol].some(function(ci) {
+      return ci >= 0 && parseMetricNumber(row[ci]) !== null;
+    });
+    if (!hasGrouping && /部门销售数据/.test(fullRowLabel) && !rowHasDataValue) {
+      const headerMatch = fullRowLabel.match(/[\u4e00-\u9fa5A-Za-z0-9_-]*部门销售数据/);
+      const cleanGroupHeader = headerMatch ? headerMatch[0] : fullRowLabel;
+      GROUP_HEADER_KEYS.add(cleanGroupHeader);
+      isAfterGroupHeader = true;
+      groupHeaderLabel = cleanGroupHeader;
+      currentMetric = '';
+      continue;
+    }
     if (metricCell) currentMetric = metricCell;
     if (!currentMetric) continue;
 
@@ -2700,9 +2713,9 @@ function buildBusinessSummaryData(rows, dept, filename) {
 
       if (name === '合计') {
         if (curRaw===null) continue;
-        result.metrics.push({ label: currentMetric, trend, curVal, prevVal, rawCur: curRaw, rawPrev: prevRaw, deltaRate: deltaRate || '', completion, target, accum: accRaw!==null ? fmtMetricCell(currentMetric, accRaw) : null });
+        result.metrics.push({ label: currentMetric, trend, curVal, prevVal, rawCur: curRaw, rawPrev: prevRaw, rawAccum: accRaw, rawTarget: targetRaw, rawCompletion: compRaw, deltaRate: deltaRate || '', completion, target, accum: accRaw!==null ? fmtMetricCell(currentMetric, accRaw) : null });
       } else {
-        result.subGroups.push({ metric: currentMetric, account: name, group: group || null, platform: platform || null, curVal, prevVal, rawCur: curRaw, rawPrev: prevRaw, completion, target, deltaRate, deltaValue: null });
+        result.subGroups.push({ metric: currentMetric, account: name, group: group || null, platform: platform || null, curVal, prevVal, rawCur: curRaw, rawPrev: prevRaw, rawAccum: accRaw, rawTarget: targetRaw, rawCompletion: compRaw, accum: accRaw!==null ? fmtMetricCell(currentMetric, accRaw) : null, completion, target, deltaRate, deltaValue: null });
       }
     } else {
       // ═══ 无类目组/平台列 → 用分组标题行检测 ═══
@@ -2734,14 +2747,17 @@ function buildBusinessSummaryData(rows, dept, filename) {
       const deltaRate = prevRaw && curRaw ? ((curRaw-prevRaw)/Math.abs(prevRaw)*100).toFixed(1)+'%' : null;
       const comp = compCol >= 0 ? fmtRateCell(row[compCol]) : null;
       const tgt = targetCol >= 0 ? fmtMetricCell(currentMetric, row[targetCol]) : null;
+      const accRaw = accCol >= 0 ? parseMetricNumber(row[accCol]) : null;
+      const tgtRaw = targetCol >= 0 ? parseMetricNumber(row[targetCol]) : null;
+      const compRaw = compCol >= 0 ? parseMetricNumber(row[compCol]) : null;
       const trend = (prevRaw!==null && curRaw!==null) ? (curRaw >= prevRaw ? 'up' : 'down') : 'flat';
 
       if (isAfterGroupHeader) {
         // 在分组标题下方 → 进 subGroups
-        result.subGroups.push({ metric: groupHeaderLabel, account: currentMetric, group: null, platform: null, curVal, prevVal, rawCur: curRaw, rawPrev: prevRaw, completion: comp, target: tgt, deltaRate, deltaValue: null });
+        result.subGroups.push({ metric: groupHeaderLabel, account: currentMetric, group: null, platform: null, curVal, prevVal, rawCur: curRaw, rawPrev: prevRaw, rawAccum: accRaw, rawTarget: tgtRaw, rawCompletion: compRaw, accum: accRaw!==null ? fmtMetricCell(currentMetric, accRaw) : null, completion: comp, target: tgt, deltaRate, deltaValue: null });
       } else {
         // 未进入分组 → 进 metrics
-        result.metrics.push({ label: currentMetric, trend, curVal, prevVal, rawCur: curRaw, rawPrev: prevRaw, deltaRate: deltaRate || '', completion: comp, target: tgt, accum: accCol >= 0 ? fmtMetricCell(currentMetric, row[accCol]) : null });
+        result.metrics.push({ label: currentMetric, trend, curVal, prevVal, rawCur: curRaw, rawPrev: prevRaw, rawAccum: accRaw, rawTarget: tgtRaw, rawCompletion: compRaw, deltaRate: deltaRate || '', completion: comp, target: tgt, accum: accRaw!==null ? fmtMetricCell(currentMetric, accRaw) : null });
       }
     }
   }
@@ -2765,7 +2781,7 @@ const PATCH10_RATE_KEYWORDS = [
 ];
 
 const PATCH10_RATE_EXCLUDE = [
-  /金额/, /销售净额/, /净销售额/, /销售额/, /利润额/, /目标额/
+  /完成率/, /金额/, /销售净额/, /净销售额/, /销售额/, /利润额/, /目标额/
 ];
 
 const PATCH10_SALES_KEYWORDS = [/销售净额/, /净销售额/];
@@ -2816,6 +2832,69 @@ function patch10_isProfitCompletionLabel(label) {
   const s = String(label || '');
   return /经营净利润/.test(s) && (/只填写.*完成率|完成率/.test(s));
 }
+function accountLooksLikeMetric(name) {
+  return /销售净额|净销售额|销售额|成本率|成本费用率|推广费率|推广率|推广占比|付费占比|付费率|经营净利润|净利润|利润率|利润额|边界利润|货品成本|完成率/.test(String(name || ''));
+}
+function kpiMetricText(x) {
+  if (!x) return '';
+  if (x.label) return String(x.label);
+  if (accountLooksLikeMetric(x.account)) return String(x.account);
+  return String(x.metric || x.account || '');
+}
+function isCoreSalesMetric(x) {
+  const s = kpiMetricText(x);
+  return /销售净额|净销售额|销售额/.test(s) && !/类目|店铺排名|排名/.test(s);
+}
+function isCostRateMetric(x) {
+  return /成本率|成本费用率/.test(kpiMetricText(x));
+}
+function isPaidRateMetric(x) {
+  return /推广费率|推广率|推广占比|付费占比|付费率/.test(kpiMetricText(x));
+}
+function isProfitCompletionMetric(x) {
+  const s = kpiMetricText(x);
+  return /经营净利润完成率|净利润完成率|利润完成率/.test(s);
+}
+function isProfitRateMetric(x) {
+  const s = kpiMetricText(x);
+  return /经营净利润率|净利润率|利润率/.test(s) && !isProfitCompletionMetric(x);
+}
+function isProfitAmountMetric(x) {
+  const s = kpiMetricText(x);
+  return /经营净利润|净利润|利润额/.test(s) && !/率|完成率|占比/.test(s);
+}
+function isPseudoAccountName(name) {
+  const s = String(name || '').trim();
+  return !s || /^组别$|^账号$|^店铺$|^类目$|^平台$|^合计$|^总计$/.test(s);
+}
+function kpiNumber(v) {
+  const n = parseMetricNumber(v);
+  return n === null || isNaN(n) ? null : n;
+}
+function rawKpiNumber(item, displayKey, rawKey) {
+  const raw = item && rawKey ? kpiNumber(item[rawKey]) : null;
+  if (raw !== null) return raw;
+  return item && displayKey ? kpiNumber(item[displayKey]) : null;
+}
+function completionFromAccumTarget(accum, target) {
+  if (accum === null || target === null || target === 0) return null;
+  return fmtRateCell(accum / target);
+}
+function fmtKpiAmount(n) {
+  return n === null ? '未填写' : fmtM(n);
+}
+function fmtKpiRate(n) {
+  return n === null ? '未填写' : patch10_fmtRate(n);
+}
+function kpiStatusFromCompletion(v) {
+  const n = kpiNumber(v);
+  if (n === null) return 'missing';
+  if (n < 0) return 'bad';
+  return 'ok';
+}
+function makeStdKpi(label, value, sub, status, extra) {
+  return Object.assign({ label, value: value || '未填写', sub: sub || '', status: status || 'neutral' }, extra || {});
+}
 function normalizeMetricLabelsForAI(r) {
   if (!r) return;
   const normalize = function(item, key) {
@@ -2836,6 +2915,42 @@ function normalizeMetricLabelsForAI(r) {
     normalize(sg, 'account');
   });
 }
+function sanitizeProfitCompletionRows(r) {
+  if (!r) return;
+  const fix = function(item) {
+    if (!item || !isProfitCompletionMetric(item)) return;
+    const comp = kpiNumber(item.completion);
+    const cur = kpiNumber(item.rawCur);
+    if (comp !== null && cur !== null && Math.abs(cur) > 2) {
+      item._rawProfitAmount = cur;
+      item.rawCur = comp;
+      item.curVal = fmtRateCell(comp);
+    }
+    const accum = rawKpiNumber(item, 'accum', 'rawAccum');
+    if (comp !== null && accum !== null && Math.abs(accum) > 2) {
+      item._rawProfitAccumAmount = accum;
+      item.rawAccum = null;
+      item.accum = null;
+    }
+    const target = rawKpiNumber(item, 'target', 'rawTarget');
+    if (target !== null && Math.abs(target) > 2) {
+      item._rawProfitTargetAmount = target;
+      item.target = fmtM(target);
+    }
+  };
+  (r.metrics || []).forEach(fix);
+  (r.subGroups || []).forEach(fix);
+  const fixProfitRateTarget = function(item) {
+    if (!item || !isProfitRateMetric(item)) return;
+    const target = rawKpiNumber(item, 'target', 'rawTarget');
+    if (target !== null && Math.abs(target) > 2) {
+      item._rawProfitTargetAmount = target;
+      item.target = fmtM(target);
+    }
+  };
+  (r.metrics || []).forEach(fixProfitRateTarget);
+  (r.subGroups || []).forEach(fixProfitRateTarget);
+}
 
 function reconcileShopLevelRates(r) {
   if (!r || !Array.isArray(r.metrics) || !Array.isArray(r.subGroups)) return;
@@ -2853,6 +2968,7 @@ function reconcileShopLevelRates(r) {
 
   for (const m of r.metrics) {
     if (!patch10_isRateMetric(m.label)) continue;
+    if (!/店铺|平台|部门/.test(String(m.label || ''))) continue;
     const keyword = patch10_extractRateKeyword(m.label);
     if (!keyword) continue;
 
@@ -2953,12 +3069,105 @@ function rebuildAccountLevelSummaryRates(r) {
   });
 }
 
+function cleanDisplayRows(r) {
+  if (!r || !Array.isArray(r.subGroups)) return;
+  r.subGroups = r.subGroups.filter(function(sg) {
+    if (isPseudoAccountName(sg.account)) return false;
+    const cur = kpiNumber(sg.rawCur);
+    const prev = kpiNumber(sg.rawPrev);
+    const tgt = kpiNumber(sg.target);
+    const comp = kpiNumber(sg.completion);
+    return cur !== null || prev !== null || tgt !== null || comp !== null;
+  }).map(function(sg) {
+    const metricName = kpiMetricText(sg);
+    sg.curVal = fmtMetricCell(metricName, sg.rawCur);
+    sg.prevVal = fmtMetricCell(metricName, sg.rawPrev);
+    if (sg.rawAccum !== undefined && sg.rawAccum !== null) sg.accum = fmtMetricCell(metricName, sg.rawAccum);
+    if (sg.rawTarget !== undefined && sg.rawTarget !== null) sg.target = fmtMetricCell(metricName, sg.rawTarget);
+    return sg;
+  });
+}
+function weightedSubGroupRate(r, tester) {
+  const salesByAccount = {};
+  (r.subGroups || []).forEach(function(sg) {
+    if (isCoreSalesMetric(sg)) {
+      const n = kpiNumber(sg.rawCur);
+      if (n !== null && n > 0) salesByAccount[sg.account] = n;
+    }
+  });
+  const weights = [], rates = [];
+  (r.subGroups || []).forEach(function(sg) {
+    if (!tester(sg)) return;
+    const w = salesByAccount[sg.account];
+    const rt = kpiNumber(sg.rawCur);
+    if (w > 0 && rt !== null) { weights.push(w); rates.push(rt); }
+  });
+  return patch10_weightedAverage(weights, rates);
+}
+function buildStandardKpis(r) {
+  if (!r) return;
+  const metrics = r.metrics || [];
+  const sales = metrics.find(isCoreSalesMetric);
+  let cost = metrics.find(isCostRateMetric);
+  let paid = metrics.find(isPaidRateMetric);
+  const profitCompletion = metrics.find(isProfitCompletionMetric);
+  const profitRate = metrics.find(isProfitRateMetric);
+  const profitAmount = metrics.find(isProfitAmountMetric);
+  const costWeighted = cost ? null : weightedSubGroupRate(r, isCostRateMetric);
+  const paidWeighted = paid ? null : weightedSubGroupRate(r, isPaidRateMetric);
+  const cards = [];
+
+  if (sales) {
+    const curSales = kpiNumber(sales.rawCur);
+    const monthSales = rawKpiNumber(sales, 'accum', 'rawAccum');
+    const salesTarget = rawKpiNumber(sales, 'target', 'rawTarget');
+    const salesCompletion = completionFromAccumTarget(monthSales, salesTarget) || sales.completion;
+    cards.push(makeStdKpi('本周销售净额', fmtKpiAmount(curSales), sales.deltaRate || '', 'primary', { key:'weekly_sales' }));
+    cards.push(makeStdKpi('月累计销售额', fmtKpiAmount(monthSales), salesCompletion ? '销售完成率 ' + salesCompletion : '', 'primary', { key:'month_sales' }));
+    cards.push(makeStdKpi('销售完成率', salesCompletion || '未填写', salesTarget !== null ? '目标 ' + fmtMetricCell(sales.label || sales.metric, salesTarget) : (sales.target ? '目标 ' + sales.target : ''), kpiStatusFromCompletion(salesCompletion), { key:'sales_completion' }));
+  }
+  if (cost) {
+    cards.push(makeStdKpi('本周成本率', fmtKpiRate(kpiNumber(cost.rawCur)), cost.deltaRate || '', 'neutral', { key:'weekly_cost_rate' }));
+  } else if (costWeighted !== null) {
+    cards.push(makeStdKpi('本周成本率', fmtKpiRate(costWeighted), '按渠道销售额加权', 'neutral', { key:'weekly_cost_rate' }));
+  }
+  if (paid) {
+    cards.push(makeStdKpi('本周推广/付费率', fmtKpiRate(kpiNumber(paid.rawCur)), paid.deltaRate || '', 'neutral', { key:'weekly_paid_rate' }));
+  } else if (paidWeighted !== null) {
+    cards.push(makeStdKpi('本周推广/付费率', fmtKpiRate(paidWeighted), '按渠道销售额加权', 'neutral', { key:'weekly_paid_rate' }));
+  }
+  if (profitRate) {
+    cards.push(makeStdKpi('本周经营净利润率', fmtKpiRate(kpiNumber(profitRate.rawCur)), profitRate.deltaRate || '', 'neutral', { key:'weekly_profit_rate' }));
+  }
+  const profitAmountCompletion = profitAmount ? completionFromAccumTarget(rawKpiNumber(profitAmount, 'accum', 'rawAccum'), rawKpiNumber(profitAmount, 'target', 'rawTarget')) : null;
+  const profitCompletionValue = (profitCompletion && profitCompletion.completion)
+    ? profitCompletion.completion
+    : (profitAmountCompletion || (profitRate && profitRate.completion ? profitRate.completion : null));
+  if (profitCompletion || profitAmount || profitRate) {
+    const comp = profitCompletionValue;
+    const status = kpiStatusFromCompletion(comp);
+    const invalid = status === 'missing' || /#DIV|#VALUE|#REF|未填写|不可/.test(String(comp || ''));
+    cards.push(makeStdKpi('月利润完成率', invalid ? '不可计算' : fmtKpiRate(kpiNumber(comp)), invalid ? '源表未填写利润目标或公式错误' : '', invalid ? 'bad' : status, { key:'profit_completion' }));
+  } else {
+    cards.push(makeStdKpi('利润状态', '未填写', '源表未提供利润额/利润目标', 'missing', { key:'profit_status' }));
+  }
+
+  r.standardKpis = {
+    cards,
+    summary: cards.map(c => c.label + '：' + c.value + (c.sub ? '（' + c.sub + '）' : '')).join('；')
+  };
+}
 function finalizeDeptData(r) {
   if (!r) return r;
   normalizeMetricLabelsForAI(r);
+  sanitizeProfitCompletionRows(r);
   rebuildAccountLevelSummaryRates(r);
-  reconcileShopLevelRates(r);
+  // 只校正平台/店铺汇总行，避免把子部门自身成本率改成总店铺率。
+  if ((r.metrics || []).some(m => /店铺|平台|部门/.test(String(m.label || '')))) reconcileShopLevelRates(r);
   normalizeMetricLabelsForAI(r);
+  cleanDisplayRows(r);
+  sanitizeProfitCompletionRows(r);
+  buildStandardKpis(r);
   return r;
 }
 
@@ -3022,7 +3231,7 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
         if (cv===null && pv===null) continue;
         const comp = compCol>=0 ? cleanVal(row[compCol], r._sourceErrors) : null;
         const tgt  = targetCol>=0 ? cleanVal(row[targetCol], r._sourceErrors) : null;
-        monthCol;
+        const month = monthCol>=0 ? cleanVal(row[monthCol], r._sourceErrors) : null;
         const label = (grp ? grp+'·' : '') + name;
         const dr = pv&&cv ? ((parseFloat(cv)-parseFloat(pv))/Math.abs(parseFloat(pv))*100).toFixed(1)+'%' : null;
         r.subGroups.push({
@@ -3030,8 +3239,12 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
           account: name,
           curVal: fmtVal(cv), prevVal: fmtVal(pv),
           rawCur: cv, rawPrev: pv,
-          completion: comp ? fmtVal(comp) : null,
-          target: tgt ? fmtM(tgt) : null,
+          rawAccum: month,
+          rawTarget: tgt,
+          rawCompletion: comp,
+          accum: month ? fmtMetricCell(label, month) : null,
+          completion: comp ? fmtRateCell(comp) : null,
+          target: tgt ? fmtMetricCell(label, tgt) : null,
           deltaRate: dr
         });
       }
@@ -3050,6 +3263,66 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
     })();
     if (hasParentCol) {
       return finalizeDeptData(buildF2ParentRecord(rows, dept, filename, r));
+    }
+  }
+
+  // ═══ F7: 店铺/指标名称/本周数据格式（跨境等）═══
+  if (rows.length >= 4) {
+    const hrow = rows[2] || [];
+    const headerText = rowText(hrow);
+    if (String(hrow[0]||'').includes('店铺') && String(hrow[1]||'').includes('指标') && headerText.includes('本周数据')) {
+      const prevCol=2, curCol=3, deltaCol=4, accCol=5, targetCol=6, compCol=7;
+      r.curWeek = String(hrow[curCol]||'本周').replace(/\n/g,' ');
+      r.prevWeek = String(hrow[prevCol]||'上周').replace(/\n/g,' ');
+      let curMetric = '';
+      for (let ri=3; ri<rows.length; ri++) {
+        const row = rows[ri] || [];
+        const label = row[0] ? String(row[0]).replace(/\n/g,'').trim() : '';
+        if (label) curMetric = label;
+        const account = row[1] ? String(row[1]).trim() : '';
+        if (!curMetric || !account) continue;
+        const cv = cleanVal(row[curCol], r._sourceErrors);
+        const pv = cleanVal(row[prevCol], r._sourceErrors);
+        const av = cleanVal(row[accCol], r._sourceErrors);
+        const tv = cleanVal(row[targetCol], r._sourceErrors);
+        const cp = cleanVal(row[compCol], r._sourceErrors);
+        if (cv===null && pv===null && av===null && tv===null && cp===null) continue;
+        const metricObj = {
+          metric: curMetric,
+          account,
+          curVal: fmtMetricCell(curMetric, cv),
+          prevVal: fmtMetricCell(curMetric, pv),
+          rawCur: cv,
+          rawPrev: pv,
+          rawAccum: av,
+          rawTarget: tv,
+          rawCompletion: cp,
+          accum: av!==null ? fmtMetricCell(curMetric, av) : null,
+          completion: cp!==null ? fmtRateCell(cp) : null,
+          target: tv!==null ? fmtMetricCell(curMetric, tv) : null,
+          deltaRate: pv!==null && cv!==null && parseMetricNumber(pv) ? ((parseMetricNumber(cv)-parseMetricNumber(pv))/Math.abs(parseMetricNumber(pv))*100).toFixed(1)+'%' : null
+        };
+        if (account === '合计') {
+          r.metrics.push({
+            label: curMetric,
+            curVal: fmtMetricCell(curMetric, cv!==null?cv:av),
+            prevVal: fmtMetricCell(curMetric, pv),
+            rawCur: cv!==null?cv:av,
+            rawPrev: pv,
+            rawAccum: av,
+            rawTarget: tv,
+            rawCompletion: cp,
+            deltaRate: metricObj.deltaRate,
+            completion: cp!==null ? fmtRateCell(cp) : null,
+            target: tv!==null ? fmtMetricCell(curMetric, tv) : null,
+            accum: av!==null ? fmtMetricCell(curMetric, av) : null,
+            trend: pv!==null && cv!==null && parseMetricNumber(cv) >= parseMetricNumber(pv) ? 'up' : 'down'
+          });
+        } else {
+          r.subGroups.push(metricObj);
+        }
+      }
+      if (r.metrics.length || r.subGroups.length) return finalizeDeptData(r);
     }
   }
 
@@ -3144,17 +3417,36 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
       // 跳过"合计"行（单独处理为metrics）
       if (acct.includes('合计') || acct === '总计') {
         const cv=cleanVal(row[curCol.ci], r._sourceErrors);
-        if (cv !== null) {
-          r.metrics.push({label:curMetric,trend:'flat',curVal:fmtVal(cv),prevVal:null,rawCur:cv,rawPrev:null,deltaRate:null,completion:null,target:null,accum:null});
+        const pv=cleanVal(prevCol?row[prevCol.ci]:null, r._sourceErrors);
+        const av=sp.acc!==undefined?cleanVal(row[sp.acc], r._sourceErrors):null;
+        const comp=sp.comp!==undefined?cleanVal(row[sp.comp], r._sourceErrors):null;
+        const tgt=sp.tgt!==undefined?cleanVal(row[sp.tgt], r._sourceErrors):null;
+        if (cv !== null || av !== null || comp !== null) {
+          r.metrics.push({
+            label:curMetric,
+            trend:(pv!==null&&cv!==null)?(parseMetricNumber(cv)>=parseMetricNumber(pv)?'up':'down'):'flat',
+            curVal:fmtMetricCell(curMetric, cv!==null?cv:av),
+            prevVal:pv!==null?fmtMetricCell(curMetric,pv):null,
+            rawCur:cv!==null?cv:av,
+            rawPrev:pv,
+            rawAccum:av,
+            rawTarget:tgt,
+            rawCompletion:comp,
+            deltaRate:null,
+            completion:comp!==null?fmtRateCell(comp):null,
+            target:tgt!==null?fmtMetricCell(curMetric,tgt):null,
+            accum:av!==null?fmtMetricCell(curMetric,av):null
+          });
         }
         continue;
       }
       const cv=cleanVal(row[curCol.ci], r._sourceErrors), pv=cleanVal(prevCol?row[prevCol.ci]:null, r._sourceErrors);
-      if (cv===null&&pv===null) continue;
       const comp=sp.comp!==undefined?cleanVal(row[sp.comp], r._sourceErrors):null;
       const tgt=sp.tgt!==undefined?cleanVal(row[sp.tgt], r._sourceErrors):null;
+      const av=sp.acc!==undefined?cleanVal(row[sp.acc], r._sourceErrors):null;
+      if (cv===null&&pv===null&&av===null&&tgt===null&&comp===null) continue;
       const dr=pv&&cv?((parseFloat(cv)-parseFloat(pv))/Math.abs(parseFloat(pv))*100).toFixed(1)+'%':null;
-      r.subGroups.push({metric:curMetric,account:acct,curVal:fmtVal(cv),prevVal:fmtVal(pv),rawCur:cv,rawPrev:pv,completion:comp?fmtVal(comp):null,target:tgt?fmtM(tgt):null,deltaRate:dr});
+      r.subGroups.push({metric:curMetric,account:acct,curVal:fmtMetricCell(curMetric,cv),prevVal:fmtMetricCell(curMetric,pv),rawCur:cv,rawPrev:pv,rawAccum:av,rawTarget:tgt,rawCompletion:comp,accum:av!==null?fmtMetricCell(curMetric,av):null,completion:comp!==null?fmtRateCell(comp):null,target:tgt!==null?fmtMetricCell(curMetric,tgt):null,deltaRate:dr});
     } else {
       if (!label) continue;
       const cv=cleanVal(row[curCol.ci], r._sourceErrors), pv=cleanVal(prevCol?row[prevCol.ci]:null, r._sourceErrors);
@@ -3162,6 +3454,7 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
       const drRaw=sp.dr!==undefined?cleanVal(row[sp.dr], r._sourceErrors):null;
       const comp=sp.comp!==undefined?cleanVal(row[sp.comp], r._sourceErrors):null;
       const tgt=sp.tgt!==undefined?cleanVal(row[sp.tgt], r._sourceErrors):null;
+      const av=sp.acc!==undefined?cleanVal(row[sp.acc], r._sourceErrors):null;
       const isRank = isRankData(label);
       if (isRank) {
         r.rankData.push({label,curVal:cv!==null?String(cv):null,prevVal:pv!==null?String(pv):null,delta:sp.dv!==undefined?String(cleanVal(row[sp.dv], r._sourceErrors)||''):null});
@@ -3172,7 +3465,7 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
         r.rankData.push({label, curVal:String(cv), prevVal:pv!==null?String(pv):null, delta:null});
         continue;
       }
-      r.metrics.push({label,trend,curVal:fmtVal(cv),prevVal:fmtVal(pv),rawCur:cv,rawPrev:pv,deltaRate:drRaw?fmtVal(drRaw):null,completion:comp?fmtVal(comp):null,target:tgt?fmtM(tgt):null,accum:null});
+      r.metrics.push({label,trend,curVal:fmtMetricCell(label,cv),prevVal:fmtMetricCell(label,pv),rawCur:cv,rawPrev:pv,rawAccum:av,rawTarget:tgt,rawCompletion:comp,deltaRate:drRaw?fmtRateCell(drRaw):null,completion:comp!==null?fmtRateCell(comp):null,target:tgt!==null?fmtMetricCell(label,tgt):null,accum:av!==null?fmtMetricCell(label,av):null});
     }
   }
   // 直播部/达人部等账号表汇总：金额求和，率指标按销售额加权。
@@ -3185,24 +3478,48 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
       }
     });
     for (const sg of r.subGroups) {
-      if (!bm[sg.metric]) bm[sg.metric]={cur:0,prev:0,cnt:0,comp:sg.completion,weightedCur:0,weightCur:0,weightedPrev:0,weightPrev:0};
+      if (!bm[sg.metric]) bm[sg.metric]={cur:0,prev:0,cnt:0,accum:0,target:0,accumCnt:0,targetCnt:0,comp:sg.completion,weightedCur:0,weightCur:0,weightedPrev:0,weightPrev:0};
       const c=parseMetricNumber(sg.rawCur), p=parseMetricNumber(sg.rawPrev);
+      const a=rawKpiNumber(sg, 'accum', 'rawAccum');
+      const t=rawKpiNumber(sg, 'target', 'rawTarget');
+      const isRate = patch10_isRateMetric(sg.metric);
       const weight = salesByAccount[sg.account] || 0;
-      if (patch10_isRateMetric(sg.metric) && weight > 0) {
+      if (isRate && weight > 0) {
         if (c !== null) { bm[sg.metric].weightedCur += weight * c; bm[sg.metric].weightCur += weight; bm[sg.metric].cnt++; }
         if (p !== null) { bm[sg.metric].weightedPrev += weight * p; bm[sg.metric].weightPrev += weight; }
       } else {
         if (c !== null) { bm[sg.metric].cur+=c; bm[sg.metric].cnt++; }
         if (p !== null) bm[sg.metric].prev+=p;
       }
+      if (!isRate && a !== null) { bm[sg.metric].accum += a; bm[sg.metric].accumCnt++; }
+      if (!isRate && t !== null) { bm[sg.metric].target += t; bm[sg.metric].targetCnt++; }
+      if (!bm[sg.metric].comp && sg.completion) bm[sg.metric].comp = sg.completion;
     }
     for (const [metric,agg] of Object.entries(bm)) {
-      if (!agg.cnt) continue;
       const isRate = patch10_isRateMetric(metric);
+      if (!agg.cnt && !agg.accumCnt && !agg.targetCnt) continue;
       const cur = isRate && agg.weightCur ? agg.weightedCur / agg.weightCur : agg.cur;
       const prev = isRate && agg.weightPrev ? agg.weightedPrev / agg.weightPrev : agg.prev;
       const dr=prev?((cur-prev)/Math.abs(prev)*100).toFixed(1)+'%':null;
-      r.metrics.push({label:metric,curVal:fmtMetricCell(metric, cur),prevVal:prev!==null?fmtMetricCell(metric, prev):null,rawCur:cur,rawPrev:prev,deltaRate:dr,completion:agg.comp,target:null,accum:null,trend:prev?(cur>=prev?'up':'down'):'flat'});
+      const rawAccum = !isRate && agg.accumCnt ? agg.accum : null;
+      const rawTarget = !isRate && agg.targetCnt ? agg.target : null;
+      const derivedCompletion = completionFromAccumTarget(rawAccum, rawTarget);
+      const rawCur = agg.cnt ? cur : rawAccum;
+      r.metrics.push({
+        label:metric,
+        curVal:fmtMetricCell(metric, rawCur),
+        prevVal:agg.cnt && prev!==null?fmtMetricCell(metric, prev):null,
+        rawCur,
+        rawPrev:agg.cnt ? prev : null,
+        rawAccum,
+        rawTarget,
+        rawCompletion:derivedCompletion ? parseMetricNumber(derivedCompletion) : parseMetricNumber(agg.comp),
+        deltaRate:dr,
+        completion:derivedCompletion || agg.comp || null,
+        target:rawTarget!==null?fmtMetricCell(metric, rawTarget):null,
+        accum:rawAccum!==null?fmtMetricCell(metric, rawAccum):null,
+        trend:prev?(cur>=prev?'up':'down'):'flat'
+      });
     }
   }
   return finalizeDeptData(r);
@@ -3557,7 +3874,7 @@ ${escapedSummary}
     return !isNaN(pct) && Math.abs(pct) >= 20;
   }).map(m => `${(m.label || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}环比${(m.deltaRate || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}（本周${(m.curVal || '').replace(/`/g, '\\`').replace(/\$/g, '\\$')}，上周${(m.prevVal || '—').replace(/`/g, '\\`').replace(/\$/g, '\\$')}）`);
 
-  const m = d.metrics.slice(0,8).map(x => {
+  const m = (d.standardKpis && d.standardKpis.summary) ? d.standardKpis.summary : d.metrics.slice(0,8).map(x => {
     const escape = (s) => (s || '').replace(/`/g, '\\`').replace(/\$/g, '\\$');
     return `${escape(x.label)}：本周${escape(x.curVal || '—')}` +
       (x.prevVal    ? `（上周${escape(x.prevVal)}）`       : '') +
@@ -3623,7 +3940,7 @@ ${planningText}`;
 
   prompt += `
 
-核心指标：${m||'（无数字数据）'}
+核心指标（统一口径：本周销售/成本/推广看周度，销售完成率/利润完成率看月度累计）：${m||'（无数字数据）'}
 ${sg ? '各账号/分组：' + sg : ''}
 ${rk ? '店铺排名：' + rk : ''}
 ${anomalyText}
@@ -3763,38 +4080,34 @@ function renderReport(ai,d) {
     h += ai.summary+'</div>';
   }
 
-  // 指标卡
-  var metrics = (ai.metrics&&ai.metrics.length) ? ai.metrics : d.metrics.slice(0,4).map(function(m){
-    return {label:m.label, value:m.curVal||'—', delta:m.deltaRate, trend:m.trend};
-  });
+  // 标准核心指标卡：周度经营质量和月度目标进度分开展示。
+  var metrics = (d.standardKpis && d.standardKpis.cards && d.standardKpis.cards.length)
+    ? d.standardKpis.cards
+    : d.metrics.slice(0,4).map(function(m){ return {label:m.label, value:m.curVal||'—', sub:m.deltaRate||'', status:m.trend}; });
   if (metrics.length) {
     var n = Math.min(metrics.length,4);
     h += '<div class="mgrid mg'+n+'">';
-    metrics.forEach(function(m) {
-      var dc = m.trend==='up'?'up':m.trend==='down'?'dn':'fl2';
+    metrics.slice(0,4).forEach(function(m) {
+      var dc = m.status==='ok'||m.status==='up'?'up':m.status==='bad'||m.status==='down'?'dn':m.status==='missing'?'fl2':'fl2';
       h += '<div class="mc">';
       h += '<div class="mc-l">'+m.label+'</div>';
       h += '<div class="mc-v">'+(m.value||'—')+'</div>';
-      if (m.delta && m.delta!=='null') h += '<div class="mc-d '+dc+'">'+m.delta+'</div>';
+      if (m.sub && m.sub!=='null') h += '<div class="mc-d '+dc+'">'+m.sub+'</div>';
       h += '</div>';
     });
     h += '</div>';
-  }
-
-  // 月完成率卡
-  var compMs = d.metrics.filter(function(m){return m.completion;}).slice(0,3);
-  if (compMs.length) {
-    h += '<div class="mgrid mg'+Math.min(compMs.length,3)+'">';
-    compMs.forEach(function(m) {
-      var pct = parseFloat(m.completion);
-      var color = pct<20?'var(--R)':pct<50?'var(--A)':'var(--G)';
-      h += '<div class="mc">';
-      h += '<div class="mc-l">'+m.label+'·月完成率</div>';
-      h += '<div class="mc-v" style="color:'+color+'">'+m.completion+'</div>';
-      if (m.target) h += '<div class="mc-c">目标 '+m.target+'</div>';
+    if (metrics.length > 4) {
+      h += '<div class="mgrid mg'+Math.min(metrics.length-4,3)+'">';
+      metrics.slice(4,7).forEach(function(m) {
+        var dc = m.status==='ok'||m.status==='up'?'up':m.status==='bad'||m.status==='down'?'dn':m.status==='missing'?'fl2':'fl2';
+        h += '<div class="mc">';
+        h += '<div class="mc-l">'+m.label+'</div>';
+        h += '<div class="mc-v">'+(m.value||'—')+'</div>';
+        if (m.sub && m.sub!=='null') h += '<div class="mc-d '+dc+'">'+m.sub+'</div>';
+        h += '</div>';
+      });
       h += '</div>';
-    });
-    h += '</div>';
+    }
   }
 
   // 子账号明细
