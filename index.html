@@ -2405,7 +2405,8 @@ function findBusinessSummaryHeader(rows) {
     const text = rowText(row);
     if (text.includes('年度') || text.includes('规划') || text.includes('2026')) continue;
     let nonNull = 0;
-    for (let j=0;j<row.length;j++) {
+    // 只扫描前12列，防止数据行（含隐藏列20列+）用列数赢过表头行
+    for (let j=0;j<Math.min(row.length, 12);j++) {
       if (row[j] !== null && row[j] !== undefined && String(row[j]).trim() !== '') nonNull++;
     }
     // 找"非空列数>=6"且最多的行
