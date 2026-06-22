@@ -2084,8 +2084,34 @@ function pickBestSheet(wb, dept, filename) {
   // 对于已知的多Sheet部门，按部门名匹配主Sheet
   const deptNameLow = DEPT_NAMES[dept] ? DEPT_NAMES[dept].toLowerCase() : '';
   
-  // 策略1：找Sheet名中包含部门名的（如"天猫平台"文件中有个Sheet叫"天猫平台"）
-  let mainIdx = -1, mainScore = -1;
+  // 辅助：从表头前几行提取最新月份
+  function getMonthScore(ws, maxScanRows) {
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1,defval:null,raw:true});
+    let latestMonth = 0;
+    const monthNames = {'1月':1,'2月':2,'3月':3,'4月':4,'5月':5,'6月':6,'7月':7,'8月':8,'9月':9,'10月':10,'11月':11,'12月':12};
+    for (let ri = 0; ri < Math.min(rows.length, maxScanRows); ri++) {
+      const row = rows[ri] || [];
+      for (let ci = 0; ci < row.length; ci++) {
+        const s = String(row[ci] || '');
+        // 匹配 "5.29-6.4" → 提取月份 6
+        const rangeMatch = s.match(/(\d+)\.\d+\s*[-—–到至~]\s*(\d+)\.\d+/);
+        if (rangeMatch) {
+          const startM = parseInt(rangeMatch[1]);
+          const endM = parseInt(rangeMatch[2]);
+          if (endM > latestMonth) latestMonth = endM;
+          if (startM > latestMonth) latestMonth = startM;
+        }
+        // 匹配 "6月" 或 "6月累计"
+        for (const [name, num] of Object.entries(monthNames)) {
+          if (s.includes(name) && num > latestMonth) latestMonth = num;
+        }
+      }
+    }
+    return latestMonth;
+  }
+
+  // 策略1：按"月份 > 行数 > 部门名"综合评分
+  let mainIdx = -1, mainScore = -1, mainMonth = 0;
   for (let si = 0; si < sheets.length; si++) {
     const sn = sheets[si].toLowerCase();
     const ws = wb.Sheets[sheets[si]];
@@ -2093,23 +2119,28 @@ function pickBestSheet(wb, dept, filename) {
     const rowCount = rows.length;
     if (rowCount < 3) continue;
 
-    let score = 0;
-    // 加分：Sheet名含部门名
+    // 排除附属Sheet：同比、排名、旧数据备份等
+    if (/同比|排名|分析|旧数据|backup/i.test(sn)) continue;
+
+    // 月份权重：6月=200, 5月=100, 4月=50, 3月=20, <3月=10
+    const month = getMonthScore(ws, 5);
+    const monthScore = month >= 6 ? 200 : month === 5 ? 100 : month === 4 ? 50 : month >= 3 ? 20 : 10;
+
+    let score = monthScore * 3;  // 月份是首要维度（3倍权重）
+    // 加分：部门名匹配
     if (deptNameLow && sn.includes(deptNameLow)) score += 50;
-    // 加分：Sheet名含部门代码
     if (sn.includes(dept)) score += 50;
-    // 加分：更多行 = 更有可能是主数据
-    score += Math.min(rowCount, 100);
+    // 加分：更多行
+    score += Math.min(rowCount, 50);
+    // 减分：Sheet名含"sheet1""排名"
+    if (/sheet1|sheet2/i.test(sn)) score -= 50;
 
-    // 减分：Sheet名含"排名""排名""sheet1"等
-    if (/排名|sheet1|sheet2/i.test(sn)) score -= 30;
-    // 减分：只有2-3行
-    if (rowCount < 5) score -= 20;
-
-    if (score > mainScore) { mainScore = score; mainIdx = si; }
+    if (score > mainScore || (score === mainScore && month > mainMonth)) {
+      mainScore = score; mainIdx = si; mainMonth = month;
+    }
   }
   
-  // 策略2：如果没找到，按最早有数据且行最多的Sheet
+  // 策略2：如果没找到（所有Sheet都被排除了），按行数最多的选
   if (mainIdx < 0) {
     let maxRows = 0;
     for (let si = 0; si < sheets.length; si++) {
@@ -2418,10 +2449,21 @@ function buildBusinessSummaryData(rows, dept, filename) {
   // fallback 日期列：找所有匹配日期模式的列，排除已知功能列
   if (curCol < 0) {
     const dateCols = [];
+    const isValidDateStr = (s) => {
+      // 匹配 "4.25" 或 "5.30-6.5" 格式 — 月份必须在 1-12
+      const simpleMatch = s.match(/^(\d{1,2})\.(\d+)/);
+      if (simpleMatch) {
+        const m = parseInt(simpleMatch[1]);
+        const d = parseInt(simpleMatch[2]);
+        if (m >= 1 && m <= 12 && d >= 1 && d <= 31) return true;
+      }
+      // 匹配 "5月22日" 格式
+      if (/\d+月\d+日/.test(s)) return true;
+      return false;
+    };
     for (let ci = 1; ci < header.length; ci++) {
       const s = String(header[ci] || '').replace(/\n/g,'').trim();
-      const isDate = /\d+\.\d+/.test(s) || /\d+月\d+日/.test(s);
-      if (!isDate) continue;
+      if (!isValidDateStr(s)) continue;
       // 排除含"环比""累计""目标""完成率"的列
       if (s.includes('环比') || s.includes('累计') || s.includes('目标') || s.includes('完成率')) continue;
       dateCols.push({ci, label: s});
@@ -2776,11 +2818,6 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
     }
   }
 
-  // ═══ F4: 双主键型检测（Col2=指标名，如跨境/达人）═══
-  if (detectF4DualKey(rows)) {
-    return buildF4DualKey(rows, dept, filename, r);
-  }
-
   // ═══ F5: PAA混排型检测（右侧有行动计划表）═══
   if (detectF5PAAMixed(rows)) {
     return buildF5PAAMixed(rows, dept, filename, r, sheetIndex, wb);
@@ -2816,14 +2853,20 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
     if (s.includes('累计'))                    { sp.acc=ci; return; }
     if (s.includes('目标')&&!s.includes('完成')){ sp.tgt=ci; return; }
     if (s.includes('完成率'))                  { sp.comp=ci; return; }
-    if (['账号','直播间'].some(k=>s.includes(k))) { sp.acct=ci; return; }
+    if (['账号','直播间','指标名称'].some(k=>s.includes(k))) { sp.acct=ci; return; }
     // 日期列识别：支持多种格式
     //   - 6.1  (标准数字日期)
     //   - 5.29-6.4 (范围格式)
     //   - 5月22日-5月28日 (中文范围)
     //   - 本周 (单字符周标识)
     const isDateStr = (s) => {
-      if (/\d+\.\d+/.test(s)) return true;           // 6.1 标准
+      // 校验月份 1-12，防止隐藏列的数值被误认为日期（如 "7849.816557"）
+      const simpleMatch = s.match(/^(\d{1,2})\.(\d+)/);
+      if (simpleMatch) {
+        const m = parseInt(simpleMatch[1]);
+        const d = parseInt(simpleMatch[2]);
+        if (m >= 1 && m <= 12 && d >= 1 && d <= 31) return true;
+      }
       if (/\d+月\d+日/.test(s)) return true;          // 5月22日 中文
       if (/^本周$|^上周$|^当月$/.test(s)) return true; // 本周/上周
       if (/\d+\.\d+\s*[-—–到至~]\s*\d+\.\d+/.test(s)) return true; // 5.29-6.4 范围
@@ -2863,6 +2906,14 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
     if (sp.acct!==undefined) {
       const acct=row[sp.acct]?String(row[sp.acct]).trim():'';
       if (!acct) continue;
+      // 跳过"合计"行（单独处理为metrics）
+      if (acct.includes('合计') || acct === '总计') {
+        const cv=cleanVal(row[curCol.ci], r._sourceErrors);
+        if (cv !== null) {
+          r.metrics.push({label:curMetric,trend:'flat',curVal:fmtVal(cv),prevVal:null,rawCur:cv,rawPrev:null,deltaRate:null,completion:null,target:null,accum:null});
+        }
+        continue;
+      }
       const cv=cleanVal(row[curCol.ci], r._sourceErrors), pv=cleanVal(prevCol?row[prevCol.ci]:null, r._sourceErrors);
       if (cv===null&&pv===null) continue;
       const comp=sp.comp!==undefined?cleanVal(row[sp.comp], r._sourceErrors):null;
@@ -2932,141 +2983,6 @@ function buildF2ParentRecord(rows, dept, filename, base) {
       deltaRate: dv ? String(dv) : null,
       completion: null, target: null, accum: null
     });
-  }
-  return base;
-}
-
-// ── F4: 双主键型检测（Col2=指标名，如跨境/达人）──
-function detectF4DualKey(rows) {
-  if (rows.length < 3) return false;
-  // 搜索R0-R4范围找"双主键"表头
-  for (let i=0; i<Math.min(rows.length, 5); i++) {
-    const hrow = rows[i] || [];
-    const cell0 = String(hrow[0]||'').trim();
-    const cell1 = String(hrow[1]||'').trim();
-    // 条件：Col0=店铺/部门名, Col1=指标名（如"销售净额"等）
-    const hasStoreCol = cell0.includes('店铺') || cell0.includes('名称') || cell0.includes('部门');
-    const hasMetricCol = cell1.includes('指标') || cell1.includes('名称') || cell1.includes('净额') || cell1.includes('销售') || cell1.includes('成本');
-    // 同时检查后续列是否有日期列（本周/上周/数字日期）
-    const hasDateCol = hrow.some((v,ci) => ci>=2 && v && (String(v).includes('本周') || String(v).includes('上周') || /\d+\.\d+/.test(String(v))));
-    if (hasStoreCol && hasMetricCol && hasDateCol) return true;
-  }
-  return false;
-}
-
-// ── F4: 双主键型解析器（达人部/跨境）──
-function buildF4DualKey(rows, dept, filename, base) {
-  // 找表头行（R0-R4中列数最多且有'本周'或日期格式的行）
-  let hIdx = 2; // 默认R3
-  let maxCols = 0;
-  for (let i=0; i<Math.min(rows.length, 5); i++) {
-    const row = rows[i] || [];
-    const hasDate = row.some((v,ci) => ci>=2 && v && (String(v).includes('本周') || String(v).includes('上周') || /\d+\.\d+/.test(String(v))));
-    let nonNull = row.filter(v => v !== null && v !== undefined && String(v).trim() !== '').length;
-    if (hasDate && nonNull > maxCols) { maxCols = nonNull; hIdx = i; }
-  }
-  const hrow = rows[hIdx] || [];
-  const acctCol=0, nameCol=1;
-  let prevCol=-1, curCol=-1, targetCol=-1, compCol=-1, dvCol=-1;
-  hrow.forEach((h,ci)=>{
-    if (!h) return;
-    const s = String(h).trim();
-    if (s.includes('上周') || s.includes('上周数据')) prevCol = ci;
-    else if (s.includes('本周') || s.includes('本周数据')) curCol = ci;
-    else if (s.includes('目标') && !s.includes('完成')) targetCol = ci;
-    else if (s.includes('完成率')) compCol = ci;
-    else if (s.includes('本周-上周') || s.includes('周差异') || s.includes('差值')) dvCol = ci;
-  });
-  // fallback: 按列位置找数字日期列
-  if (curCol < 0) {
-    for (let ci = hrow.length-1; ci >= 0; ci--) {
-      const v = String(hrow[ci]||'');
-      if (/\d+\.\d+/.test(v) || v.includes('本周')) { curCol = ci; break; }
-    }
-    if (curCol < 0) { curCol=4; prevCol=3; }
-    else {
-      for (let ci = curCol-1; ci >= 0; ci--) {
-        const v = String(hrow[ci]||'');
-        if (/\d+\.\d+/.test(v) || v.includes('上周')) { prevCol = ci; break; }
-      }
-      if (prevCol < 0) prevCol = curCol - 1;
-    }
-  }
-  base.curWeek = hrow[curCol] ? String(hrow[curCol]).trim() : '本周';
-  base.prevWeek = prevCol>=0 && hrow[prevCol] ? String(hrow[prevCol]).trim() : null;
-
-  // 先读所有行，找到"合计"行
-  let totalRow = null;
-  for (let ri=hIdx+1; ri<rows.length; ri++) {
-    const row = rows[ri] || [];
-    const acct = row[acctCol] ? String(row[acctCol]).trim() : '';
-    if (acct.includes('合计')) { totalRow = row; break; }
-  }
-  // 读取所有明细行（不含合计行）
-  let hasDetail = false;
-  for (let ri=hIdx+1; ri<rows.length; ri++) {
-    const row = rows[ri] || [];
-    if (!row || row.length < 2) continue;
-    const acct = row[acctCol] ? String(row[acctCol]).trim() : '';
-    const name = nameCol>=0 && row[nameCol] ? String(row[nameCol]).trim() : '';
-    const both = (acct+name).trim();
-    if (!both) continue;
-    if (acct.includes('合计') || name === '合计') continue;
-    // 跳过空行和分隔行
-    if (both.length < 2 && !row.slice(2).some(v => v !== null && v !== undefined && String(v).trim() !== '')) continue;
-    hasDetail = true;
-    const cv = cleanVal(row[curCol], base._sourceErrors);
-    const pv = prevCol>=0 ? cleanVal(row[prevCol], base._sourceErrors) : null;
-    const comp = compCol>=0 ? cleanVal(row[compCol], base._sourceErrors) : null;
-    const tgt  = targetCol>=0 ? cleanVal(row[targetCol], base._sourceErrors) : null;
-    if (cv===null && pv===null) continue;
-    const label = name || acct;
-    base.subGroups.push({
-      metric: name ? (acct?acct+'·':'')+name : acct,
-      account: acct || name,
-      curVal: cv!==null ? fmtVal(cv) : null,
-      prevVal: pv!==null ? fmtVal(pv) : null,
-      rawCur: cv, rawPrev: pv,
-      completion: comp ? fmtVal(comp) : null,
-      target: tgt ? fmtM(tgt) : null,
-      deltaRate: pv&&cv ? ((parseFloat(cv)-parseFloat(pv))/Math.abs(parseFloat(pv))*100).toFixed(1)+'%' : null
-    });
-  }
-
-  // 读取合计行（优先于明细汇总）
-  if (totalRow) {
-    const cv = cleanVal(totalRow[curCol], base._sourceErrors);
-    const comp = compCol>=0 ? cleanVal(totalRow[compCol], base._sourceErrors) : null;
-    const tgt  = targetCol>=0 ? cleanVal(totalRow[targetCol], base._sourceErrors) : null;
-    if (cv !== null) {
-      base.metrics.push({
-        label: '销售净额',
-        curVal: fmtVal(cv), prevVal: null,
-        rawCur: cv, rawPrev: null,
-        trend: 'flat', deltaRate: null,
-        completion: comp ? fmtVal(comp) : null,
-        target: tgt ? fmtM(tgt) : null,
-        accum: null
-      });
-    }
-  } else if (hasDetail) {
-    // 无合计行时，手动汇总
-    let totalCur = 0, totalPrev = 0, hasCur = false, hasPrev = false;
-    for (const sg of base.subGroups) {
-      if (sg.rawCur !== null) { totalCur += parseFloat(sg.rawCur)||0; hasCur = true; }
-      if (sg.rawPrev !== null) { totalPrev += parseFloat(sg.rawPrev)||0; hasPrev = true; }
-    }
-    if (hasCur) {
-      base.metrics.push({
-        label: '销售净额（合计）',
-        curVal: fmtM(totalCur),
-        prevVal: hasPrev ? fmtM(totalPrev) : null,
-        rawCur: totalCur, rawPrev: hasPrev ? totalPrev : null,
-        trend: hasPrev && totalCur >= totalPrev ? 'up' : (hasPrev ? 'down' : 'flat'),
-        deltaRate: hasPrev ? ((totalCur-totalPrev)/Math.abs(totalPrev)*100).toFixed(1)+'%' : null,
-        completion: null, target: null, accum: null
-      });
-    }
   }
   return base;
 }
