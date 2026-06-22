@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>渔之源 · 周度经营中心</title>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+<script src="xlsx.full.min.js"></script>
+<script>
 // ══════════════════════════════════════════
 // 导出全部报告到 Excel
 // ══════════════════════════════════════════
@@ -1138,7 +1139,10 @@ function cleanVal(v, trackErrors) {
   if (v===null||v===undefined||v==='') return null;
   const s = String(v).trim().toLowerCase();
   if (['#div/0!','#value!','#ref!','#n/a','#name?','/','无数据','小二暂未回复'].includes(s)) {
-    if (trackErrors) trackErrors.push('#DIV/0!');
+    if (trackErrors) {
+      const msg = '⚠ 源表存在公式错误或缺失值（如 #DIV/0!/#VALUE!/“/”），系统已按空值跳过相关单元格';
+      if (!trackErrors.includes(msg)) trackErrors.push(msg);
+    }
     return null;
   }
   return v;
@@ -2048,6 +2052,7 @@ function onPick(files) { addFiles(files); }
 function addFiles(files) {
   for (const f of files) {
     if (!f.name.match(/\.xlsx?$/i)) continue;
+    if (/^~\$/.test(f.name)) { toast('已忽略 WPS/Excel 临时文件：' + f.name); continue; }
     if (pendingFiles.find(x=>x.name===f.name)) continue;
     pendingFiles.push(f);
   }
@@ -2166,7 +2171,8 @@ function pickBestSheet(wb, dept, filename) {
 
 async function parseExcel(file) {
   const buf  = await file.arrayBuffer();
-  const wb   = XLSX.read(buf, {type:'array',cellFormula:false,cellDates:false});
+  const wb   = XLSX.read(buf, {type:'array',cellFormula:true,cellDates:false});
+  const formulaQualityBySheet = recomputeWorkbookFormulaCaches(wb);
   const allResults = [];
   const dept = detectDept(file.name);
   const hasMultiSheet = wb.SheetNames.length > 1;
@@ -2187,7 +2193,7 @@ async function parseExcel(file) {
         if (taskResults) allResults.push(...(Array.isArray(taskResults) ? taskResults : [taskResults]));
       } else {
         const parsed = buildDeptData(mainRows, dept, file.name, mainSheetName, mainIdx, wb);
-        if (parsed) allResults.push(parsed);
+        if (parsed) allResults.push(attachFormulaQualityIssues(parsed, formulaQualityBySheet[mainSheetName]));
       }
     }
 
@@ -2197,7 +2203,7 @@ async function parseExcel(file) {
       const rows = XLSX.utils.sheet_to_json(ws, {header:1,defval:null,raw:true});
       if (rows.length >= 2) {
         const parsed = buildDeptData(rows, extra.detectAs, file.name, wb.SheetNames[extra.sheetIndex], extra.sheetIndex, wb);
-        if (parsed) allResults.push(parsed);
+        if (parsed) allResults.push(attachFormulaQualityIssues(parsed, formulaQualityBySheet[wb.SheetNames[extra.sheetIndex]]));
       }
     }
 
@@ -2219,7 +2225,7 @@ async function parseExcel(file) {
   }
 
   const parsed = buildDeptData(rows, dept, file.name, sheetName, 0, wb);
-  if (parsed) allResults.push(parsed);
+  if (parsed) allResults.push(attachFormulaQualityIssues(parsed, formulaQualityBySheet[sheetName]));
   return allResults;
 }
 
@@ -2377,6 +2383,162 @@ function fmtRateCell(v) {
   if (n===null) return null;
   const pct = Math.abs(n) <= 1 ? n * 100 : n;
   return pct.toFixed(1) + '%';
+}
+
+function excelColToNum(col) {
+  let n = 0;
+  String(col || '').replace(/\$/g,'').toUpperCase().split('').forEach(ch => {
+    if (ch >= 'A' && ch <= 'Z') n = n * 26 + ch.charCodeAt(0) - 64;
+  });
+  return n;
+}
+function excelNumToCol(n) {
+  let s = '';
+  while (n > 0) {
+    const r = (n - 1) % 26;
+    s = String.fromCharCode(65 + r) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s;
+}
+function excelSplitAddr(addr) {
+  const m = String(addr || '').replace(/\$/g,'').match(/^([A-Z]+)(\d+)$/i);
+  return m ? { col: m[1].toUpperCase(), row: parseInt(m[2], 10) } : null;
+}
+function excelCellNumber(cell) {
+  if (!cell) return null;
+  if (cell.t === 'e') return null;
+  return parseMetricNumber(cell.v);
+}
+function excelDisplayRawValue(cell) {
+  if (!cell) return null;
+  if (cell.t === 'e') {
+    const errMap = {0:'#NULL!',7:'#DIV/0!',15:'#VALUE!',23:'#REF!',29:'#NAME?',36:'#NUM!',42:'#N/A'};
+    return errMap[cell.v] || ('#ERR' + cell.v);
+  }
+  return cell.v;
+}
+function excelRangeAddresses(a, b) {
+  const s = excelSplitAddr(a), e = excelSplitAddr(b);
+  if (!s || !e) return [];
+  const out = [];
+  const c1 = Math.min(excelColToNum(s.col), excelColToNum(e.col));
+  const c2 = Math.max(excelColToNum(s.col), excelColToNum(e.col));
+  const r1 = Math.min(s.row, e.row);
+  const r2 = Math.max(s.row, e.row);
+  for (let r = r1; r <= r2; r++) {
+    for (let c = c1; c <= c2; c++) out.push(excelNumToCol(c) + r);
+  }
+  return out;
+}
+function evalSimpleExcelFormula(formula, ws) {
+  if (!formula) return null;
+  let expr = String(formula).replace(/^=/,'').replace(/\$/g,'').trim();
+  if (!expr || /#REF!|#VALUE!|#DIV\/0!|!|&|"/i.test(expr)) return null;
+  expr = expr.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
+  expr = expr.replace(/SUM\(\s*([A-Z]+\d+)\s*:\s*([A-Z]+\d+)\s*\)/gi, function(_, a, b) {
+    let total = 0;
+    excelRangeAddresses(a, b).forEach(addr => {
+      const n = excelCellNumber(ws[addr]);
+      if (n !== null) total += n;
+    });
+    return String(total);
+  });
+  if (/[A-Z]+\(/i.test(expr)) return null;
+  try {
+    expr = expr.replace(/\b[A-Z]{1,3}\d+\b/gi, function(addr) {
+      const n = excelCellNumber(ws[String(addr).toUpperCase()]);
+      if (n === null) throw new Error('non numeric ref');
+      return String(n);
+    });
+    if (!/^[0-9eE+\-*/().\s]+$/.test(expr)) return null;
+    const val = Function('"use strict";return (' + expr + ')')();
+    return (typeof val === 'number' && isFinite(val)) ? val : null;
+  } catch (e) {
+    return null;
+  }
+}
+function fmtIssueValue(v) {
+  if (v===null || v===undefined || v==='') return '空';
+  const n = parseMetricNumber(v);
+  if (n===null) return String(v);
+  if (Math.abs(n) < 2 && n !== 0) return (n * 100).toFixed(2) + '%';
+  if (Math.abs(n) >= 10000) return (n / 10000).toFixed(2) + '万';
+  return Number(n.toFixed(4)).toLocaleString();
+}
+function pushDataQualityIssue(r, issue) {
+  if (!r || !issue) return;
+  if (!r._dataQualityIssues) r._dataQualityIssues = [];
+  const key = (issue.type || '') + '|' + (issue.metricLabel || '') + '|' + (issue.cell || '') + '|' + (issue.message || '');
+  if (r._dataQualityIssues.some(x => ((x.type || '') + '|' + (x.metricLabel || '') + '|' + (x.cell || '') + '|' + (x.message || '')) === key)) return;
+  r._dataQualityIssues.push(issue);
+}
+function recomputeWorkbookFormulaCaches(wb) {
+  const result = {};
+  if (!wb || !wb.SheetNames) return result;
+  wb.SheetNames.forEach(sheetName => {
+    const ws = wb.Sheets[sheetName];
+    if (!ws || !ws['!ref']) return;
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    const formulaCells = [];
+    const originals = {};
+    for (let R = range.s.r; R <= range.e.r; R++) {
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[addr];
+        if (cell && cell.f) {
+          formulaCells.push(addr);
+          originals[addr] = excelDisplayRawValue(cell);
+        }
+      }
+    }
+    // 多跑几轮，处理公式之间相互引用的简单依赖。
+    for (let pass = 0; pass < 4; pass++) {
+      formulaCells.forEach(addr => {
+        const cell = ws[addr];
+        const calc = evalSimpleExcelFormula(cell.f, ws);
+        if (calc === null) return;
+        cell.v = calc;
+        cell.t = 'n';
+        delete cell.w;
+      });
+    }
+    const issues = [];
+    formulaCells.forEach(addr => {
+      const cell = ws[addr];
+      const calc = evalSimpleExcelFormula(cell.f, ws);
+      if (calc === null) return;
+      const original = originals[addr];
+      const originalNum = parseMetricNumber(original);
+      const diff = originalNum === null ? Infinity : Math.abs(originalNum - calc);
+      const tol = Math.max(1e-6, Math.abs(calc) * 1e-6);
+      if (originalNum === null || diff > tol) {
+        cell.v = calc;
+        cell.t = 'n';
+        delete cell.w;
+        if (issues.length < 20) {
+          issues.push({
+            type: 'formula-cache',
+            metricLabel: '公式缓存重算',
+            cell: addr,
+            formula: cell.f,
+            original: original,
+            recomputed: calc,
+            diffPct: originalNum === null ? null : +(Math.abs(originalNum - calc) * 100).toFixed(2),
+            message: sheetName + '!' + addr + ' 公式缓存值过期：' + fmtIssueValue(original) + ' → ' + fmtIssueValue(calc)
+          });
+        }
+      }
+    });
+    if (issues.length) result[sheetName] = issues;
+  });
+  return result;
+}
+function attachFormulaQualityIssues(r, issues) {
+  if (!r || !issues || !issues.length) return r;
+  r._formulaQualityIssues = (r._formulaQualityIssues || []).concat(issues);
+  issues.slice(0, 8).forEach(issue => pushDataQualityIssue(r, issue));
+  return r;
 }
 function rowText(row) {
   return (row || []).map(v => v===null||v===undefined ? '' : String(v)).join(' ');
@@ -2584,9 +2746,7 @@ function buildBusinessSummaryData(rows, dept, filename) {
     }
   }
 
-  // ★ Patch 10: 在 return 之前调用 ★
-  reconcileShopLevelRates(result);
-  return result.metrics.length || result.subGroups.length ? result : null;
+  return result.metrics.length || result.subGroups.length ? finalizeDeptData(result) : null;
 }
 
 // ══════════════════════════════════════════
@@ -2649,6 +2809,34 @@ function patch10_fmtRate(n) {
   return pct.toFixed(1) + '%';
 }
 
+function patch10_isSalesMetric(label) {
+  return PATCH10_SALES_KEYWORDS.some(re => re.test(String(label || '')));
+}
+function patch10_isProfitCompletionLabel(label) {
+  const s = String(label || '');
+  return /经营净利润/.test(s) && (/只填写.*完成率|完成率/.test(s));
+}
+function normalizeMetricLabelsForAI(r) {
+  if (!r) return;
+  const normalize = function(item, key) {
+    if (!item || !item[key]) return;
+    if (patch10_isProfitCompletionLabel(item[key])) {
+      item[key] = '经营净利润完成率';
+      item._labelNormalized = true;
+      pushDataQualityIssue(r, {
+        type: 'metric-label',
+        metricLabel: '经营净利润完成率',
+        message: '源表把“经营净利润”和“完成率”写在同一行，系统已按“经营净利润完成率”交给 AI，避免误解为利润率。'
+      });
+    }
+  };
+  (r.metrics || []).forEach(m => normalize(m, 'label'));
+  (r.subGroups || []).forEach(sg => {
+    normalize(sg, 'metric');
+    normalize(sg, 'account');
+  });
+}
+
 function reconcileShopLevelRates(r) {
   if (!r || !Array.isArray(r.metrics) || !Array.isArray(r.subGroups)) return;
   if (r.subGroups.length === 0) return;
@@ -2708,15 +2896,15 @@ function reconcileShopLevelRates(r) {
     m._reconciled = {
       original: original,
       recomputed: recomputed,
-      reason: '源表 cached value 与分部数据加权计算偏差 > 3pct，已用分部数据重算',
+      reason: '源表 cached value 与分部数据加权计算偏差，已用分部数据重算',
       components: components
     };
     m.rawCur = recomputed;
     m.curVal = patch10_fmtRate(recomputed);
 
     // 异常列表
-    if (!r._dataQualityIssues) r._dataQualityIssues = [];
-    r._dataQualityIssues.push({
+    pushDataQualityIssue(r, {
+      type: 'weighted-rate',
       metricLabel: m.label,
       original: original,
       recomputed: recomputed,
@@ -2724,6 +2912,54 @@ function reconcileShopLevelRates(r) {
       reason: '源表 cached value 与分部数据加权偏差 ' + (diff * 100).toFixed(2) + 'pct，已用分部数据重算。建议联系部门同学打开文件后按 Ctrl+Shift+F9 强制重算并保存。'
     });
   }
+}
+
+function rebuildAccountLevelSummaryRates(r) {
+  if (!r || !Array.isArray(r.metrics) || !Array.isArray(r.subGroups) || !r.subGroups.length) return;
+  const salesByAccount = {};
+  r.subGroups.forEach(sg => {
+    if (patch10_isSalesMetric(sg.metric)) {
+      const n = parseMetricNumber(sg.rawCur);
+      if (n !== null && n > 0) salesByAccount[sg.account] = n;
+    }
+  });
+  if (!Object.keys(salesByAccount).length) return;
+  r.metrics.forEach(m => {
+    if (!patch10_isRateMetric(m.label)) return;
+    const related = r.subGroups.filter(sg => sg.metric === m.label && salesByAccount[sg.account] > 0);
+    if (!related.length) return;
+    const weights = [], rates = [];
+    related.forEach(sg => {
+      const rate = parseMetricNumber(sg.rawCur);
+      if (rate === null) return;
+      weights.push(salesByAccount[sg.account]);
+      rates.push(rate);
+    });
+    const recomputed = patch10_weightedAverage(weights, rates);
+    const original = parseMetricNumber(m.rawCur);
+    if (recomputed === null || original === null) return;
+    const diff = Math.abs(original - recomputed);
+    if (diff < PATCH10_DIFF_THRESHOLD) return;
+    m.rawCur = recomputed;
+    m.curVal = patch10_fmtRate(recomputed);
+    pushDataQualityIssue(r, {
+      type: 'account-weighted-rate',
+      metricLabel: m.label,
+      original,
+      recomputed,
+      diffPct: +(diff * 100).toFixed(2),
+      reason: '账号/直播间级率指标不能直接求和，系统已按销售净额加权重算。'
+    });
+  });
+}
+
+function finalizeDeptData(r) {
+  if (!r) return r;
+  normalizeMetricLabelsForAI(r);
+  rebuildAccountLevelSummaryRates(r);
+  reconcileShopLevelRates(r);
+  normalizeMetricLabelsForAI(r);
+  return r;
 }
 
 function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
@@ -2759,9 +2995,7 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
   const businessSummary = buildBusinessSummaryData(rows, dept, filename);
   if (businessSummary) {
     businessSummary._sourceErrors = r._sourceErrors;
-    // ═══ 主动重算过期的公式缓存值 ═══
-    reconcileShopLevelRates(businessSummary);
-    return businessSummary;
+    return finalizeDeptData(businessSummary);
   }
 
   // ═══ F6: 品牌部·单周数据格式检测（组别+指标名称）═══
@@ -2801,7 +3035,7 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
           deltaRate: dr
         });
       }
-      if (r.subGroups.length) return r;
+      if (r.subGroups.length) return finalizeDeptData(r);
     }
   }
 
@@ -2815,13 +3049,13 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
       return false;
     })();
     if (hasParentCol) {
-      return buildF2ParentRecord(rows, dept, filename, r);
+      return finalizeDeptData(buildF2ParentRecord(rows, dept, filename, r));
     }
   }
 
   // ═══ F5: PAA混排型检测（右侧有行动计划表）═══
   if (detectF5PAAMixed(rows)) {
-    return buildF5PAAMixed(rows, dept, filename, r, sheetIndex, wb);
+    return finalizeDeptData(buildF5PAAMixed(rows, dept, filename, r, sheetIndex, wb));
   }
 
   // ═══ F1/F3: 标准通用解析器（原有逻辑优化版）═══
@@ -2941,24 +3175,37 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
       r.metrics.push({label,trend,curVal:fmtVal(cv),prevVal:fmtVal(pv),rawCur:cv,rawPrev:pv,deltaRate:drRaw?fmtVal(drRaw):null,completion:comp?fmtVal(comp):null,target:tgt?fmtM(tgt):null,accum:null});
     }
   }
-  // 直播部汇总
+  // 直播部/达人部等账号表汇总：金额求和，率指标按销售额加权。
   if (sp.acct!==undefined&&r.subGroups.length) {
-    const bm={};
+    const bm={}, salesByAccount={};
+    r.subGroups.forEach(function(sg){
+      if (patch10_isSalesMetric(sg.metric)) {
+        const n = parseMetricNumber(sg.rawCur);
+        if (n !== null && n > 0) salesByAccount[sg.account] = n;
+      }
+    });
     for (const sg of r.subGroups) {
-      if (!bm[sg.metric]) bm[sg.metric]={cur:0,prev:0,cnt:0,comp:sg.completion};
-      const c=parseFloat(sg.rawCur)||0, p=parseFloat(sg.rawPrev)||0;
-      if (!isNaN(c)) { bm[sg.metric].cur+=c; bm[sg.metric].cnt++; }
-      if (!isNaN(p)) bm[sg.metric].prev+=p;
+      if (!bm[sg.metric]) bm[sg.metric]={cur:0,prev:0,cnt:0,comp:sg.completion,weightedCur:0,weightCur:0,weightedPrev:0,weightPrev:0};
+      const c=parseMetricNumber(sg.rawCur), p=parseMetricNumber(sg.rawPrev);
+      const weight = salesByAccount[sg.account] || 0;
+      if (patch10_isRateMetric(sg.metric) && weight > 0) {
+        if (c !== null) { bm[sg.metric].weightedCur += weight * c; bm[sg.metric].weightCur += weight; bm[sg.metric].cnt++; }
+        if (p !== null) { bm[sg.metric].weightedPrev += weight * p; bm[sg.metric].weightPrev += weight; }
+      } else {
+        if (c !== null) { bm[sg.metric].cur+=c; bm[sg.metric].cnt++; }
+        if (p !== null) bm[sg.metric].prev+=p;
+      }
     }
     for (const [metric,agg] of Object.entries(bm)) {
       if (!agg.cnt) continue;
-      const dr=agg.prev?((agg.cur-agg.prev)/Math.abs(agg.prev)*100).toFixed(1)+'%':null;
-      r.metrics.push({label:metric,curVal:fmtM(agg.cur),prevVal:fmtM(agg.prev),rawCur:agg.cur,rawPrev:agg.prev,deltaRate:dr,completion:agg.comp,target:null,accum:null,trend:agg.prev?(agg.cur>=agg.prev?'up':'down'):'flat'});
+      const isRate = patch10_isRateMetric(metric);
+      const cur = isRate && agg.weightCur ? agg.weightedCur / agg.weightCur : agg.cur;
+      const prev = isRate && agg.weightPrev ? agg.weightedPrev / agg.weightPrev : agg.prev;
+      const dr=prev?((cur-prev)/Math.abs(prev)*100).toFixed(1)+'%':null;
+      r.metrics.push({label:metric,curVal:fmtMetricCell(metric, cur),prevVal:prev!==null?fmtMetricCell(metric, prev):null,rawCur:cur,rawPrev:prev,deltaRate:dr,completion:agg.comp,target:null,accum:null,trend:prev?(cur>=prev?'up':'down'):'flat'});
     }
   }
-  // ★ Patch 10: 在 return r 之前调用 ★
-  reconcileShopLevelRates(r);
-  return r;
+  return finalizeDeptData(r);
 }
 
 // ── F2: 父记录型解析器（视频中心）──
@@ -3338,6 +3585,14 @@ ${escapedSummary}
 ⚠ 异常指标（环比变化超±20%，需重点分析）：${anomalies.join('；')}`
     : '';
 
+  const qualityText = (d._dataQualityIssues && d._dataQualityIssues.length)
+    ? `
+⚠ 数据质量校验：${d._dataQualityIssues.slice(0,6).map(function(issue){
+      return (issue.message || issue.reason || (issue.metricLabel + ' 已由系统校验/重算')).replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    }).join('；')}
+请以系统重算后的核心指标为准，不要引用源表旧缓存值或公式错误值。`
+    : '';
+
   const deptTypeMap = {
     brand: '品牌部', brandVideo: '品牌视频部', video: '视频中心',
     kol: '达人部', cs: '客服部',
@@ -3372,6 +3627,7 @@ ${planningText}`;
 ${sg ? '各账号/分组：' + sg : ''}
 ${rk ? '店铺排名：' + rk : ''}
 ${anomalyText}
+${qualityText}
 ${noDataNote}`;
 
   // 分析指导部分
@@ -3418,6 +3674,11 @@ ${noDataNote}`;
     prompt += `
 
 ⚠ 数据质量警告：该部门源表检测到公式错误。请在分析结论中明确说明"检测到源表数据异常，以下分析基于可解析数据"，不要忽视或掩盖数据问题。`;
+  }
+  if (d._dataQualityIssues && d._dataQualityIssues.length) {
+    prompt += `
+
+⚠ 重要：该部门部分指标已经由系统校验或重算。AI只能引用上方“核心指标”中的最终值；如需提到异常，只说明源表存在缓存/公式/口径问题，不要用源表原始错误值做经营判断。`;
   }
 
   return prompt;
@@ -3475,14 +3736,21 @@ function renderReport(ai,d) {
   if (d._dataQualityIssues && d._dataQualityIssues.length) {
     h += '<details style="margin:0 20px 12px;padding:8px 12px;background:#fff7e6;border-left:3px solid #faad14;font-size:13px;border-radius:4px">';
     h += '<summary style="cursor:pointer;font-weight:600;color:#d46b08;font-size:12px">';
-    h += '⚠️ 数据质量异常 (' + d._dataQualityIssues.length + ' 项)，已自动修正</summary>';
+    h += '⚠️ 数据质量校验 (' + d._dataQualityIssues.length + ' 项)，已按可重算口径修正/提示</summary>';
     h += '<ul style="margin:8px 0 0;padding-left:20px">';
     d._dataQualityIssues.forEach(function(issue){
-      var origPct = (Math.abs(issue.original) <= 1 ? (issue.original * 100) : issue.original).toFixed(1) + '%';
-      var recPct = (Math.abs(issue.recomputed) <= 1 ? (issue.recomputed * 100) : issue.recomputed).toFixed(1) + '%';
       h += '<li style="margin-bottom:6px;font-size:12px;color:var(--ink2);line-height:1.5">';
-      h += '<strong>' + escapeHtml(issue.metricLabel) + '</strong>：源表缓存值 ' + origPct + ' → 重算值 ' + recPct + '（偏差 ' + issue.diffPct + 'pct）';
-      h += '<br><span style="color:#666;font-size:11px">' + escapeHtml(issue.reason) + '</span>';
+      if (issue.original !== undefined && issue.recomputed !== undefined && issue.original !== null && issue.recomputed !== null) {
+        h += '<strong>' + escapeHtml(issue.metricLabel || '指标') + '</strong>';
+        if (issue.cell) h += '（' + escapeHtml(issue.cell) + '）';
+        h += '：源表值 ' + escapeHtml(fmtIssueValue(issue.original)) + ' → 系统值 ' + escapeHtml(fmtIssueValue(issue.recomputed));
+        if (issue.diffPct !== null && issue.diffPct !== undefined) h += '（偏差 ' + escapeHtml(issue.diffPct) + '）';
+      } else {
+        h += '<strong>' + escapeHtml(issue.metricLabel || '数据质量') + '</strong>：' + escapeHtml(issue.message || issue.reason || '已校验');
+      }
+      if (issue.reason || issue.message) {
+        h += '<br><span style="color:#666;font-size:11px">' + escapeHtml(issue.reason || issue.message) + '</span>';
+      }
       h += '</li>';
     });
     h += '</ul></details>';
