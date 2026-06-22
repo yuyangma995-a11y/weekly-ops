@@ -2072,6 +2072,67 @@ function renderFL() {
 // ══════════════════════════════════════════
 // Excel 解析
 // ══════════════════════════════════════════
+// ── 智能主Sheet选择：按"含部门名+有数据+表头日期最新"选，而非遍历全部 ──
+function pickBestSheet(wb, dept, filename) {
+  const sheets = wb.SheetNames;
+  if (sheets.length === 1) return { mainIdx: 0, extraSheets: [] };
+
+  // 需要解析附属Sheet的文件（如PAA在事业三群第二个Sheet）
+  // extraSheets: [{ sheetIndex, detectDept }]  — detectDept覆盖默认检测
+  const extraSheets = [];
+
+  // 对于已知的多Sheet部门，按部门名匹配主Sheet
+  const deptNameLow = DEPT_NAMES[dept] ? DEPT_NAMES[dept].toLowerCase() : '';
+  
+  // 策略1：找Sheet名中包含部门名的（如"天猫平台"文件中有个Sheet叫"天猫平台"）
+  let mainIdx = -1, mainScore = -1;
+  for (let si = 0; si < sheets.length; si++) {
+    const sn = sheets[si].toLowerCase();
+    const ws = wb.Sheets[sheets[si]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1,defval:null,raw:true});
+    const rowCount = rows.length;
+    if (rowCount < 3) continue;
+
+    let score = 0;
+    // 加分：Sheet名含部门名
+    if (deptNameLow && sn.includes(deptNameLow)) score += 50;
+    // 加分：Sheet名含部门代码
+    if (sn.includes(dept)) score += 50;
+    // 加分：更多行 = 更有可能是主数据
+    score += Math.min(rowCount, 100);
+
+    // 减分：Sheet名含"排名""排名""sheet1"等
+    if (/排名|sheet1|sheet2/i.test(sn)) score -= 30;
+    // 减分：只有2-3行
+    if (rowCount < 5) score -= 20;
+
+    if (score > mainScore) { mainScore = score; mainIdx = si; }
+  }
+  
+  // 策略2：如果没找到，按最早有数据且行最多的Sheet
+  if (mainIdx < 0) {
+    let maxRows = 0;
+    for (let si = 0; si < sheets.length; si++) {
+      const ws = wb.Sheets[sheets[si]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1,defval:null,raw:true});
+      if (rows.length > maxRows) { maxRows = rows.length; mainIdx = si; }
+    }
+  }
+
+  // 检测附属Sheet：PAA在事业三群同文件
+  if (dept === 'biz_g3') {
+    for (let si = 0; si < sheets.length; si++) {
+      if (si === mainIdx) continue;
+      const sn = sheets[si].toLowerCase();
+      if (sn.includes('paa') || sn.includes('PAA')) {
+        extraSheets.push({ sheetIndex: si, detectAs: 'paa' });
+      }
+    }
+  }
+
+  return { mainIdx: mainIdx >= 0 ? mainIdx : 0, extraSheets };
+}
+
 async function parseExcel(file) {
   const buf  = await file.arrayBuffer();
   const wb   = XLSX.read(buf, {type:'array',cellFormula:false,cellDates:false});
@@ -2079,33 +2140,55 @@ async function parseExcel(file) {
   const dept = detectDept(file.name);
   const hasMultiSheet = wb.SheetNames.length > 1;
 
-  // 遍历所有 Sheet
-  for (let si = 0; si < wb.SheetNames.length; si++) {
-    const ws       = wb.Sheets[wb.SheetNames[si]];
-    const rows     = XLSX.utils.sheet_to_json(ws, {header:1,defval:null,raw:true});
-    if (rows.length < 2) continue;
-    const sheetName = wb.SheetNames[si];
-
-    // 识别任务清单格式
-    const header0 = rows[0] ? String(rows[0][0]||'') : '';
-    if (/待办|任务|事项|盯盘/.test(header0) || /待办|任务|盯盘/.test(file.name)) {
-      const taskResults = buildTaskData(rows, file.name);
-      if (taskResults) allResults.push(...(Array.isArray(taskResults) ? taskResults : [taskResults]));
-      continue;
+  // ═══ 多Sheet智能选择 ═══
+  if (hasMultiSheet) {
+    const { mainIdx, extraSheets } = pickBestSheet(wb, dept, file.name);
+    
+    // 解析主Sheet
+    const mainWs = wb.Sheets[wb.SheetNames[mainIdx]];
+    const mainRows = XLSX.utils.sheet_to_json(mainWs, {header:1,defval:null,raw:true});
+    if (mainRows.length >= 2) {
+      const mainSheetName = wb.SheetNames[mainIdx];
+      // 识别任务清单格式
+      const header0 = mainRows[0] ? String(mainRows[0][0]||'') : '';
+      if (/待办|任务|事项|盯盘/.test(header0) || /待办|任务|盯盘/.test(file.name)) {
+        const taskResults = buildTaskData(mainRows, file.name);
+        if (taskResults) allResults.push(...(Array.isArray(taskResults) ? taskResults : [taskResults]));
+      } else {
+        const parsed = buildDeptData(mainRows, dept, file.name, mainSheetName, mainIdx, wb);
+        if (parsed) allResults.push(parsed);
+      }
     }
 
-    // 多Sheet时，各自独立检测部门
-    let sheetDept = dept;
-    if (hasMultiSheet) {
-      // 用Sheet名尝试检测独立部门（如"PAA事业部"→paa）
-      const sheetDeptDetected = detectDept(sheetName);
-      if (sheetDeptDetected !== 'other') sheetDept = sheetDeptDetected;
+    // 解析附属Sheet（如PAA）
+    for (const extra of extraSheets) {
+      const ws = wb.Sheets[wb.SheetNames[extra.sheetIndex]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1,defval:null,raw:true});
+      if (rows.length >= 2) {
+        const parsed = buildDeptData(rows, extra.detectAs, file.name, wb.SheetNames[extra.sheetIndex], extra.sheetIndex, wb);
+        if (parsed) allResults.push(parsed);
+      }
     }
 
-    // 用buildDeptData解析（传入完整wb，用于跨Sheet分析）
-    const parsed = buildDeptData(rows, sheetDept, file.name, sheetName, si, wb);
-    if (parsed) allResults.push(parsed);
+    return allResults;
   }
+
+  // ═══ 单Sheet：直接解析 ═══
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1,defval:null,raw:true});
+  if (rows.length < 2) return allResults;
+  const sheetName = wb.SheetNames[0];
+
+  // 识别任务清单格式
+  const header0 = rows[0] ? String(rows[0][0]||'') : '';
+  if (/待办|任务|事项|盯盘/.test(header0) || /待办|任务|盯盘/.test(file.name)) {
+    const taskResults = buildTaskData(rows, file.name);
+    if (taskResults) allResults.push(...(Array.isArray(taskResults) ? taskResults : [taskResults]));
+    return allResults;
+  }
+
+  const parsed = buildDeptData(rows, dept, file.name, sheetName, 0, wb);
+  if (parsed) allResults.push(parsed);
   return allResults;
 }
 
@@ -2268,10 +2351,41 @@ function rowText(row) {
   return (row || []).map(v => v===null||v===undefined ? '' : String(v)).join(' ');
 }
 function findBusinessSummaryHeader(rows) {
+  // 严格模板：完整F3格式（京东族）
   for (let i=0;i<Math.min(rows.length,8);i++) {
     const text = rowText(rows[i]);
     if (text.includes('周数据汇总') && text.includes('类目组') && text.includes('本周数据') && text.includes('环比')) return i;
   }
+  // 宽松模板1：含"周数据汇总"+"本周数据"
+  for (let i=0;i<Math.min(rows.length,8);i++) {
+    const text = rowText(rows[i]);
+    if (text.includes('周数据汇总') && text.includes('本周数据')) return i;
+  }
+  // 宽松模板2：含"类目组"+"本周数据"（跨境等变种）
+  for (let i=0;i<Math.min(rows.length,8);i++) {
+    const text = rowText(rows[i]);
+    if (text.includes('类目组') && (text.includes('本周') || text.includes('上周'))) return i;
+  }
+  // 宽松模板3：找"列名最多"的行——统计每行列数，取前3行列数最多的
+  // 排除标题行（含"年度"、"规划"、"2026"等）
+  let bestIdx = -1, bestCount = 0;
+  for (let i=0;i<Math.min(rows.length,8);i++) {
+    const row = rows[i] || [];
+    const text = rowText(row);
+    if (text.includes('年度') || text.includes('规划') || text.includes('2026')) continue;
+    let nonNull = 0;
+    for (let j=0;j<row.length;j++) {
+      if (row[j] !== null && row[j] !== undefined && String(row[j]).trim() !== '') nonNull++;
+    }
+    // 找"非空列数>=6"且最多的行
+    if (nonNull >= 6 && nonNull > bestCount) {
+      // 确认这行有日期格式的数据（列名含数字日期）
+      const hasDate = row.some(v => v && /\d+\.\d+/.test(String(v)));
+      if (hasDate) { bestCount = nonNull; bestIdx = i; }
+    }
+  }
+  if (bestIdx >= 0) return bestIdx;
+
   return -1;
 }
 function headerCol(header, patterns) {
@@ -2474,8 +2588,22 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
   // ═══ F1/F3: 标准通用解析器（原有逻辑优化版）═══
   if (rows.length < 2) return r;
   let hIdx=-1;
+  // 找包含日期格式的表头行
   for (let i=0;i<Math.min(rows.length,6);i++) {
-    if (rows[i].some(v=>v&&/\d+\.\d+/.test(String(v)))) { hIdx=i; break; }
+    const hasDate = rows[i].some(v=> {
+      if (!v) return false;
+      const s = String(v);
+      return /\d+\.\d+/.test(s) || /^\d+月\d+日/.test(s) || /^本周$|^上周$/.test(s);
+    });
+    if (hasDate) { hIdx=i; break; }
+  }
+  // 如果没找到带日期的行，找"第2行起非空列数最多"的行
+  if (hIdx < 0) {
+    let maxCols = 0;
+    for (let i=1;i<Math.min(rows.length,6);i++) {
+      const nonNull = rows[i].filter(v => v !== null && v !== undefined && String(v).trim() !== '').length;
+      if (nonNull > maxCols) { maxCols = nonNull; hIdx = i; }
+    }
   }
   if (hIdx<0) return r;
   const hrow=rows[hIdx], dateCols=[], sp={};
@@ -2488,7 +2616,20 @@ function buildDeptData(rows, dept, filename, sheetName, sheetIndex, wb) {
     if (s.includes('目标')&&!s.includes('完成')){ sp.tgt=ci; return; }
     if (s.includes('完成率'))                  { sp.comp=ci; return; }
     if (['账号','直播间'].some(k=>s.includes(k))) { sp.acct=ci; return; }
-    if (/\d+\.\d+/.test(s)&&!['销售','成本','推广','未抓'].some(k=>s.includes(k))) dateCols.push({ci,label:s});
+    // 日期列识别：支持多种格式
+    //   - 6.1  (标准数字日期)
+    //   - 5.29-6.4 (范围格式)
+    //   - 5月22日-5月28日 (中文范围)
+    //   - 本周 (单字符周标识)
+    const isDateStr = (s) => {
+      if (/\d+\.\d+/.test(s)) return true;           // 6.1 标准
+      if (/\d+月\d+日/.test(s)) return true;          // 5月22日 中文
+      if (/^本周$|^上周$|^当月$/.test(s)) return true; // 本周/上周
+      if (/\d+\.\d+\s*[-—–到至~]\s*\d+\.\d+/.test(s)) return true; // 5.29-6.4 范围
+      if (/\d+月\d+日\s*[-—–到至~]\s*\d+月\d+日/.test(s)) return true; // 5月22日-5月28日
+      return false;
+    };
+    if (isDateStr(s) && !['销售','成本','推广','未抓','完成率','目标','累计'].some(k=>s.includes(k))) dateCols.push({ci,label:s});
   });
   dateCols.sort((a,b)=>a.ci-b.ci);
   const curCol=dateCols[dateCols.length-1], prevCol=dateCols[dateCols.length-2];
@@ -2592,59 +2733,94 @@ function buildF2ParentRecord(rows, dept, filename, base) {
   return base;
 }
 
-// ── F4: 双主键型检测（Col2=指标名）──
+// ── F4: 双主键型检测（Col2=指标名，如跨境/达人）──
 function detectF4DualKey(rows) {
   if (rows.length < 3) return false;
-  const hrow = rows[2] || [];
-  const cell0 = String(hrow[0]||'').trim();
-  const cell1 = String(hrow[1]||'').trim();
-  return (cell0.includes('店铺') || cell0.includes('名称')) && (cell1.includes('指标') || cell1.includes('名称'));
+  // 搜索R0-R4范围找"双主键"表头
+  for (let i=0; i<Math.min(rows.length, 5); i++) {
+    const hrow = rows[i] || [];
+    const cell0 = String(hrow[0]||'').trim();
+    const cell1 = String(hrow[1]||'').trim();
+    // 条件：Col0=店铺/部门名, Col1=指标名（如"销售净额"等）
+    const hasStoreCol = cell0.includes('店铺') || cell0.includes('名称') || cell0.includes('部门');
+    const hasMetricCol = cell1.includes('指标') || cell1.includes('名称') || cell1.includes('净额') || cell1.includes('销售') || cell1.includes('成本');
+    // 同时检查后续列是否有日期列（本周/上周/数字日期）
+    const hasDateCol = hrow.some((v,ci) => ci>=2 && v && (String(v).includes('本周') || String(v).includes('上周') || /\d+\.\d+/.test(String(v))));
+    if (hasStoreCol && hasMetricCol && hasDateCol) return true;
+  }
+  return false;
 }
 
 // ── F4: 双主键型解析器（达人部/跨境）──
 function buildF4DualKey(rows, dept, filename, base) {
-  const hrow = rows[2] || [];
+  // 找表头行（R0-R4中列数最多且有'本周'或日期格式的行）
+  let hIdx = 2; // 默认R3
+  let maxCols = 0;
+  for (let i=0; i<Math.min(rows.length, 5); i++) {
+    const row = rows[i] || [];
+    const hasDate = row.some((v,ci) => ci>=2 && v && (String(v).includes('本周') || String(v).includes('上周') || /\d+\.\d+/.test(String(v))));
+    let nonNull = row.filter(v => v !== null && v !== undefined && String(v).trim() !== '').length;
+    if (hasDate && nonNull > maxCols) { maxCols = nonNull; hIdx = i; }
+  }
+  const hrow = rows[hIdx] || [];
   const acctCol=0, nameCol=1;
   let prevCol=-1, curCol=-1, targetCol=-1, compCol=-1, dvCol=-1;
   hrow.forEach((h,ci)=>{
-    const s = String(h||'').trim();
-    if (s.includes('上周')) prevCol = ci;
-    else if (s.includes('本周')) curCol = ci;
+    if (!h) return;
+    const s = String(h).trim();
+    if (s.includes('上周') || s.includes('上周数据')) prevCol = ci;
+    else if (s.includes('本周') || s.includes('本周数据')) curCol = ci;
     else if (s.includes('目标') && !s.includes('完成')) targetCol = ci;
     else if (s.includes('完成率')) compCol = ci;
-    else if (s.includes('本周-上周') || s.includes('周差异')) dvCol = ci;
+    else if (s.includes('本周-上周') || s.includes('周差异') || s.includes('差值')) dvCol = ci;
   });
-  if (curCol < 0) { curCol=4; prevCol=3; } // fallback 列序
+  // fallback: 按列位置找数字日期列
+  if (curCol < 0) {
+    for (let ci = hrow.length-1; ci >= 0; ci--) {
+      const v = String(hrow[ci]||'');
+      if (/\d+\.\d+/.test(v) || v.includes('本周')) { curCol = ci; break; }
+    }
+    if (curCol < 0) { curCol=4; prevCol=3; }
+    else {
+      for (let ci = curCol-1; ci >= 0; ci--) {
+        const v = String(hrow[ci]||'');
+        if (/\d+\.\d+/.test(v) || v.includes('上周')) { prevCol = ci; break; }
+      }
+      if (prevCol < 0) prevCol = curCol - 1;
+    }
+  }
   base.curWeek = hrow[curCol] ? String(hrow[curCol]).trim() : '本周';
   base.prevWeek = prevCol>=0 && hrow[prevCol] ? String(hrow[prevCol]).trim() : null;
 
   // 先读所有行，找到"合计"行
-  let totalRow = null, totalIdx = -1;
-  for (let ri=3; ri<rows.length; ri++) {
+  let totalRow = null;
+  for (let ri=hIdx+1; ri<rows.length; ri++) {
     const row = rows[ri] || [];
     const acct = row[acctCol] ? String(row[acctCol]).trim() : '';
-    if (acct.includes('合计')) { totalRow = row; totalIdx = ri; break; }
+    if (acct.includes('合计')) { totalRow = row; break; }
   }
   // 读取所有明细行（不含合计行）
   let hasDetail = false;
-  for (let ri=3; ri<rows.length; ri++) {
+  for (let ri=hIdx+1; ri<rows.length; ri++) {
     const row = rows[ri] || [];
+    if (!row || row.length < 2) continue;
     const acct = row[acctCol] ? String(row[acctCol]).trim() : '';
     const name = nameCol>=0 && row[nameCol] ? String(row[nameCol]).trim() : '';
-    if (!acct && !name) continue;
-    if (acct.includes('合计')) continue;
+    const both = (acct+name).trim();
+    if (!both) continue;
+    if (acct.includes('合计') || name === '合计') continue;
+    // 跳过空行和分隔行
+    if (both.length < 2 && !row.slice(2).some(v => v !== null && v !== undefined && String(v).trim() !== '')) continue;
     hasDetail = true;
     const cv = cleanVal(row[curCol], base._sourceErrors);
     const pv = prevCol>=0 ? cleanVal(row[prevCol], base._sourceErrors) : null;
     const comp = compCol>=0 ? cleanVal(row[compCol], base._sourceErrors) : null;
     const tgt  = targetCol>=0 ? cleanVal(row[targetCol], base._sourceErrors) : null;
-    // 跳过: 成本费用率、推广费用率 这类非核心指标
-    if (['成本费用率','推广费用率','经营净利润'].some(kw=>name.includes(kw))) continue;
     if (cv===null && pv===null) continue;
-    const label = (name ? name : acct);
+    const label = name || acct;
     base.subGroups.push({
       metric: name ? (acct?acct+'·':'')+name : acct,
-      account: acct,
+      account: acct || name,
       curVal: cv!==null ? fmtVal(cv) : null,
       prevVal: pv!==null ? fmtVal(pv) : null,
       rawCur: cv, rawPrev: pv,
